@@ -63,7 +63,7 @@ EOF
 BRANCH=${1:-master}
 GVM_DEST=${2:-$HOME}
 GVM_NAME="gvm"
-SRC_REPO=${SRC_REPO:-https://github.com/moovweb/gvm.git}
+SRC_REPO=${SRC_REPO:-https://github.com/markeissler/gvm2.git}
 
 [ "$GVM_DEST" = "$HOME" ] && GVM_NAME=".gvm"
 
