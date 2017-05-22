@@ -29,7 +29,7 @@ if [[ "$?" != "0" ]]; then
 fi
 
 if [[ $command == "version" ]]; then
-	display_message "Go Version Manager v$GVM_VERSION installed at $GVM_ROOT"
+	display_message "Go enVironment Manager v$GVM_VERSION installed at $GVM_ROOT"
 else
 	if [ -f "$GVM_ROOT/scripts/$command" ]; then
 		shift
@@ -38,7 +38,7 @@ else
 		echo "Usage: gvm [command]
 
 Description:
-  GVM is the Go Version Manager
+  GVM is the Go enVironment Manager
 
 Commands:
   version    - print the gvm version number
