@@ -27,9 +27,9 @@ the upstream repo.
 
 ### What debugging information is available?
 
-GVM can output addtional debugging information during usage by simply defining
-the `GVM_DEBUG` environment variable with a value of "1". During normal usage
-you could simply do this:
+__GVM2__ can output addtional debugging information during usage by simply
+defining the `GVM_DEBUG` environment variable with a value of "1". During normal
+usage you could simply do this:
 
 ```bash
     prompt> GVM_DEBUG=1 cd .
@@ -45,7 +45,7 @@ you could simply do this:
     ...
 ```
 
-Support for the GVM_DEBUG flag is a work in progress. The following commands
+Support for the `GVM_DEBUG` flag is a work in progress. The following commands
 currently support this flag:
 
 ```
@@ -55,13 +55,13 @@ currently support this flag:
     gvm install
 ```
 
->The `cd` command above refers to the GVM wrapper for the shell cd command. The
-native `cd` command, obviously, does not support GVM_DEBUG.
+>The `cd` command above refers to the __GVM2__ wrapper for the shell cd command.
+The native `cd` command, obviously, does not support GVM_DEBUG.
 
-Build logs are another source of useful information. When Travis-CI runs the GVM
-test suite, a variety of download, compile and install logs will be generated.
-These log files will be copied and transferred to a configured Amazon S3 bucket
-(if configured) along with all other build artifacts.
+Build logs are another source of useful information. When Travis-CI runs the
+__GVM2__ test suite, a variety of download, compile and install logs will be
+generated. These log files will be copied and transferred to a configured Amazon
+S3 bucket (if configured) along with all other build artifacts.
 
 Exposure of debugging information is configured via Environment Variables.
 
@@ -89,7 +89,7 @@ is not recommended.
 
 ### GVM Configuration
 
-Enable additional debugging output from __GVM__ by enabling debugging.
+Enable additional debugging output from __GVM2__ by enabling debugging.
 
 | Name             | Value            | Description                     | Display value in build log |
 | ---------------- |----------------- | ------------------------------- | --- |
