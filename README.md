@@ -93,7 +93,8 @@ before proceeding.
 `.git` directory will have been renamed during original installation.
 
 ```sh
-prompt> git clone -b go-version-pkgset-pre1 --no-checkout "https://github.com/markeissler/gvm.git" ~/.gvm/gvm-update.tmp
+prompt> cd ~/.git
+prompt> git clone --no-checkout "https://github.com/markeissler/gvm2.git" ~/.gvm/gvm-update.tmp
 ```
 
 2. Move the resulting `.git` directory in place, then reset the local repo state.
@@ -145,7 +146,7 @@ Usage: gvm install [version] [options]
 
 ## List Go Versions
 
-To list all installed Go versions (The current version is prefixed with "=>"):
+To list all installed Go versions:
 
 ```sh
 prompt> gvm list
@@ -369,8 +370,9 @@ version and pkgset.
 
 ## Vendoring Native Code and Dependencies
 
->NOTE: Vendoring is a moving target in __GVM2__ with a specific goal to add
-support for Godep vendoring.
+>CAUTION: Vendoring is a moving target in __GVM2__ with a specific goal to add
+support for Godep vendoring. Existing [GPKG](http://github.com/moovweb/gpkg)
+support will likely be removed.
 
 __GVM2__ supports vendoring package set-specific native code and related
 dependencies, which is useful if you need to qualify a new configuration
