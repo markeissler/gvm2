@@ -5,6 +5,10 @@
 #
 . "$GVM_ROOT/scripts/functions" || return 1
 
+function gvm2() {
+    gvm "$@"
+}
+
 function gvm() {
 	if [[ "$GVM_ROOT" == "" ]]; then
 		display_error "GVM_ROOT not set. Try running: \'source \$GVM_ROOT/scripts/gvm\'."
