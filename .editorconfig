@@ -1,0 +1,21 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+
+[*.{js,json}]
+indent_size = 2
+
+[*.{rb,rake}]
+indent_size = 2
+
+[Gemfile]
+indent_size = 2
+
+[*.{sh,bash}]
+indent_size = 2
+
+[*.yml]
+indent_size = 2
