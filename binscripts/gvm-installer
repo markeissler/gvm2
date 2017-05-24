@@ -92,7 +92,7 @@ then
 	echo "  GIT_ROOT -> ${GIT_ROOT}"
 fi
 
-if [[ -z "$GIT_ROOT" || "$(basename "$GIT_ROOT")" != "gvm" ]]
+if [[ -z "$GIT_ROOT" || "$(basename "$GIT_ROOT")" != "gvm2" ]]
 then
   echo "Cloning from $SRC_REPO to $GVM_DEST/$GVM_NAME"
 
