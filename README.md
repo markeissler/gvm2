@@ -332,7 +332,7 @@ prompt> brew install mercurial
 ### Debian/Ubuntu
 
 ```sh
-prompt> sudo apt-get install curl git mercurial make binutils bison gcc build-essential
+prompt> sudo apt-get install curl git mercurial make binutils bison gcc build-essential bsdmainutils
 ```
 
 ### Redhat/Centos
