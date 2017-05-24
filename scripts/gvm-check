@@ -48,6 +48,13 @@ Could not find curl
   mac:   brew install curl
 "
 
+# Check for hexdump (for bash_pseudo_hash)
+command -v hexdump &> /dev/null ||
+    error_message="${error_message}
+Could not find hexdump
+  linux: apt-get install bsdmainutils
+"
+
 if [ -n "$error_message" ]; then
 	display_warning "$error_message"
 	exit 1
