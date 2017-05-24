@@ -44,21 +44,23 @@ To upgrade a previous installation see the [Upgrading](#upgrading) section.
 For a fresh installation:
 
 ```sh
-prompt> curl -sSL https://raw.githubusercontent.com/markeissler/gvm/master/binscripts/gvm-installer | bash
+prompt> curl -sSL https://raw.githubusercontent.com/markeissler/gvm2/master/binscripts/gvm-installer | bash
 ```
 
 Or if you are using zsh just change `bash` to `zsh`.
 
 ### Sourcing gvm into your shell (bash, zsh)
 
-The `gvm-installer` will automatically update your shell environment to load
-__GVM2__ last. What is needed is a line like this (in your `.bashrc`,
-`.bash_profile`, `.zlogin`, etc.). __GVM2__ should always be loaded last using a
-line like this:
+The __GVM2__ installer will attempt to update your shell init file (`.bashrc`, 
+`.bash_profile`, `.zlogin`, etc.) by appending the following line:
 
 ```sh
 [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
 ```
+
+After the installer completes, you should verify that the line has been added to
+the correct file (e.g. `.bashrc` vs `.bash_profile`) since the installer can't
+guess the peculiarities of your setup!
 
 >If you are using [RVM](https://github.com/rvm/rvm) as well, then __GVM2__ should
 be loaded __after__ RVM. __The instructions for RVM will conflict with these
@@ -66,7 +68,7 @@ instructions.__ Loading RVM last will result in a broken environment. While __GV
 has been designed to accommodate RVM, the reverse statement is not true.
 
 If you are using both __GVM2__ and [RVM](https://github.com/rvm/rvm), then you
-will need to add the following snippet to the end of your shell init file:
+will need to make sure that __GVM2__ is loaded last:
 
 ```sh
 export PATH="$PATH:$HOME/.rvm/bin"
