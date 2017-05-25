@@ -370,24 +370,24 @@ Because we are creating both the `.go-version` and `.go-pkgset` files the next
 time you change into this directory __GVM2__ will automatically set both the Go
 version and pkgset.
 
-## Vendoring Native Code and Dependencies
+## Vendoring
 
->CAUTION: Vendoring is a moving target in __GVM2__ with a specific goal to add
-support for Godep vendoring. Existing [GPKG](http://github.com/moovweb/gpkg)
+Vendoring is a moving target in __GVM2__ with a specific goal to add
+support for Godep vendoring. Existing legacy [GPKG](http://github.com/moovweb/gpkg)
 support will likely be removed.
+
+## Vendoring Native Code and Dependencies
 
 __GVM2__ supports vendoring package set-specific native code and related
 dependencies, which is useful if you need to qualify a new configuration
 or version of one of these dependencies against a last-known-good version
-in an isolated manner.  Such behavior is critical to maintaining good release
-engineering and production environment hygiene.
+in an isolated manner.
 
-As a convenience matter, __GVM2__ will furnish the following environment
-variables to aid in this manner if you want to decouple your work from what the
-operating system provides:
+The following environment variables are available once you've selected a package
+set (`gvm pgkset use <package_name>`):
 
 1. `${GVM_OVERLAY_PREFIX}` functions in a manner akin to a root directory
-  hierarchy suitable for auto{conf,make,tools} where it could be passed in
+  hierarchy suitable for `auto{conf,make,tools}` where it could be passed in
   to `./configure --prefix=${GVM_OVERLAY_PREFIX}` and not conflict with any
   existing operating system artifacts and hermetically be used by your
   workspace.  This is suitable to use with `C{PP,XX}FLAGS and LDFLAGS`, but you
@@ -405,6 +405,28 @@ operating system provides:
 
 5. `${PKG_CONFIG_PATH}` includes `${GVM_OVERLAY_PREFIX}/lib/pkgconfig` so
   that `pkg-config` can automatically resolve any vendored dependencies.
+
+### Vendoring Native Code Example Workflow
+
+
+```sh
+prompt> gvm use go1.1
+prompt> gvm pkgset use current-known-good
+
+# Let's assume that this includes some C headers and native libraries, which
+# Go's CGO facility wraps for us.  Let's assume that these native
+# dependencies are at version V.
+prompt> gvm pkgset create trial-next-version
+
+# Let's assume that V+1 has come along and you want to safely trial it in
+# your workspace.
+prompt> gvm pkgset use trial-next-version
+
+# Do your work here replicating current-known-good from above, but install
+# V+1 into ${GVM_OVERLAY_PREFIX}.
+```
+
+See `examples/native` for a working example.
 
 ## Contributing
 
