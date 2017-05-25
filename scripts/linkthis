@@ -8,7 +8,7 @@ function show_usage() {
 	echo "If the [package-name] is provided, it will be used in the path based"
 	echo "at \${GOPATH%%:*}/src, e.g.:"
 	echo
-	echo "    gvm linkthis github.com/moovweb/gpkg"
+	echo "    gvm linkthis github.com/user/package"
 	echo
 	echo "If omitted, the [package-name] will be the basename of the current"
 	echo "directory, e.g. '$package_name_basename'."
