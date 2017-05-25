@@ -22,13 +22,13 @@ def copy_logs(build_directory, label="")
   _label = "(#{label})" unless (label.nil? || label.empty?)
 
   FileUtils.mkdir("#{root_path}/build_logs") unless Dir.exist?("#{root_path}/build_logs")
-  _build_logs = Dir.glob("#{_build_directory}/gvm/logs/*.log")
+  _build_logs = Dir.glob("#{_build_directory}/gvm2/logs/*.log")
 
   printf "Copying log files #{_label}...\n"
 
   # debug verbosity
   if ENV['GVM_DEBUG'] == '1'
-    printf "  log file source directory: #{_build_directory}/gvm/logs/\n"
+    printf "  log file source directory: #{_build_directory}/gvm2/logs/\n"
     printf "  log file output directory: #{root_path}/build_logs/\n"
   end
 
@@ -51,11 +51,11 @@ task :default do
           #{root_path}/binscripts/gvm-installer #{commit} #{tmpdir}
         '
       EOSH
-      Dir.glob("#{tmpdir}/gvm/tests/*_comment_test.sh").sort.each do |f|
+      Dir.glob("#{tmpdir}/gvm2/tests/*_comment_test.sh").sort.each do |f|
         system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
           bash -c '
-            source #{tmpdir}/gvm/scripts/gvm
-            builtin cd #{tmpdir}/gvm/tests
+            source #{tmpdir}/gvm2/scripts/gvm
+            builtin cd #{tmpdir}/gvm2/tests
             tf --text "#{f}"
           '
         EOSH
@@ -78,8 +78,8 @@ task :scenario do
         system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
           bash -c '
             #{root_path}/binscripts/gvm-installer #{commit} #{tmpdir}
-            source #{tmpdir}/gvm/scripts/gvm
-            builtin cd #{tmpdir}/gvm/tests/scenario
+            source #{tmpdir}/gvm2/scripts/gvm
+            builtin cd #{tmpdir}/gvm2/tests/scenario
             tf --text "#{name}"
           '
         EOSH
