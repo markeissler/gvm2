@@ -1,3 +1,7 @@
+# 0.9.1 / 2017-05-28
+
+Fix __Upgrading__ instructions in README file to include backup instructions and
+to fix incorrect starting point directory.
 
 # 0.9.0 / 2017-05-24
 
