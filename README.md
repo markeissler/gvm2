@@ -91,15 +91,21 @@ instructions...
 >WARNING: It is highly recommended to backup your entire `$HOME/.gvm` directory
 before proceeding.
 
-1. Grab the tagged commit. This creates just the `.git` directory; the original
+1. Backup your `$HOME/.gvm` directory:
+
+```sh
+prompt> builtin cd ~
+prompt> cp -Rp ~/.gvm ~/.gvm.bak
+```
+
+2. Grab the HEAD commit on master. This creates just the `.git` directory; the original
 `.git` directory will have been renamed during original installation.
 
 ```sh
-prompt> cd ~/.git
 prompt> git clone --no-checkout "https://github.com/markeissler/gvm2.git" ~/.gvm/gvm-update.tmp
 ```
 
-2. Move the resulting `.git` directory in place, then reset the local repo state.
+3. Move the resulting `.git` directory in place, then reset the local repo state.
 
 ```sh
 prompt> mv ~/.gvm/gvm-update.tmp/.git ~/.gvm/
@@ -110,7 +116,9 @@ prompt> mv git.bak git.bak.old
 prompt> mv .git git.bak
 ```
 
-3. Open a new terminal to test.
+4. Open a new terminal to test.
+
+5. If everything looks ok, then go ahead and remove the `~/.gvm.bak` directory.
 
 ## Installing Go
 
