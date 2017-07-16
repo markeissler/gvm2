@@ -26,6 +26,7 @@ doc/yard
 /pkgsets
 /archive
 /environments
+/build_logs
 
 # Ignore gvm generated files
 /scripts/gvm
