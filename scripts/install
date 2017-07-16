@@ -4,41 +4,6 @@
 # const
 GO_BOOTSTRAP_BRANCH="release-branch.go1.4"
 
-detect_run_os() {
-	local _run_os _uname_str _uname_arc
-	_run_os="unknown,"
-	_uname_str="$(uname)"
-	_uname_arc="$(uname -m)"
-
-	if [ "${_uname_str}" == "Darwin" ]; then
-		local _macos_version
-		_run_os="darwin"
-		_macos_version="$(sw_vers -productVersion | cut -d "." -f 2)"
-		if [ "${_macos_version}" -ge 8 ]; then
-			_run_os="${_run_os},osx10.8"
-		elif [ "${_macos_version}" -ge 6 ]; then
-			_run_os="${_run_os},osx10.6"
-		else
-			display_error "Binary Go unavailable for this platform"
-			rm -rf $GO_INSTALL_ROOT
-			rm -f $GO_BINARY_PATH
-			exit 1
-		fi
-		unset _macos_version
-	elif [ "${_uname_str}" == "Linux" ]; then
-		_run_os="linux,"
-	fi
-
-	if [ "${_uname_arc}" == "x86_64" ]; then
-		_run_os="${_run_os},amd64"
-	else
-		_run_os="${_run_os},386"
-	fi
-
-	echo "${_run_os}"
-	unset _run_os _uname_str _uname_arc
-}
-
 show_usage() {
 	echo "Usage: gvm install [version] [options]"
 	echo "    -s,  --source=SOURCE      Install Go from specified source."
@@ -193,6 +158,8 @@ patch_go() {
 	[[ "${_patch_applied}" -eq 0 ]] && display_message " ** Patching skipped (not needed)"
 
 	unset _run_os _src_directory _version _patch_applied
+  _run_os="$(__gvm_detect_runos)"
+
 }
 
 create_enviroment() {
@@ -325,6 +292,7 @@ download_binary() {
 
 	unset _os _os_version _os_arch
 	unset _run_os
+  _run_os="$(__gvm_detect_runos)"
 }
 
 install_go_binary() {
