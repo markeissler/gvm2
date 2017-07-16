@@ -57,6 +57,7 @@ desc "Run simple tests"
 task :default do
   Dir.mktmpdir('gvm-test') do |tmpdir|
     begin
+      # install GVM in tmpdir, suppress updates to user shell config files
       system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
         bash -c '
           export GVM_NO_UPDATE_PROFILE=1
@@ -91,8 +92,10 @@ task :scenario do
     puts "Running scenario #{name}..."
     Dir.mktmpdir('gvm-test') do |tmpdir|
       begin
+        # install GVM in tmpdir, suppress updates to user shell config files
         system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
           bash -c '
+            export GVM_NO_UPDATE_PROFILE=1
             #{root_path}/binscripts/gvm-installer #{commit} #{tmpdir}
             source #{tmpdir}/gvm2/scripts/gvm
             builtin cd #{tmpdir}/gvm2/tests/scenario
