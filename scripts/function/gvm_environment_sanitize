@@ -1,10 +1,46 @@
 #!/usr/bin/env bash
 function gvm_environment_sanitize() {
-	local ACTIVE_GO=$(which go)
-	if [[ "${ACTIVE_GO/${GOROOT}}" != "/bin/go" ]]; then
-		OLD_GOROOT=$GOROOT && unset GOROOT
-		GOROOT=$(go env GOROOT)
-		sed -i 's|'${OLD_GOROOT}'|'${GOROOT}'|g' "$GVM_ROOT/environments/$1"
-		. "$GVM_ROOT/environments/$1" &> /dev/null
-	fi
+    local environment="${1}"
+    local active_go="$(which go)"
+    local system_list; system_list=()
+    local defaultIFS="${IFS}"
+    local IFS="${defaultIFS}"
+
+    # We only sanitize 'system' and 'system@'' environments
+    [[ "${environment}" =~ ^system(@.*)?$ ]] || return 0
+
+    # If env is 'system' or 'system@global', GOROOT might point to a non-existing path if user has upgraded the binary
+    # since the 'system' env files were generated. We need to try and update GOROOT or warn user.
+
+    if [[ -x "${active_go}" && ! -f "${GOROOT}" ]]
+    then
+        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "gvm_environment_sanitize() - Original GOROOT: ${GOROOT}"
+
+        OLD_GOROOT="${GOROOT}" && unset GOROOT
+        GOROOT="$(go env GOROOT)"
+
+        # update system and system@global environments
+        IFS=$'\n' system_list=( $($LS_PATH -1 "${GVM_ROOT}/environments/system"*) ) IFS="${defaultIFS}"
+
+        local _env_file
+        for _env_file in "${system_list[@]}"
+        do
+            sed -i.bak 's|'${OLD_GOROOT}'|'${GOROOT}'|g' "${_env_file}" \
+            && rm "${_env_file}.bak"
+        done
+        unset _env_file
+
+        # source updated environment file
+        . "${GVM_ROOT}/environments/${environment}" &> /dev/null
+
+        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "gvm_environment_sanitize() - Sanitized GOROOT: ${GOROOT}"
+    elif [[ ! -x "${active_go}" ]]
+    then
+        display_error "Failed to find a path to Go for requested environment: '${environment}'." || return 1
+    fi
+
+    unset defaultIFS IFS
+    unset system_list
+    unset active_go
+    unset environment
 }
