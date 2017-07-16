@@ -253,14 +253,15 @@ download_binary() {
 	if [[ "${GVM_DEBUG}" -eq 1 ]]
 	then
 		echo "scripts/install - download_binary() vars:"
-		echo "  _run_os       -> ${_run_os}"
-		echo "  _os           -> ${_os}"
-		echo "  _os_version   -> ${_os_version}"
-		echo "  _os_arch      -> ${_os_arch}"
+		echo "  _version       -> ${GO_NAME}"
+		echo "  _run_os        -> ${_run_os}"
+		echo "  _os            -> ${_os}"
+		echo "  _os_version    -> ${_os_version}"
+		echo "  _os_arch       -> ${_os_arch}"
 	fi
 
 	if [[ "${_os}" == "unknown" ]]; then
-		display_error "Binary Go unavailable for this platform"
+		display_error "Binary for ${GO_NAME} unavailable for this platform"
 		rm -rf $GO_INSTALL_ROOT
 		rm -f $GO_BINARY_PATH
 		exit 1
@@ -280,6 +281,14 @@ download_binary() {
 
 	GO_BINARY_URL="http://golang.org/dl/${GO_BINARY_FILE}"
 	GO_BINARY_PATH=${GVM_ROOT}/archive/${GO_BINARY_FILE}
+
+	if [[ "${GVM_DEBUG}" -eq 1 ]]
+	then
+		echo "scripts/install - download_binary() vars:"
+		echo "  _binary_file  -> ${GO_BINARY_FILE}"
+		echo "  _binary_url   -> ${GO_BINARY_URL}"
+		echo "  _binary_path  -> ${GO_BINARY_PATH}"
+	fi
 
 	if [ ! -f $GO_BINARY_PATH ]; then
 		curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
