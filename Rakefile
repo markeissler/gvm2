@@ -71,6 +71,7 @@ task :default do
         # run test
         system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
           bash -c '
+            export SANDBOX="#{tmpdir}"
             source #{tmpdir}/gvm2/scripts/gvm
             builtin cd #{tmpdir}/gvm2/tests
             tf --text "#{f}"
@@ -97,6 +98,7 @@ task :scenario do
           bash -c '
             export GVM_NO_UPDATE_PROFILE=1
             #{root_path}/binscripts/gvm-installer #{commit} #{tmpdir}
+            export SANDBOX="#{tmpdir}"
             source #{tmpdir}/gvm2/scripts/gvm
             builtin cd #{tmpdir}/gvm2/tests/scenario
             tf --text "#{name}"
