@@ -1,4 +1,7 @@
-# find_installed
+# scripts/function/find_installed.sh
+#
+# shellcheck shell=bash
+# vi: set ft=bash
 #
 
 # source once and only once!
