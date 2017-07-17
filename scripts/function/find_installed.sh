@@ -7,6 +7,7 @@
 # load dependencies
 g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
 . "${g_path_script}/_bash_pseudo_hash" || return 1
+. "${g_path_script}/read_environment_file" || return 1
 . "${g_path_script}/tools" || return 1
 
 # __gvm_find_installed()
@@ -43,9 +44,9 @@ __gvm_find_installed()
             if [[ "${__key}" == "system" ]]
             then
                 # resolve path from environment!
-                __val="$(sed -n -e 's/^\(.*GOROOT=.*\)$/\1/g' \
-                    -e 's/\"//g' \
-                    -e 's/^.*GOROOT=//gp' "${GVM_ROOT}/environments/system")"
+                local system_env="$( __gvm_read_environment_file "${GVM_ROOT}/environments/system")"
+                __val="$(valueForKeyFakeAssocArray "GOROOT" "${system_env[*]}")"
+                unset system_env
             fi
 
             versions_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}") )
