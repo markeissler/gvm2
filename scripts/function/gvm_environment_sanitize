@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 function gvm_environment_sanitize() {
-    local environment="${1}"
-    local active_go="$(which go)"
+    local environment="${1}"; shift
+    local path="${1:-$PATH}"
+    local active_go="$(PATH="${path}" which go)"
     local system_list; system_list=()
     local defaultIFS="${IFS}"
     local IFS="${defaultIFS}"
@@ -12,12 +13,23 @@ function gvm_environment_sanitize() {
     # If env is 'system' or 'system@global', GOROOT might point to a non-existing path if user has upgraded the binary
     # since the 'system' env files were generated. We need to try and update GOROOT or warn user.
 
-    if [[ -x "${active_go}" && ! -f "${GOROOT}" ]]
+    if [[ -x "${active_go}" && ! -d "${GOROOT}" ]]
     then
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "gvm_environment_sanitize() - Original GOROOT: ${GOROOT}"
 
         OLD_GOROOT="${GOROOT}" && unset GOROOT
-        GOROOT="$(go env GOROOT)"
+        GOROOT="$(PATH="${path}" go env GOROOT 2>/dev/null)"
+
+        # set GOROOT based on currently active go
+        #
+        # This should not be needed for a correctly installed system go (found in standard path locations). If the user
+        # has somehow placed a go binary (installed with GVM) in the PATH, then GOROOT will be empty now (the binaries
+        # have set a GOROOT of /usr/local/go). Essentially, this is just here for unit testing.
+        #
+        if [[ -z "${GOROOT}" ]]
+        then
+            GOROOT="${active_go%/bin/go}"
+        fi
 
         # update system and system@global environments
         IFS=$'\n' system_list=( $($LS_PATH -1 "${GVM_ROOT}/environments/system"*) ) IFS="${defaultIFS}"
