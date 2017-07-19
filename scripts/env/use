@@ -221,7 +221,7 @@ function gvm_use() {
         # source archive installed and version can be built locally
         if [[ -d "${go_archive_path}" && "$(builtin cd "${go_archive_path}" && git tag -l "${version}")" != "" ]]
         then
-            display_warning "$(locale_text_for_key "go_install_version_local_prompt")"
+            display_warning "$(locale_text_for_key "go_install_version_local")"
             return 1
         fi
         unset go_archive_path
@@ -230,10 +230,10 @@ function gvm_use() {
         local available_hash; available_hash=( "$(__gvm_find_available)" )
         if [[ -n "$(valueForKeyFakeAssocArray "${version}" "${available_hash[*]}")" ]]
         then
-            display_error "$(locale_text_for_key "go_install_version_upstream_prompt")"
+            display_error "$(locale_text_for_key "go_install_version_upstream")"
             return 1
         else
-            display_error "$(locale_text_for_key "go_install_version_invalid_prompt")"
+            display_error "$(locale_text_for_key "go_install_version_invalid")"
             return 1
         fi
         unset available_hash
