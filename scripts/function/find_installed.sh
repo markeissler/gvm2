@@ -21,9 +21,9 @@ g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
 #   the system installed go if it exists.
 # @param target [optional] Go version to find
 # @param installed_path [optional] Go install path (directory to installed gos)
-# @return Returns an pseudo hash (status 0) where keys are Go versions and
-#   values are paths to Go version installations or an empty string (status 1)
-#   on failure.
+# @return Returns a pseudo hash where keys are Go versions and values are paths
+#   to Go version installations (status 0) or an empty string (status 1) on 
+#   failure.
 # */
 __gvm_find_installed()
 {
