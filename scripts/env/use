@@ -194,28 +194,55 @@ function gvm_use() {
         return 1
     fi
 
-    fuzzy_match=$($LS_PATH -1 "$GVM_ROOT/gos" | $SORT_PATH | $GREP_PATH "$version" | $HEAD_PATH -n 1 | $GREP_PATH "${version}")
-    if [[ -z "${fuzzy_match}" ]]
+    # check to see if requested version is already installed, if not advise user on how to
+    # proceed:
+    #   1. if no binaries installed and no source cache directory exists, then tell user no Gos have been installed and
+    #      provide instructions on how to begin.
+    #   2. if source cache directory exists, then tell user they can build requested version from local cache.
+    #   3. if version exists on download server, tell user they can either build from source or install binary from a
+    #      remote server.
+    local installed_hash; installed_hash=( "$(__gvm_find_installed "" "${GVM_ROOT}/gos")" )
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "Command (%s) installed versions dump:\n" "${BASH_SOURCE[0]##*/}"
+        prettyDumpFakeAssocArray "${installed_hash[*]}"
+    fi
+    if [[ -z "$(valueForKeyFakeAssocArray "${version}" "${installed_hash[*]}")" ]]
     then
         local go_archive_path="$GVM_ROOT/archive/go"
-        local installed_hash; installed_hash=( "$(__gvm_find_installed "" "${GVM_ROOT}/gos")" )
+
+        # no binaries installed and no source archive installed?
         if [[ ${#installed_hash[@]} -eq 0 && ! -d "${go_archive_path}" ]]
         then
             display_error "$(locale_text_for_key "go_install_prompt")"
             return 1
         fi
-        if [[ -z "$(builtin cd "${go_archive_path}" && git tag -l "${version}")" ]]
+
+        # source archive installed and version can be built locally
+        if [[ -d "${go_archive_path}" && "$(builtin cd "${go_archive_path}" && git tag -l "${version}")" != "" ]]
         then
-            display_error "Version not found locally. Try 'gvm install ${version}'" || return 1
-        else
-            display_warning "${version} is not installed. Install it by running 'gvm install ${version}'" || return 1
+            display_warning "$(locale_text_for_key "go_install_version_local_prompt")"
+            return 1
         fi
-        unset installed_hash go_archive_path
+        unset go_archive_path
+
+        # does version exist remotely? version can be downloaded as binary or source, otherwise bail.
+        local available_hash; available_hash=( "$(__gvm_find_available)" )
+        if [[ -n "$(valueForKeyFakeAssocArray "${version}" "${available_hash[*]}")" ]]
+        then
+            display_error "$(locale_text_for_key "go_install_version_upstream_prompt")"
+            return 1
+        else
+            display_error "$(locale_text_for_key "go_install_version_invalid_prompt")"
+            return 1
+        fi
+        unset available_hash
     fi
+    unset installed_hash
 
     gvm_export_path
-    . "$GVM_ROOT/environments/$fuzzy_match" &> /dev/null || display_error "Couldn't source environment" || return 1
-    gvm_environment_sanitize "$fuzzy_match"
+    . "$GVM_ROOT/environments/$version" &> /dev/null || display_error "Couldn't source environment" || return 1
+    gvm_environment_sanitize "$version"
 
     # fix PATH to correct order
     local fixed_path="$(__gvm_munge_path)"
@@ -225,8 +252,8 @@ function gvm_use() {
 
     if [[ -n "$(valueForKeyFakeAssocArray "--default" "${options_hash[*]}")" ]]
     then
-        cp "$GVM_ROOT/environments/$fuzzy_match" "$GVM_ROOT/environments/default"
-        [[ $? -ne 0 ]] && display_error "Couldn't make $fuzzy_match default"
+        cp "$GVM_ROOT/environments/$version" "$GVM_ROOT/environments/default"
+        [[ $? -ne 0 ]] && display_error "Couldn't make ${version} default"
     fi
 
     local pkgset="$(valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}")"
@@ -245,7 +272,7 @@ function gvm_use() {
 
     if [[ -z "$(valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}")" ]]
     then
-        display_message "Now using version $fuzzy_match"
+        display_message "Now using version ${version}"
     fi
 
     unset options_hash
