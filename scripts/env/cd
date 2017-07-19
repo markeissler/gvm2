@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # cd
 #
 # shellcheck shell=bash
@@ -120,11 +121,20 @@ cd() {
         # quietly failing
         if [[ "${GVM_DEBUG}" -eq 1 ]]
         then
+            local installed_hash; installed_hash=( "$(__gvm_find_installed "" "${GVM_ROOT}/gos")" )
+            local go_archive_path="$GVM_ROOT/archive/go"
+
             echo "No fallback go version could be found."
-            if [[ ! -d "$GVM_ROOT/archive/go" ]]
+
+            # no binaries installed and no source archive installed?
+            if [[ ${#installed_hash[@]} -eq 0 && ! -d "${go_archive_path}" ]]
             then
-                echo "$(locale_text_for_key "go_install_prompt")"
+                display_error "$(locale_text_for_key "go_install_prompt")"
+                return 1
             fi
+
+            unset go_archive_path
+            unset installed_hash
         fi
 
         # not a cd() error, just a gvm error...need to pretend nothing happened!
