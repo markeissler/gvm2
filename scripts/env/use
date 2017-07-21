@@ -227,7 +227,7 @@ function gvm_use() {
         unset go_archive_path
 
         # does version exist remotely? version can be downloaded as binary or source, otherwise bail.
-        local available_hash; available_hash=( "$(__gvm_find_available)" )
+        local available_hash; available_hash=( "$(__gvm_find_available "https://go.googlesource.com/go")" )
         if [[ -n "$(valueForKeyFakeAssocArray "${version}" "${available_hash[*]}")" ]]
         then
             display_error "$(locale_text_for_key "go_install_version_upstream")"
