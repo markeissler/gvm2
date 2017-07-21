@@ -8,10 +8,18 @@
 [[ ${GVM_FIND_AVAILABLE:-} -eq 1 ]] && return || readonly GVM_FIND_AVAILABLE=1
 
 # load dependencies
-g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
-. "${g_path_script}/_bash_pseudo_hash" || return 1
-. "${g_path_script}/_shell_compat" || return 1
-. "${g_path_script}/tools" || return 1
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "_bash_pseudo_hash"
+        "_shell_compat"
+        "tools"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
 
 # __gvm_find_available()
 # /*!

@@ -1,5 +1,4 @@
-g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
-. "${g_path_script}/../scripts/function/detect_runos.sh" || return 1
+. "${SANDBOX}/gvm2/scripts/function/detect_runos.sh" || return 1
 
 ##
 ## detect system runtime

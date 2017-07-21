@@ -1,5 +1,4 @@
-g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
-. "${g_path_script}/../scripts/function/find_available.sh" || return 1
+. "${SANDBOX}/gvm2/scripts/function/find_available.sh" || return 1
 
 ##
 ## find available Go versions

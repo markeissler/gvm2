@@ -5,8 +5,16 @@
 [[ ${GVM_DETECT_RUNOS:-} -eq 1 ]] && return || readonly GVM_DETECT_RUNOS=1
 
 # load dependencies
-g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
-. "${g_path_script}/_shell_compat" || return 1
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "_shell_compat"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
 
 # __gvm_detect_runos()
 # /*!

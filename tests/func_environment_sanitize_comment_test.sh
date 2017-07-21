@@ -1,5 +1,4 @@
-g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
-. "${g_path_script}/../scripts/function/gvm_environment_sanitize" || return 1
+. "${SANDBOX}/gvm2/scripts/function/gvm_environment_sanitize" || return 1
 
 ##
 ## sanitize system environment

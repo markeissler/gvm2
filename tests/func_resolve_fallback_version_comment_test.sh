@@ -1,5 +1,4 @@
-g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
-. "${g_path_script}/../scripts/function/resolve_fallback_version" || return 1
+. "${SANDBOX}/gvm2/scripts/function/resolve_fallback_version" || return 1
 
 ## Setup expectation
 expectedVersion='^go1(.[0-9]*)*$'
