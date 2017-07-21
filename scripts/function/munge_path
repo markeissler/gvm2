@@ -48,9 +48,12 @@ __gvm_munge_path() {
     local general_ary; general_ary=()
     local defaultIFS="$IFS"
     local IFS="$defaultIFS"
+    local spaceChar=$' '
 
     [[ -z "${path_in}" ]] && echo "" && return 1
-    IFS=': ' path_in_ary=( $(printf "%s" "${path_in}") ) IFS="$defaultIFS"
+
+    # convert path into an array of elements, encode spaces
+    IFS=':' path_in_ary=( $(printf "%s" "${path_in//$spaceChar/%2f}") ) IFS="$defaultIFS"
 
     # extract path elements
     local _path
@@ -92,10 +95,10 @@ __gvm_munge_path() {
         unset _dedupe_path_out_ary
     fi
 
-    # reconstruct new path
+    # convert path elements array into path string, decode spaces
     IFS=":" path_out="${path_out_ary[*]}" IFS="$defaultIFS"
 
-    printf "%s" "${path_out}"
+    printf "%s" "${path_out//%2f/$spaceChar}"
 
     if [[ -z "${path_out}" ]]
     then
