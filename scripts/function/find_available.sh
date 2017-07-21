@@ -34,7 +34,7 @@ __gvm_find_available()
 {
     local url="${1}"; shift
     local versions_hash; versions_hash=()
-    local regex='^(go([0-9]+(\.[0-9]+)*))$'
+    local regex='^(go([0-9]+(\.[0-9]+[a-z0-9]*)*))$'
 
     [[ "x${url}" != "x" ]] || (echo "" && return 1)
 
