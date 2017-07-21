@@ -5,15 +5,17 @@
 ##
 
 ## Setup expectation
-sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sanitize_test_input_system.sh" > "${SANDBOX}/gvm2/environments/system"
-sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sanitize_test_input_system@global.sh" > "${SANDBOX}/gvm2/environments/system@global"
-mkdir "${SANDBOX}/gvm2/gos/system"
 
 ## 1.8.1
 gvm uninstall go1.8.1 > /dev/null 2>&1
 gvm install go1.8.1 --binary
 source ${SANDBOX}/gvm2/scripts/gvm
 gvm use go1.8.1
+
+## setup dummy system and system@global configs
+sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sanitize_test_input_system.sh" > "${SANDBOX}/gvm2/environments/system"
+sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sanitize_test_input_system@global.sh" > "${SANDBOX}/gvm2/environments/system@global"
+mkdir "${SANDBOX}/gvm2/gos/system"
 
 expectedSanitizedGOROOT="${SANDBOX}/gvm2/gos/go1.8.1"
 expectedSanitizedConfig="$(grep "GOROOT" "${SANDBOX}/gvm2/environments/go1.8.1")"
@@ -22,7 +24,7 @@ expectedSanitizedConfig="${expectedSanitizedConfig/\$GVM_ROOT/$SANDBOX\/gvm2}"
 
 ## Execute command
 source ${SANDBOX}/gvm2/environments/system
-gvm_environment_sanitize "system" "${SANDBOX}/gvm2/gos/go1.8.1/bin:$PATH}"
+gvm_environment_sanitize "system" "${SANDBOX}/gvm2/gos/go1.8.1/bin:${PATH}"
 sanitizedGOROOT="${GOROOT}"
 sanitizedConfig="$(grep "GOROOT" "${SANDBOX}/gvm2/environments/system")"
 
@@ -34,12 +36,12 @@ sanitizedConfig="$(grep "GOROOT" "${SANDBOX}/gvm2/environments/system")"
 ## sanitize system@global environment
 ##
 
+## 1.8.1
+gvm use go1.8.1
+
 ## Setup expectation
 sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sanitize_test_input_system.sh" > "${SANDBOX}/gvm2/environments/system"
 sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sanitize_test_input_system@global.sh" > "${SANDBOX}/gvm2/environments/system@global"
-
-## 1.8.1
-gvm use go1.8.1
 
 expectedSanitizedGOROOT="${SANDBOX}/gvm2/gos/go1.8.1"
 expectedSanitizedConfig="$(grep "GOROOT" "${SANDBOX}/gvm2/environments/go1.8.1")"
