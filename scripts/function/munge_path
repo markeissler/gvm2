@@ -41,9 +41,9 @@ __gvm_munge_path() {
     local path_out=""
     local path_out_ary; path_out_ary=()
     local path_dedupe_flag="${2:-true}"
-    local rvm_regex='([^:\\\n\\\0]+\.rvm{1}[^:\\\n\\\0]+)'
+    local rvm_regex='([^:\\\n\\\0]+[.]?rvm{1}[^:\\\n\\\0]+)'
     local rvm_ary; rvm_ary=()
-    local gvm_regex='([^:\\\n\\\0]+\.gvm{1}[^:\\\n\\\0]+)'
+    local gvm_regex='([^:\\\n\\\0]+[.]?gvm{1}[^:\\\n\\\0]+)'
     local gvm_ary; gvm_ary=()
     local general_ary; general_ary=()
     local defaultIFS="$IFS"
