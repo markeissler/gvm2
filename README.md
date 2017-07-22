@@ -16,26 +16,21 @@ if you find bugs.
 
 ## Overview
 
-Juggling different versions of Go across different projects is a troublesome
-task, a task that involves remembering and manually updating Go environment
-variables.
+Juggling different versions of Go across different projects is a troublesome task, a task that involves remembering and
+manually updating Go environment variables.
 
-While it "would be nice" to only ever have to work with a single version of Go,
-perhaps the most-recent release, the reality is that different projects may
-require different Go versions just because (you know what the reasons are). And
+While it "would be nice" to only ever have to work with a single version of Go, perhaps the most-recent release, the
+reality is that different projects may require different Go versions just because (you know what the reasons are). And
 different projects will almost definitely require different package dependencies.
 
-The [RVM](https://github.com/rvm/rvm) team had already solved this problem for
-ruby development; [GVM](https://github.com/moovweb/gvm) got us part of the way
-to solving the same problem for Go develpment. __GVM2__ has the goal of taking
-things a bit further by making this tool behave more like __RVM__.
+The [RVM](https://github.com/rvm/rvm) team had already solved this problem for ruby development;
+[GVM](https://github.com/moovweb/gvm) got us part of the way to solving the same problem for Go develpment. __GVM2__ has
+the goal of taking things a bit further by making this tool behave more like __RVM__.
 
-Perhaps the biggest step forward is the introduction of __GVM2__ `.go-version`
-and `.go-pkgset` files similar to __RVM__'s `.ruby-version` and `.ruby-gemset`
-files. What a huge convenience it is to have your Go version selected
-automatically whenever you change directories! Couple this functionality with
-support for isolated dependency sets (in the form of "package sets") and
-suddenly version and package management business becomes a breeze.
+Perhaps the biggest step forward is the introduction of __GVM2__ `.go-version` and `.go-pkgset` files similar to
+__RVM__'s `.ruby-version` and `.ruby-gemset` files. What a huge convenience it is to have your Go version selected
+automatically whenever you change directories! Couple this functionality with support for isolated dependency sets (in
+the form of "package sets") and suddenly version and package management business becomes a breeze.
 
 ## Installing
 
@@ -51,24 +46,22 @@ Or if you are using zsh just change `bash` to `zsh`.
 
 ### Sourcing gvm into your shell (bash, zsh)
 
-The __GVM2__ installer will attempt to update your shell init file (`.bashrc`, 
-`.bash_profile`, `.zlogin`, etc.) by appending the following line:
+The __GVM2__ installer will attempt to update your shell init file (`.bashrc`, `.bash_profile`, `.zlogin`, etc.) by
+appending the following line:
 
 ```sh
 [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
 ```
 
-After the installer completes, you should verify that the line has been added to
-the correct file (e.g. `.bashrc` vs `.bash_profile`) since the installer can't
-guess the peculiarities of your setup!
+After the installer completes, you should verify that the line has been added to the correct file (e.g. `.bashrc` vs
+`.bash_profile`) since the installer can't guess the peculiarities of your setup!
 
->If you are using [RVM](https://github.com/rvm/rvm) as well, then __GVM2__ should
-be loaded __after__ RVM. __The instructions for RVM will conflict with these
-instructions.__ Loading RVM last will result in a broken environment. While __GVM2__
-has been designed to accommodate RVM, the reverse statement is not true.
+>If you are using [RVM](https://github.com/rvm/rvm) as well, then __GVM2__ should be loaded __after__ RVM. __The
+instructions for RVM will conflict with these instructions.__ Loading RVM last will result in a broken environment.
+While __GVM2__ has been designed to accommodate RVM, the reverse statement is not true.
 
-If you are using both __GVM2__ and [RVM](https://github.com/rvm/rvm), then you
-will need to make sure that __GVM2__ is loaded last:
+If you are using both __GVM2__ and [RVM](https://github.com/rvm/rvm), then you will need to make sure that __GVM2__ is
+loaded last:
 
 ```sh
 export PATH="$PATH:$HOME/.rvm/bin"
@@ -76,20 +69,18 @@ export PATH="$PATH:$HOME/.rvm/bin"
 [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
 ```
 
-If __GVM2__ is installed after RVM, then the above entries should have been
-appended to your shell init file in the correct order.
+If __GVM2__ is installed after RVM, then the above entries should have been appended to your shell init file in the
+correct order.
 
 <a name="upgrading"></a>
 
 ## Upgrading
 
-__GVM2__ does not yet support upgrading previous installations. Rest assured
-that before this project achieves revision 1.0 this shortcoming will have been
-resolved. In the meantime, you can upgrade in place with the following
+__GVM2__ does not yet support upgrading previous installations. Rest assured that before this project achieves revision
+1.0 this shortcoming will have been resolved. In the meantime, you can upgrade in place with the following
 instructions...
 
->WARNING: It is highly recommended to backup your entire `$HOME/.gvm` directory
-before proceeding.
+>WARNING: It is highly recommended to backup your entire `$HOME/.gvm` directory before proceeding.
 
 1. Backup your `$HOME/.gvm` directory:
 
@@ -98,8 +89,8 @@ prompt> builtin cd ~
 prompt> cp -Rp ~/.gvm ~/.gvm.bak
 ```
 
-2. Grab the HEAD commit on master. This creates just the `.git` directory; the original
-`.git` directory will have been renamed during original installation.
+2. Grab the HEAD commit on master. This creates just the `.git` directory; the original `.git` directory will have been
+    renamed during original installation.
 
 ```sh
 prompt> git clone --no-checkout "https://github.com/markeissler/gvm2.git" ~/.gvm/gvm-update.tmp
@@ -122,17 +113,16 @@ prompt> mv .git git.bak
 
 ## Installing Go
 
-Once you've installed __GVM2__, you will need to install a bootstrap version of
-Go. The last revision of Go that can be built with C compilers is Go 1.4.;
-therefore, __the very first version of Go that you must install is Go 1.4__:
+Once you've installed __GVM2__, you will need to install a bootstrap version of Go. The last revision of Go that can be
+built with C compilers is Go 1.4.; therefore, __the very first version of Go that you must install is Go 1.4__:
 
 ```sh
 prompt> gvm install go1.4.3
 prompt> gvm use go1.4.3
 ```
 
-Once those steps have been completed, Go will be in your PATH. Also, `$GOROOT`
-and `$GOPATH` will be set automatically. You can verify success with:
+Once those steps have been completed, Go will be in your PATH. Also, `$GOROOT` and `$GOPATH` will be set automatically.
+You can verify success with:
 
 ```sh
 prompt> go version
@@ -195,33 +185,28 @@ not available. The legacy __release__ and __weekly__ tags are suppressed for bre
 
 ## Using a Go Version
 
-Before you can use Go, you will need to select a Go version. Usually, this
-step will be automatically handled by __GVM2__ but you can, at any time,
-manually select a Go version:
+Before you can use Go, you will need to select a Go version. Usually, this step will be automatically handled by
+__GVM2__ but you can, at any time, manually select a Go version:
 
 ```sh
 prompt> gvm use go1.4
 ```
 
-The Go version that is in use will be the last one you selected or the one that
-is auto-selected by __GVM2__. See [Auto selection of Go version and GVM2 pkgset](#auto-selection)
-for more information.
+The Go version that is in use will be the last one you selected or the one that is auto-selected by __GVM2__. See
+[Auto selection of Go version and GVM2 pkgset](#auto-selection) for more information.
 
 ## Using a Package Set with a Go Version
 
-A package set (__pkgset__) provides a way for you to isolate dependencies for a
-project in that all dependencies installed with `go get` will be installed into
-the currently active __pkgset__.
+A package set (__pkgset__) provides a way for you to isolate dependencies for a project in that all dependencies
+installed with `go get` will be installed into the currently active __pkgset__.
 
-Package sets are bound to Go versions. When you switch Go versions (using the
-`gvm use` command), the list of package sets available will change. The package
-set in use will be the last one you selected or the one that is auto-selected by
+Package sets are bound to Go versions. When you switch Go versions (using the `gvm use` command), the list of package
+sets available will change. The package set in use will be the last one you selected or the one that is auto-selected by
 __GVM2__ depending on the presence of a .go-pkgset file.
 
 ### Create a Package Set
 
-Before you can create or select a package set, you must first select a Go
-version.
+Before you can create or select a package set, you must first select a Go version.
 
 ```sh
 prompt> gvm pkgset create "my-package-set"
@@ -232,8 +217,8 @@ prompt> gvm pkgset use "my-package-set"
 
 ### Active Go version
 
-There are two ways to determine which version of Go is active. The first option
-is to use the native `go version` command:
+There are two ways to determine which version of Go is active. The first option is to use the native `go version`
+command:
 
 ```sh
 prompt> go version
@@ -285,15 +270,12 @@ If that doesn't work see the troubleshooting steps at the bottom of this page.
 
 ## Using .go-version and .go-pkgset files
 
-Prior to the introduction of the `.go-version` and `.go-pkgset` files, you had
-to manually select the Go version and package set in use, and then those
-settings remained set until you once again changed them or began a new session.
-When juggling several Go projects it can become quite a hassle to not only
-remember which version and pkgset you should be using, but also to execute the
-commands to switch to the correct version and pkgset.
+Prior to the introduction of the `.go-version` and `.go-pkgset` files, you had to manually select the Go version and
+package set in use, and then those settings remained set until you once again changed them or began a new session. When
+juggling several Go projects it can become quite a hassle to not only remember which version and pkgset you should be
+using, but also to execute the commands to switch to the correct version and pkgset.
 
-The use of `.go-version` and `.go-pkgset` files eliminates this problem all
-together.
+The use of `.go-version` and `.go-pkgset` files eliminates this problem all together.
 
 ### .go-version
 
@@ -316,23 +298,19 @@ prompt> cat ~/dev/my_go_project/.go-pkgset
 my-package-set
 ```
 
-Again, a single line consisting of a __GVM2__ package set as reported by the `gvm
-pkgset list` command.
+Again, a single line consisting of a __GVM2__ package set as reported by the `gvm pkgset list` command.
 
 <a name="auto-selection"></a>
 
 ### Auto selection of Go version and GVM pkgset
 
-Whenever you change directories (using the cd() command), __GVM2__ will search
-for an applicable `.go-version` and `.go-pkgset` file. The search will begin in
-the directory that your are changing to and will then continue all the way up to
-the top of your HOME directory. If these files appear anywhere along the path
-during the upwards traversal, __GVM2__ will select the file, parse it and apply
-it. __GVM2__ will only consider the first file it encounters.
+Whenever you change directories (using the cd() command), __GVM2__ will search for an applicable `.go-version` and
+`.go-pkgset` file. The search will begin in the directory that your are changing to and will then continue all the way
+up to the top of your HOME directory. If these files appear anywhere along the path during the upwards traversal,
+__GVM2__ will select the file, parse it and apply it. __GVM2__ will only consider the first file it encounters.
 
-If the `.go-version` and/or the `.go-pkgset` files are not found, __GVM2__ will
-next attempt to make suitable guesses for an appropriate environment to select.
-The order of guessing looks like this:
+If the `.go-version` and/or the `.go-pkgset` files are not found, __GVM2__ will next attempt to make suitable guesses
+for an appropriate environment to select. The order of guessing looks like this:
 
 ```
 Go version:
@@ -354,8 +332,7 @@ prompt> xcode-select --install
 
 ### Add dependencies with Homebrew
 
-The easiest way to install dependencies on MacOS is with the [Homebrew](https://brew.sh/)
-package manager:
+The easiest way to install dependencies on MacOS is with the [Homebrew](https://brew.sh/) package manager:
 
 ```sh
 prompt> brew update
@@ -395,8 +372,7 @@ __GVM2__ works on WSL. Instructions are the same as for [Debian/Ubuntu](#install
 
 ## Typical Usage
 
-The following example illustrates a typical workflow. The example assumes that
-"go1.7" has already been installed.
+The following example illustrates a typical workflow. The example assumes that "go1.7" has already been installed.
 
 ```sh
 prompt> mkdir my_project
@@ -408,45 +384,39 @@ prompt> echo "go1.7" > .go-version
 prompt> echo "my_project" > .go-pkgset
 ```
 
-Because we are creating both the `.go-version` and `.go-pkgset` files the next
-time you change into this directory __GVM2__ will automatically set both the Go
-version and pkgset.
+Because we are creating both the `.go-version` and `.go-pkgset` files the next time you change into this directory
+__GVM2__ will automatically set both the Go version and pkgset.
 
 ## Vendoring
 
-Vendoring is a moving target in __GVM2__ with a specific goal to add
-support for Godep vendoring. Existing legacy [GPKG](http://github.com/moovweb/gpkg)
-support will likely be removed.
+Vendoring is a moving target in __GVM2__ with a specific goal to add support for Godep vendoring. Existing legacy
+[GPKG](http://github.com/moovweb/gpkg) support will likely be removed.
 
 ## Vendoring Native Code and Dependencies
 
-__GVM2__ supports vendoring package set-specific native code and related
-dependencies, which is useful if you need to qualify a new configuration
-or version of one of these dependencies against a last-known-good version
-in an isolated manner.
+__GVM2__ supports vendoring package set-specific native code and related dependencies, which is useful if you need to
+qualify a new configuration or version of one of these dependencies against a last-known-good version in an isolated
+manner.
 
-The following environment variables are available once you've selected a package
-set (`gvm pgkset use <package_name>`):
+The following environment variables are available once you've selected a package set (`gvm pgkset use <package_name>`):
 
-1. `${GVM_OVERLAY_PREFIX}` functions in a manner akin to a root directory
-  hierarchy suitable for `auto{conf,make,tools}` where it could be passed in
-  to `./configure --prefix=${GVM_OVERLAY_PREFIX}` and not conflict with any
-  existing operating system artifacts and hermetically be used by your
-  workspace.  This is suitable to use with `C{PP,XX}FLAGS and LDFLAGS`, but you
-  will have to manage these yourself, since each tool that uses them is
-  different.
+1. `${GVM_OVERLAY_PREFIX}` functions in a manner akin to a root directory hierarchy suitable for `auto{conf,make,tools}`
+    where it could be passed in to `./configure --prefix=${GVM_OVERLAY_PREFIX}` and not conflict with any existing
+    operating system artifacts and hermetically be used by your workspace.  This is suitable to use with
+    `C{PP,XX}FLAGS and LDFLAGS`, but you will have to manage these yourself, since each tool that uses them is
+    different.
 
-2. `${PATH}` includes `${GVM_OVERLAY_PREFIX}/bin` so that any tools you
-  manually install will reside there, available for you.
+2. `${PATH}` includes `${GVM_OVERLAY_PREFIX}/bin` so that any tools you manually install will reside there, available
+    for you.
 
-3. `${LD_LIBRARY_PATH}` includes `${GVM_OVERLAY_PREFIX}/lib` so that any
-  runtime library searching can be fulfilled there on FreeBSD and Linux.
+3. `${LD_LIBRARY_PATH}` includes `${GVM_OVERLAY_PREFIX}/lib` so that any runtime library searching can be fulfilled
+    there on FreeBSD and Linux.
 
-4. `${DYLD_LIBRARY_PATH}` includes `${GVM_OVERLAY_PREFIX}/lib` so that any
-  runtime library searching can be fulfilled there on MacOS.
+4. `${DYLD_LIBRARY_PATH}` includes `${GVM_OVERLAY_PREFIX}/lib` so that any runtime library searching can be fulfilled
+    there on MacOS.
 
-5. `${PKG_CONFIG_PATH}` includes `${GVM_OVERLAY_PREFIX}/lib/pkgconfig` so
-  that `pkg-config` can automatically resolve any vendored dependencies.
+5. `${PKG_CONFIG_PATH}` includes `${GVM_OVERLAY_PREFIX}/lib/pkgconfig` so that `pkg-config` can automatically resolve
+    any vendored dependencies.
 
 ### Vendoring Native Code Example Workflow
 
@@ -480,18 +450,17 @@ See `examples/native` for a working example.
 
 ## Authors
 
-__GVM2__ is the work of __Mark Eissler__ based on the original work of others as
-noted in the [Attributions](#attributions) section below.
+__GVM2__ is the work of __Mark Eissler__ based on the original work of others as noted in the
+[Attributions](#attributions) section below.
 
 <a name=attributions></a>
 
 ## Attributions
 
-__GVM2__ is a fork of [GVM](https://github.com/moovweb/gvm). A lot of work has
-gone into producing __GVM2__ which offers a more _RVM-like_ experience. Still,
-without the prior work of __Josh Bussdieker (jbuss, jaja, jbussdieker)__,
-previous contributors and, of course, the inspiration provided by the
-[RVM](https://github.com/rvm/rvm) project, this project would probably not exist.
+__GVM2__ is a fork of [GVM](https://github.com/moovweb/gvm). A lot of work has gone into producing __GVM2__ which offers
+a more _RVM-like_ experience. Still, without the prior work of __Josh Bussdieker (jbuss, jaja, jbussdieker)__, previous
+contributors and, of course, the inspiration provided by the [RVM](https://github.com/rvm/rvm) project, this project
+would probably not exist.
 
 ## License
 
