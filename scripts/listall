@@ -1,51 +1,206 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+#
+# scripts/listall
+#
 
-function show_usage() {
-	echo "Usage: gvm listall [options]"
-	echo "    -a, --all                 List all tags."
-	echo "    -h, --help                Display this message."
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "function/_bash_pseudo_hash"
+        "function/display_fatal"
+        "function/display_message"
+        "function/display_warning"
+        "function/detect_runos.sh"
+        "function/find_available.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
+show_usage() {
+cat << EOF
+usage: gvm listall [options]
+
+OPTIONS:
+    -a, --all                   List all versions available
+    -B, --binary                List available pre-built versions available
+    -s, --source                List available source versions available
+        --porcelain             Machine-readable output
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+Without any arguments source (-s|--source) is selected by default. Only bonafide
+releases are listed: legacy "weekly" and "release" tags are omitted. The source
+list is filtered to only include versions that can be built on the running
+platform. The binary list is filtered to only include versions that should have
+a binary package available for the running platform.
+
+EOF
 }
 
-function read_command_line() {
-	tag_filter="release"
-	for i in "$@"; do
-		case $i in
-			-a|--all)
-				tag_filter=""
-			;;
-			-h|--help*)
-				show_usage
-				exit 0
-			;;
-			*)
-				echo "Invalid option $i"
-				show_usage
-				exit 65 # Bad arguments
-			;;
-		esac
-	done
+read_command_line() {
+    for option in "$@"; do
+        case "${option}" in
+            -a|--all)
+                opt_filter="all"
+            ;;
+            -B|--binary)
+                opt_filter="binary"
+            ;;
+            -s|--source)
+                opt_filter="source"
+            ;;
+            --porcelain)
+                opt_porcelein=true
+            ;;
+            -h|--help)
+                show_usage; exit 0
+            ;;
+            *)
+                display_warning "Unrecognized command line argument: '$option'"
+                show_usage
+                exit 65 # Bad arguments
+            ;;
+        esac
+    done
 }
 
-read_command_line "$@"
+list_all() {
+    local source_url="${1}"; shift
+    local scope="${1:-source}" # all, binary, source
+    local filter='^(go([0-9]+(\.[0-9]+[a-z0-9]*)*))$' # all versions
+    local filtered_list; filtered_list=()
 
-echo
-display_message "gvm gos (available)"
-echo
-versions=$(git ls-remote -t https://go.googlesource.com/go | awk -F/ '{ print $NF }' | $SORT_PATH)
-if [[ $? -ne 0 ]]; then
-	display_fatal "Failed to get version list from Google"
-fi
-for version in $versions; do
-	if [[ "$tag_filter" == "release" ]]; then
-		if [[ "${version:0:7}" == "release" ]]; then
-			echo "   $version"
-		elif [[ "${version:0:3}" == "go1" ]]; then
-			echo "   $version"
-		fi
-	else
-		echo "   $version"
-	fi
-done
-echo
+    [[ -z "${source_url}" ]] || (echo "" && return 1)
 
+    if [[ "${scope}" == "binary" ]]
+    then
+        # go1 (go1.2.2, go1.3+)
+        #
+        # betaX and rcX revisions are not available as binaries!
+        #
+        filter_v1='^(go(1)(\.[1-9][0-9]+|\.[3-9])+(\.[0-9]+)?)$'
+        # handle 1.2.2+ separately
+        filter_v2='^(go(1).(2)(\.[2-9]+))$'
+        # go2 (go2.0+)
+        filter_v3='^(go(2)(\.[0-9]+)+(\.[a-z0-9]+)?)$'
+        # combine them!
+        filter="${filter_v1}|${filter_v2}|${filter_v3}"
+    fi
+
+    #
+    # macOS fixups
+    #
+    local runos="$(__gvm_detect_runos)"
+    if [[ "${runos%%,*}" == "darwin" ]]
+    then
+        # Changes to macOS compilers as of macOS 10.12 (Sierra) prevent builds of:
+        #
+        #   < go1.4 (bootstrap)
+        #   >= go1.5 < go1.7.1
+        #
+        # Binaries are still available for the affected versions.
+        #
+        if [[ "${opt_filter}" == "source" ]]
+        then
+            # go1 (go1.4, go1.7.1+)
+            #
+            # NOTE: gvm install will override any version of 1.4 to the current 1.4-bootstrap.
+            #
+            filter_v1='^(go(1)(\.[1-9][0-9]+|\.[8-9])+(\.[a-z0-9]+)?)$'
+            # handle 1.4 separately
+            filter_v2='^(go(1).(4)(\.[0-9]+)?)$'
+            # handle 1.7.1+ separately
+            filter_v3='^(go(1).(7)(\.[1-9]+))$'
+            # go2 (go2.0+)
+            filter_v4='^(go(2)(\.[0-9]+)+(\.[a-z0-9]+)?)$'
+            # combine them!
+            filter="${filter_v1}|${filter_v2}|${filter_v3}|${filter_v4}"
+        fi
+    fi
+    unset runos
+
+    local available_hash; available_hash=( "$(__gvm_find_available "${source_url}")" )
+
+    if [[ ${#available_hash[@]} -eq 0 ]]
+    then
+        unset available_hash
+        echo "" && return 1
+    fi
+
+    local available_hash_keys=( "$(keysForFakeAssocArray "${available_hash[*]}")" )
+    local _version
+    for _version in $available_hash_keys
+    do
+        [[ "${_version}" =~ ${filter} ]] && filtered_list+=( "${_version}" )
+    done
+    unset _version
+    unset available_hash_keys
+
+    printf "%s" "${filtered_list[*]}"
+
+    unset filtered_list
+    unset available_hash
+    unset filter
+    unset scope
+    unset source_url
+    return 0
+}
+
+main() {
+    # setup script global vars
+    local opt_filter="source"
+    local opt_porcelein=false
+
+    trap 'display_fatal "Canceled!"' INT
+    read_command_line "$@"
+
+    if [[ "${opt_porcelein}" == false ]]
+    then
+        echo
+        display_message "gvm gos (available)"
+        echo
+    fi
+
+    local repo_source="https://go.googlesource.com/go"
+    local version_list=( "$(list_all "${repo_source}" "${opt_filter}")" )
+
+    if [[ $? -ne 0 ]]
+    then
+        display_fatal "Failed to retrieve list of available versions"
+        return 1
+    fi
+
+    local _version
+    if [[ "${opt_porcelein}" == false ]]
+    then
+        for _version in $version_list
+        do
+            echo "   ${_version}"
+        done
+    else
+        for _version in $version_list
+        do
+            echo "${_version}"
+        done
+    fi
+    unset _version
+    unset available_hash_keys
+
+    if [[ "${opt_porcelein}" == false ]]
+    then
+        echo
+    fi
+
+    unset version_list
+    unset repo_source
+    unset available_hash
+
+    return 0
+}
+
+main "$@"

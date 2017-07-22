@@ -1,12 +1,11 @@
-g_path_script="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
-. "${g_path_script}/../scripts/function/find_path_upwards" || return 1
+. "${SANDBOX}/gvm2/scripts/function/find_path_upwards" || return 1
 
 ##
 ## find a directory
 ##
 
 ## Setup expectation
-expectedPathDir="$(dirname ${g_path_script})"
+expectedPathDir="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
 
 ## Execute command
 ## - Determine basename (baseDir) to use as input dynamically since we don't
@@ -22,7 +21,7 @@ pathDir=( $(__gvm_find_path_upwards "$baseDir") )
 ##
 
 ## Setup expectation
-expectedPathFile="${g_path_script}/func_find_path_upwards_comment_test.sh"
+expectedPathFile="${SANDBOX}/gvm2/tests/func_find_path_upwards_comment_test.sh"
 
 ## Execute command
 baseFile=( $(basename $expectedPathFile) )
