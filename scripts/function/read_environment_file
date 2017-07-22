@@ -2,7 +2,18 @@
 #
 # -*- Shell-Unix-Generic -*-
 #
-. "$GVM_ROOT/scripts/function/_bash_pseudo_hash" || return 1
+
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "_bash_pseudo_hash"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
 
 # __gvm_read_environment_file()
 # /*!

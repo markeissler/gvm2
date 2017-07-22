@@ -11,6 +11,17 @@ def commit
   )
 end
 
+def platform
+  @platform ||= begin
+    platform_config = RbConfig::CONFIG['arch']
+    case
+      when platform_config.match('darwin') then @platform = :darwin
+      when platform_config.match('linux') then @platform = :linux
+    end
+    @platform
+  end
+end
+
 # copy build logs to source directory
 def copy_logs(build_directory, label="")
   _build_directory = build_directory
@@ -46,14 +57,21 @@ desc "Run simple tests"
 task :default do
   Dir.mktmpdir('gvm-test') do |tmpdir|
     begin
+      # install GVM in tmpdir, suppress updates to user shell config files
       system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
         bash -c '
+          export GVM_NO_UPDATE_PROFILE=1
           #{root_path}/binscripts/gvm-installer #{commit} #{tmpdir}
         '
       EOSH
       Dir.glob("#{tmpdir}/gvm2/tests/*_comment_test.sh").sort.each do |f|
+        # filter out platform tests for current target
+        next if platform() == :darwin && f.match('linux_comment_test.sh$')
+        next if platform() == :linux && f.match('darwin_comment_test.sh$')
+        # run test
         system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
           bash -c '
+            export SANDBOX="#{tmpdir}"
             source #{tmpdir}/gvm2/scripts/gvm
             builtin cd #{tmpdir}/gvm2/tests
             tf --text "#{f}"
@@ -75,9 +93,12 @@ task :scenario do
     puts "Running scenario #{name}..."
     Dir.mktmpdir('gvm-test') do |tmpdir|
       begin
+        # install GVM in tmpdir, suppress updates to user shell config files
         system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
           bash -c '
+            export GVM_NO_UPDATE_PROFILE=1
             #{root_path}/binscripts/gvm-installer #{commit} #{tmpdir}
+            export SANDBOX="#{tmpdir}"
             source #{tmpdir}/gvm2/scripts/gvm
             builtin cd #{tmpdir}/gvm2/tests/scenario
             tf --text "#{name}"

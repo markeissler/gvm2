@@ -4,112 +4,77 @@
 # const
 GO_BOOTSTRAP_BRANCH="release-branch.go1.4"
 
-detect_run_os() {
-	local _run_os _uname_str _uname_arc
-	_run_os="unknown,"
-	_uname_str="$(uname)"
-	_uname_arc="$(uname -m)"
-
-	if [ "${_uname_str}" == "Darwin" ]; then
-		local _macos_version
-		_run_os="darwin"
-		_macos_version="$(sw_vers -productVersion | cut -d "." -f 2)"
-		if [ "${_macos_version}" -ge 8 ]; then
-			_run_os="${_run_os},osx10.8"
-		elif [ "${_macos_version}" -ge 6 ]; then
-			_run_os="${_run_os},osx10.6"
-		else
-			display_error "Binary Go unavailable for this platform"
-			rm -rf $GO_INSTALL_ROOT
-			rm -f $GO_BINARY_PATH
-			exit 1
-		fi
-		unset _macos_version
-	elif [ "${_uname_str}" == "Linux" ]; then
-		_run_os="linux,"
-	fi
-
-	if [ "${_uname_arc}" == "x86_64" ]; then
-		_run_os="${_run_os},amd64"
-	else
-		_run_os="${_run_os},386"
-	fi
-
-	echo "${_run_os}"
-	unset _run_os _uname_str _uname_arc
-}
-
 show_usage() {
-	echo "Usage: gvm install [version] [options]"
-	echo "    -s,  --source=SOURCE      Install Go from specified source."
-	echo "    -n,  --name=NAME          Override the default name for this version."
-	echo "    -pb, --with-protobuf      Install Go protocol buffers."
-	echo "    -b,  --with-build-tools   Install package build tools."
-	echo "    -B,  --binary             Only install from binary."
-	echo "         --prefer-binary      Attempt a binary install, falling back to source."
-	echo "    -h,  --help               Display this message."
+    echo "Usage: gvm install [version] [options]"
+    echo "    -s,  --source=SOURCE      Install Go from specified source."
+    echo "    -n,  --name=NAME          Override the default name for this version."
+    echo "    -pb, --with-protobuf      Install Go protocol buffers."
+    echo "    -b,  --with-build-tools   Install package build tools."
+    echo "    -B,  --binary             Only install from binary."
+    echo "         --prefer-binary      Attempt a binary install, falling back to source."
+    echo "    -h,  --help               Display this message."
 }
 
 read_command_line() {
-	VERSION=$1
-	if [[ "${VERSION:0:1}" != "-" ]]; then
-		shift
-	else
-		display_warning "Invalid version: $1"
-		show_usage
-		exit 1
-	fi
-	GO_SOURCE_URL=https://go.googlesource.com/go
-	for i in "$@"; do
-		case $i in
-			-s=*|--source=*)
-				GO_SOURCE_URL=$(echo "$i" | sed 's/[-a-zA-Z0-9]*=//')
-			;;
-			-n=*|--name=*)
-				GO_NAME=$(echo "$i" | sed 's/[-a-zA-Z0-9]*=//')
-			;;
-			-pb|--with-protobuf)
-				INSTALL_PB="true"
-			;;
-			-b|--with-build-tools)
-				INSTALL_BUILD_TOOLS="true"
-			;;
-			-B|--binary)
-				INSTALL_SOURCE="binary"
-			;;
-			--prefer-binary)
-			  INSTALL_SOURCE="prefer-binary"
-			;;
-			-h|--help)
-				show_usage
-				exit 0
-			;;
-			*)
-				display_warning "Invalid option $i"
-				show_usage
-				exit 65 # Bad arguments
-			;;
-		esac
-	done
+    VERSION=$1
+    if [[ "${VERSION:0:1}" != "-" ]]; then
+        shift
+    else
+        display_warning "Invalid version: $1"
+        show_usage
+        exit 1
+    fi
+    GO_SOURCE_URL=https://go.googlesource.com/go
+    for i in "$@"; do
+        case $i in
+            -s=*|--source=*)
+                GO_SOURCE_URL=$(echo "$i" | sed 's/[-a-zA-Z0-9]*=//')
+            ;;
+            -n=*|--name=*)
+                GO_NAME=$(echo "$i" | sed 's/[-a-zA-Z0-9]*=//')
+            ;;
+            -pb|--with-protobuf)
+                INSTALL_PB="true"
+            ;;
+            -b|--with-build-tools)
+                INSTALL_BUILD_TOOLS="true"
+            ;;
+            -B|--binary)
+                INSTALL_SOURCE="binary"
+            ;;
+            --prefer-binary)
+              INSTALL_SOURCE="prefer-binary"
+            ;;
+            -h|--help)
+                show_usage
+                exit 0
+            ;;
+            *)
+                display_warning "Invalid option $i"
+                show_usage
+                exit 65 # Bad arguments
+            ;;
+        esac
+    done
 }
 
 download_source() {
-	GO_CACHE_PATH=$GVM_ROOT/archive/go
-	[[ -d $GO_CACHE_PATH ]] && return
-	display_message "Downloading Go source..."
-	git clone "$GO_SOURCE_URL" "$GO_CACHE_PATH" >> "$GVM_ROOT/logs/go-download.log" 2>&1 ||
-		display_fatal "Couldn't download Go source. Check the logs $GVM_ROOT/logs/go-download.log"
-	# clone the bootstrap branch, switch to the branch to create it locally,
-	# then switch back to master branch.
-	_pwd="${PWD}"
-	{ builtin cd "$GO_CACHE_PATH" &&
-		git remote set-branches origin "${GO_BOOTSTRAP_BRANCH}" >> "$GVM_ROOT/logs/go-bootstrap.log" 2>&1 &&
-		git fetch origin "${GO_BOOTSTRAP_BRANCH}" >> "$GVM_ROOT/logs/go-bootstrap.log" 2>&1 &&
-		git checkout "${GO_BOOTSTRAP_BRANCH}" >> "$GVM_ROOT/logs/go-bootstrap.log" 2>&1 &&
-		git checkout master &&
-		builtin cd "${_pwd}"; } ||
-			display_fatal "Couldn't download Go bootstrap branch. Check the logs $GVM_ROOT/logs/go-bootstrap.log"
-	unset _pwd
+    GO_CACHE_PATH=$GVM_ROOT/archive/go
+    [[ -d $GO_CACHE_PATH ]] && return
+    display_message "Downloading Go source..."
+    git clone "$GO_SOURCE_URL" "$GO_CACHE_PATH" >> "$GVM_ROOT/logs/go-download.log" 2>&1 ||
+        display_fatal "Couldn't download Go source. Check the logs $GVM_ROOT/logs/go-download.log"
+    # clone the bootstrap branch, switch to the branch to create it locally,
+    # then switch back to master branch.
+    _pwd="${PWD}"
+    { builtin cd "$GO_CACHE_PATH" &&
+        git remote set-branches origin "${GO_BOOTSTRAP_BRANCH}" >> "$GVM_ROOT/logs/go-bootstrap.log" 2>&1 &&
+        git fetch origin "${GO_BOOTSTRAP_BRANCH}" >> "$GVM_ROOT/logs/go-bootstrap.log" 2>&1 &&
+        git checkout "${GO_BOOTSTRAP_BRANCH}" >> "$GVM_ROOT/logs/go-bootstrap.log" 2>&1 &&
+        git checkout master &&
+        builtin cd "${_pwd}"; } ||
+            display_fatal "Couldn't download Go bootstrap branch. Check the logs $GVM_ROOT/logs/go-bootstrap.log"
+    unset _pwd
 }
 
 check_tag() {
@@ -117,331 +82,369 @@ check_tag() {
 }
 
 update_source() {
-	display_message "Updating Go source..."
-	(builtin cd "$GO_CACHE_PATH" && git pull >> "$GVM_ROOT/logs/go-download.log" 2>&1 ||
-		display_fatal "Couldn't get latest Go version info. Check the logs $GVM_ROOT/logs/go-download.log")
+    display_message "Updating Go source..."
+    (builtin cd "$GO_CACHE_PATH" && git pull >> "$GVM_ROOT/logs/go-download.log" 2>&1 ||
+        display_fatal "Couldn't get latest Go version info. Check the logs $GVM_ROOT/logs/go-download.log")
 }
 
 copy_source() {
-	# @TODO: Bootstrap support should be moved into a separate function!
-	# MacOS Sierra (10.12) can no longer build binaries previous to 1.7 and that
-	# includes go1.4. When targetting go1.4, fix $version to refer to the special
-	# release build that should remain buildable.
-	#
-	# refer to: https://github.com/golang/go/issues/16352
-	#
-	# Perhaps we should just install go1.4 proactively before anything else?
-	#
-	local _version="${version}"
-	[[ "$_version" == "go1.4" ]] && _version="${GO_BOOTSTRAP_BRANCH}"
-	display_message "Copying Go source... (version: ${_version})"
-	git clone -b "${_version}" "$GO_CACHE_PATH" "$GO_INSTALL_ROOT" >> "$GVM_ROOT/logs/go-$GO_NAME-install.log" 2>&1 ||
-		display_fatal "Couldn't copy source to target folder. Check the logs $GVM_ROOT/logs/go-$GO_NAME-install.log"
-	unset _version
+    # @TODO: Bootstrap support should be moved into a separate function!
+    # MacOS Sierra (10.12) can no longer build binaries previous to 1.7 and that
+    # includes go1.4. When targetting go1.4, fix $version to refer to the special
+    # release build that should remain buildable.
+    #
+    # refer to: https://github.com/golang/go/issues/16352
+    #
+    # Perhaps we should just install go1.4 proactively before anything else?
+    #
+    local _version="${version}"
+    [[ "$_version" == "go1.4" ]] && _version="${GO_BOOTSTRAP_BRANCH}"
+    display_message "Copying Go source... (version: ${_version})"
+    git clone -b "${_version}" "$GO_CACHE_PATH" "$GO_INSTALL_ROOT" >> "$GVM_ROOT/logs/go-$GO_NAME-install.log" 2>&1 ||
+        display_fatal "Couldn't copy source to target folder. Check the logs $GVM_ROOT/logs/go-$GO_NAME-install.log"
+    unset _version
 }
 
 
 compile_go() {
-	display_message " * Compiling..."
-	[ -z "$GOROOT_BOOTSTRAP" ] && export GOROOT_BOOTSTRAP=$GOROOT
-	unset GOARCH && unset GOOS && unset GOPATH && unset GOBIN && unset GOROOT &&
-	export GOBIN=$GO_INSTALL_ROOT/bin &&
-	export PATH=$GOBIN:$PATH &&
-	export GOROOT=$GO_INSTALL_ROOT &&
-	if [ ! -f "$GO_INSTALL_ROOT/VERSION" ]; then echo "$GO_NAME" > "$GO_INSTALL_ROOT/VERSION"; fi &&
-	#builtin cd $GO_INSTALL_ROOT/src && ./all.bash &> $GVM_ROOT/logs/go-$GO_NAME-compile.log ||
-	builtin cd "$GO_INSTALL_ROOT/src" && ./make.bash &> "$GVM_ROOT/logs/go-$GO_NAME-compile.log" ||
-		{ rm -rf "$GO_INSTALL_ROOT" && display_fatal "Failed to compile. Check the logs at $GVM_ROOT/logs/go-$GO_NAME-compile.log"; }
+    display_message " * Compiling..."
+
+    local _path="/usr/sbin:/usr/bin:/sbin:/bin"
+    local _bootstrap="${GVM_ROOT}/gos/go1.4"
+
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        echo "scripts/install - compile_go() called with:"
+        echo "  GVM_ROOT       -> ${GVM_ROOT}"
+        echo "  GO_INSTALL_ROOT-> ${GO_INSTALL_ROOT}"
+        echo "  _version       -> ${GO_NAME}"
+        echo "  _path          -> ${_path}"
+        echo "  _bootstrap     -> ${_bootstrap}"
+    fi
+
+    # always set GOROOT_BOOTSTRAP to 1.4 (bootstrap) for now
+    # @TODO: Need to check if a newer bootstrap has already been installed and use that.
+    unset GOARCH &&
+    unset GOOS &&
+    unset GOPATH &&
+    unset GOBIN &&
+    unset GOROOT &&
+    export GOROOT_BOOTSTRAP="${_bootstrap}" &&
+    export GOBIN="${GO_INSTALL_ROOT}/bin" &&
+    export PATH="${GOBIN}:${_path}" &&
+    export GOROOT="${GO_INSTALL_ROOT}" &&
+    if [ ! -f "$GO_INSTALL_ROOT/VERSION" ]; then echo "$GO_NAME" > "$GO_INSTALL_ROOT/VERSION"; fi &&
+    builtin cd "$GO_INSTALL_ROOT/src" && PATH="${_path}" ./make.bash &> "$GVM_ROOT/logs/go-$GO_NAME-compile.log" ||
+        { rm -rf "$GO_INSTALL_ROOT" && display_fatal "Failed to compile. Check the logs at $GVM_ROOT/logs/go-$GO_NAME-compile.log"; }
 }
 
 # patch old go versions to build on MacOS Sierra (10.12)
 patch_go() {
-	display_message " * Patching..."
-	local _patch_applied _version _src_directory _run_os
+    display_message " * Patching..."
+    local _patch_applied _version _src_directory _run_os
 
-	_patch_applied=0
-	_version="${1}"
-	_src_directory="${2:-$PWD}"
+    _patch_applied=0
+    _version="${1}"
+    _src_directory="${2:-$PWD}"
 
-	if [[ "${GVM_DEBUG}" -eq 1 ]]
-	then
-		echo "scripts/install - patch_go() called with:"
-		echo "  _version       -> ${_version}"
-		echo "  _src_directory -> ${_src_directory}"
-	fi
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        echo "scripts/install - patch_go() called with:"
+        echo "  _version       -> ${_version}"
+        echo "  _src_directory -> ${_src_directory}"
+    fi
 
-	[[ "x${_version}" == "x" ]] && display_fatal "Couldn't patch source, invalid version specified:  \"${1}\""
+    [[ "x${_version}" == "x" ]] && display_fatal "Couldn't patch source, invalid version specified:  \"${1}\""
 
-	_run_os="$(detect_run_os)"
+    _run_os="$(__gvm_detect_runos)"
 
-	local _version_major _version_minor
-	_version_major="${_version%%.*}"
-	_version_minor="${_version#$_version_major.}"
-	_version_minor="${_version_minor%%.*}"      # handle 1.2
-	_version_minor="${_version_minor%%beta*}"   # handle 1beta2
-	_version_minor="${_version_minor%%rc*}"     # handle 1rc3
-	if [[ "${_run_os%%,*}" == "darwin" && "${_version_major%%.*}" == "go1" && ${_version_minor} -lt 5 ]]; then
-		[[ -z "${_src_directory}" || ! -d "${_src_directory}" ]] && display_fatal "Couldn't patch source, invalid directory specified: \"${2}\""
-		# patch src/cmd/dist/build.c
-		if [[ -f "${_src_directory}/cmd/dist/build.c" ]]
-		then
-			sed -i".bak" "/\"-Werror\",/d" "${_src_directory}/cmd/dist/build.c"
-			_patch_applied=1
-		fi
-	fi
+    local _version_major _version_minor
+    _version_major="${_version%%.*}"
+    _version_minor="${_version#$_version_major.}"
+    _version_minor="${_version_minor%%.*}"      # handle 1.2
+    _version_minor="${_version_minor%%beta*}"   # handle 1beta2
+    _version_minor="${_version_minor%%rc*}"     # handle 1rc3
+    if [[ "${_run_os%%,*}" == "darwin" && "${_version_major%%.*}" == "go1" && ${_version_minor} -lt 5 ]]; then
+        [[ -z "${_src_directory}" || ! -d "${_src_directory}" ]] && display_fatal "Couldn't patch source, invalid directory specified: \"${2}\""
+        # patch src/cmd/dist/build.c
+        if [[ -f "${_src_directory}/cmd/dist/build.c" ]]
+        then
+            sed -i".bak" -e "/\"-Werror\",/d" "${_src_directory}/cmd/dist/build.c"
+            # sed -i".bak" -e 's/["]*-Werror["]*[,]*//g' "${_src_directory}/make.bash"
+            _patch_applied=1
+        fi
+    fi
 
-	[[ "${_patch_applied}" -eq 0 ]] && display_message " ** Patching skipped (not needed)"
+    [[ "${_patch_applied}" -eq 0 ]] && display_message " ** Patching skipped (not needed)"
 
-	unset _run_os _src_directory _version _patch_applied
+    unset _run_os _src_directory _version _patch_applied
 }
 
 create_enviroment() {
-	new_env_file=$GVM_ROOT/environments/$GO_NAME
-	echo "export GVM_ROOT; GVM_ROOT=\"$GVM_ROOT\"" > "$new_env_file"
-	echo "export gvm_go_name; gvm_go_name=\"$GO_NAME\"" >> "$new_env_file"
-	echo "export gvm_pkgset_name; gvm_pkgset_name=\"global\"" >> "$new_env_file"
-	echo "export GOROOT; GOROOT=\"\$GVM_ROOT/gos/$GO_NAME\"" >> "$new_env_file"
-	echo "export GOPATH; GOPATH=\"\$GVM_ROOT/pkgsets/$GO_NAME/global\"" >> "$new_env_file"
-	echo "export GVM_OVERLAY_PREFIX; GVM_OVERLAY_PREFIX=\"\${GVM_ROOT}/pkgsets/${GO_NAME}/global/overlay\"" >> "$new_env_file"
-	echo "export PATH; PATH=\"\${GVM_ROOT}/pkgsets/${GO_NAME}/global/bin:\${GVM_ROOT}/gos/${GO_NAME}/bin:\${GVM_OVERLAY_PREFIX}/bin:\${GVM_ROOT}/bin:\${PATH}\"" >> "$new_env_file"
-	echo "export LD_LIBRARY_PATH; LD_LIBRARY_PATH=\"\${GVM_OVERLAY_PREFIX}/lib:\${LD_LIBRARY_PATH}\"" >> "$new_env_file"
-	echo "export DYLD_LIBRARY_PATH; DYLD_LIBRARY_PATH=\"\${GVM_OVERLAY_PREFIX}/lib:\${DYLD_LIBRARY_PATH}\"" >> "$new_env_file"
-	echo "export PKG_CONFIG_PATH; PKG_CONFIG_PATH=\"\${GVM_OVERLAY_PREFIX}/lib/pkgconfig:\${PKG_CONFIG_PATH}\"" >> "$new_env_file"
-	. "$GVM_ROOT/scripts/env/use"
-	. "$GVM_ROOT/scripts/env/implode"
-	gvm_use "$GO_NAME" &> /dev/null ||
-		display_fatal "Failed to use installed version"
-	gvm pkgset create global
-	unset GOPATH
+    local new_env_file="${GVM_ROOT}/environments/${GO_NAME}"
+
+    cat << EOF > "${new_env_file}"
+#
+# GVM2 - Automatically generated file. DO NOT EDIT!
+#
+export GVM_ROOT; GVM_ROOT="${GVM_ROOT}"
+export gvm_go_name; gvm_go_name="${GO_NAME}"
+export gvm_pkgset_name; gvm_pkgset_name="global"
+export GOROOT; GOROOT="\${GVM_ROOT}/gos/${GO_NAME}"
+export GOPATH; GOPATH="\${GVM_ROOT}/pkgsets/${GO_NAME}/global"
+export GVM_OVERLAY_PREFIX; GVM_OVERLAY_PREFIX="\${GVM_ROOT}/pkgsets/${GO_NAME}/global/overlay"
+export PATH; PATH="\${GVM_ROOT}/pkgsets/${GO_NAME}/global/bin:\${GVM_ROOT}/gos/${GO_NAME}/bin:\${GVM_OVERLAY_PREFIX}/bin:\${GVM_ROOT}/bin:\${PATH}"
+export LD_LIBRARY_PATH; LD_LIBRARY_PATH="\${GVM_OVERLAY_PREFIX}/lib:\${LD_LIBRARY_PATH}"
+export DYLD_LIBRARY_PATH; DYLD_LIBRARY_PATH="\${GVM_OVERLAY_PREFIX}/lib:\${DYLD_LIBRARY_PATH}"
+export PKG_CONFIG_PATH; PKG_CONFIG_PATH="\${GVM_OVERLAY_PREFIX}/lib/pkgconfig:\${PKG_CONFIG_PATH}"
+EOF
+
+    source "${GVM_ROOT}/scripts/env/use"
+    source "${GVM_ROOT}/scripts/env/implode"
+    gvm_use "${GO_NAME}" &> /dev/null ||
+        display_fatal "Failed to use installed version"
+    gvm pkgset create global
+    unset GOPATH
+
+    unset new_env_file
 }
 
 create_global_package_set() {
-	# Create the global package set folder
-	mkdir -p "$GVM_ROOT/pkgsets/$GO_NAME" >> "$GVM_ROOT/logs/go-$GO_NAME-install.log" 2>&1 ||
-		display_fatal "Couldn't create global package set folder. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
-	GVM_OVERLAY_ROOT="${GVM_ROOT}/pkgsets/${GO_NAME}/global/overlay"
-	mkdir -p "${GVM_OVERLAY_ROOT}/lib/pkgconfig" >> "${GVM_ROOT}/logs/go-${GO_NAME}-install.log" 2>&1 ||
-		display_fatal "Couldn't create global overlay library directory. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
-	mkdir -p "${GVM_OVERLAY_ROOT}/bin" >> "${GVM_ROOT}/logs/go-${GO_NAME}-install.log" 2>&1 ||
-		display_fatal "Couldn't create global overlay bin directory. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
+    # Create the global package set folder
+    mkdir -p "$GVM_ROOT/pkgsets/$GO_NAME" >> "$GVM_ROOT/logs/go-$GO_NAME-install.log" 2>&1 ||
+        display_fatal "Couldn't create global package set folder. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
+    GVM_OVERLAY_ROOT="${GVM_ROOT}/pkgsets/${GO_NAME}/global/overlay"
+    mkdir -p "${GVM_OVERLAY_ROOT}/lib/pkgconfig" >> "${GVM_ROOT}/logs/go-${GO_NAME}-install.log" 2>&1 ||
+        display_fatal "Couldn't create global overlay library directory. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
+    mkdir -p "${GVM_OVERLAY_ROOT}/bin" >> "${GVM_ROOT}/logs/go-${GO_NAME}-install.log" 2>&1 ||
+        display_fatal "Couldn't create global overlay bin directory. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
 }
 
 install_go() {
-	GO_INSTALL_ROOT=$GVM_ROOT/gos/$GO_NAME
-	trap 'rm -rf $GO_INSTALL_ROOT; display_fatal "Cancelled!"' INT
+    GO_INSTALL_ROOT=$GVM_ROOT/gos/$GO_NAME
+    trap 'rm -rf $GO_INSTALL_ROOT; display_fatal "Cancelled!"' INT
 
-	# Check for existing install
-	if [[ -d "$GO_INSTALL_ROOT" ]]; then
-		if [[ -f "$GO_INSTALL_ROOT/manifest" ]]; then
-			display_message "Already installed!"
-			exit 0
-		fi
-		display_warning "Removing corrupt install..."
-		gvm uninstall "$GO_NAME"
-	fi
+    # Check for existing install
+    if [[ -d "$GO_INSTALL_ROOT" ]]; then
+        if [[ -f "$GO_INSTALL_ROOT/manifest" ]]; then
+            display_message "Already installed!"
+            exit 0
+        fi
+        display_warning "Removing corrupt install..."
+        gvm uninstall "$GO_NAME"
+    fi
 
-	if [[ "$version" != "$GO_NAME" ]]; then
-		display_message "Installing $version as $GO_NAME..."
-	else
-		display_message "Installing $version..."
-	fi
+    if [[ "$version" != "$GO_NAME" ]]; then
+        display_message "Installing $version as $GO_NAME..."
+    else
+        display_message "Installing $version..."
+    fi
 
-	create_global_package_set
-	copy_source
-	patch_go "${GO_NAME}" "${GO_INSTALL_ROOT}/src"
-	compile_go
-	create_enviroment
+    create_global_package_set
+    copy_source
+    patch_go "${GO_NAME}" "${GO_INSTALL_ROOT}/src"
+    compile_go
+    create_enviroment
 
-	display_message "$GO_NAME successfully installed!"
+    display_message "$GO_NAME successfully installed!"
 }
 
 download_binary() {
-	mkdir -p $GO_INSTALL_ROOT >> "${GVM_ROOT}/logs/go-${GO_NAME}-download-binary" 2>&1
+    mkdir -p $GO_INSTALL_ROOT >> "${GVM_ROOT}/logs/go-${GO_NAME}-download-binary" 2>&1
 
-	local _run_os
-	local _os _os_version _os_arch
-	_run_os="$(detect_run_os)"
-	_os="${_run_os%%,*}"
-	_os_version="${_run_os#*,}"; _os_version="${_os_version%,*}"
-	_os_arch="${_run_os##*,}"
+    local _run_os
+    local _os _os_version _os_arch
+    _run_os="$(__gvm_detect_runos)"
+    _os="${_run_os%%,*}"
+    _os_version="${_run_os#*,}"; _os_version="${_os_version%,*}"
+    _os_arch="${_run_os##*,}"
 
-	if [[ "${GVM_DEBUG}" -eq 1 ]]
-	then
-		echo "scripts/install - download_binary() vars:"
-		echo "  _run_os       -> ${_run_os}"
-		echo "  _os           -> ${_os}"
-		echo "  _os_version   -> ${_os_version}"
-		echo "  _os_arch      -> ${_os_arch}"
-	fi
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        echo "scripts/install - download_binary() vars:"
+        echo "  _version       -> ${GO_NAME}"
+        echo "  _run_os        -> ${_run_os}"
+        echo "  _os            -> ${_os}"
+        echo "  _os_version    -> ${_os_version}"
+        echo "  _os_arch       -> ${_os_arch}"
+    fi
 
-	if [[ "${_os}" == "unknown" ]]; then
-		display_error "Binary Go unavailable for this platform"
-		rm -rf $GO_INSTALL_ROOT
-		rm -f $GO_BINARY_PATH
-		exit 1
-	fi
+    if [[ "${_os}" == "unknown" ]]; then
+        display_error "Binary for ${GO_NAME} unavailable for this platform"
+        rm -rf $GO_INSTALL_ROOT
+        rm -f $GO_BINARY_PATH
+        exit 1
+    fi
 
-	# go binaries previous to 1.4.3 have a different naming convention
-	SEMVER=$(extract_version $VERSION)
-	compare_version $SEMVER "1.4.3"
-	if [ $? -eq 2 ]; then
-		local _binary_os_version
-		_binary_os_version="${_os_version:+-}${_os_version}"
-		GO_BINARY_FILE=${VERSION}.${_os}-${_os_arch}${_binary_os_version}.tar.gz
-		unset _binary_os_version
-	else
-		GO_BINARY_FILE=${VERSION}.${_os}-${_os_arch}.tar.gz
-	fi
+    # go binaries previous to 1.4.3 have a different naming convention
+    SEMVER=$(extract_version $VERSION)
+    compare_version $SEMVER "1.4.3"
+    if [ $? -eq 2 ]; then
+        local _binary_os_version
+        _binary_os_version="${_os_version:+-}${_os_version}"
+        GO_BINARY_FILE=${VERSION}.${_os}-${_os_arch}${_binary_os_version}.tar.gz
+        unset _binary_os_version
+    else
+        GO_BINARY_FILE=${VERSION}.${_os}-${_os_arch}.tar.gz
+    fi
 
-	GO_BINARY_URL="http://golang.org/dl/${GO_BINARY_FILE}"
-	GO_BINARY_PATH=${GVM_ROOT}/archive/${GO_BINARY_FILE}
+    GO_BINARY_URL="http://golang.org/dl/${GO_BINARY_FILE}"
+    GO_BINARY_PATH=${GVM_ROOT}/archive/${GO_BINARY_FILE}
 
-	if [ ! -f $GO_BINARY_PATH ]; then
-		curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        echo "scripts/install - download_binary() vars:"
+        echo "  _binary_file  -> ${GO_BINARY_FILE}"
+        echo "  _binary_url   -> ${GO_BINARY_URL}"
+        echo "  _binary_path  -> ${GO_BINARY_PATH}"
+    fi
 
-		if [[ $? -ne 0 ]]; then
-			display_error "Failed to download binary go from http://golang.org. Trying https://go.googlecode.com"
-			GO_BINARY_URL="https://go.googlecode.com/files/${GO_BINARY_FILE}"
+    if [ ! -f $GO_BINARY_PATH ]; then
+        curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
 
-			curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
+        if [[ $? -ne 0 ]]; then
+            display_error "Failed to download binary go from http://golang.org. Trying https://go.googlecode.com"
+            GO_BINARY_URL="https://go.googlecode.com/files/${GO_BINARY_FILE}"
 
-			if [[ $? -ne 0 ]]; then
-				display_error "Failed to download binary go"
-				rm -rf $GO_INSTALL_ROOT
-				rm -f $GO_BINARY_PATH
-				exit 1
-			fi
-		fi
-	fi
+            curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
 
-	tar zxf ${GO_BINARY_PATH} -C $GO_INSTALL_ROOT --strip-components 1 >> "${GVM_ROOT}/logs/go-${GO_NAME}-download-binary" 2>&1
+            if [[ $? -ne 0 ]]; then
+                display_error "Failed to download binary go"
+                rm -rf $GO_INSTALL_ROOT
+                rm -f $GO_BINARY_PATH
+                exit 1
+            fi
+        fi
+    fi
 
-	if [[ $? -ne 0 ]]; then
-		display_error "Failed to extract binary go"
-		rm -rf $GO_INSTALL_ROOT
-		rm -f $GO_BINARY_PATH
-		exit 1
-	fi
+    tar zxf ${GO_BINARY_PATH} -C $GO_INSTALL_ROOT --strip-components 1 >> "${GVM_ROOT}/logs/go-${GO_NAME}-download-binary" 2>&1
 
-	unset _os _os_version _os_arch
-	unset _run_os
+    if [[ $? -ne 0 ]]; then
+        display_error "Failed to extract binary go"
+        rm -rf $GO_INSTALL_ROOT
+        rm -f $GO_BINARY_PATH
+        exit 1
+    fi
+
+    unset _os _os_version _os_arch
+    unset _run_os
 }
 
 install_go_binary() {
-	GO_INSTALL_ROOT=$GVM_ROOT/gos/$GO_NAME
-	trap 'rm -rf $GO_INSTALL_ROOT; display_fatal "Cancelled!"' INT
+    GO_INSTALL_ROOT=$GVM_ROOT/gos/$GO_NAME
+    trap 'rm -rf $GO_INSTALL_ROOT; display_fatal "Cancelled!"' INT
 
-	# Check for existing install
-	if [[ -d "$GO_INSTALL_ROOT" ]]; then
-		if [[ -f "$GO_INSTALL_ROOT/manifest" ]]; then
-			display_message "Already installed!"
-			exit 0
-		fi
-		display_warning "Removing corrupt install..."
-		gvm uninstall "$GO_NAME"
-	fi
+    # Check for existing install
+    if [[ -d "$GO_INSTALL_ROOT" ]]; then
+        if [[ -f "$GO_INSTALL_ROOT/manifest" ]]; then
+            display_message "Already installed!"
+            exit 0
+        fi
+        display_warning "Removing corrupt install..."
+        gvm uninstall "$GO_NAME"
+    fi
 
-	display_message "Installing $GO_NAME from binary source"
+    display_message "Installing $GO_NAME from binary source"
 
-	create_global_package_set
-	download_binary
-	create_enviroment
+    create_global_package_set
+    download_binary
+    create_enviroment
 }
 
 install_gpkg() {
-	display_message " * Installing gpkg..."
-	$GVM_GOINSTALL github.com/moovweb/gpkg > "$GVM_ROOT/logs/$GO_NAME-gpkg.log" 2>&1 || return 1
+    display_message " * Installing gpkg..."
+    $GVM_GOINSTALL github.com/moovweb/gpkg > "$GVM_ROOT/logs/$GO_NAME-gpkg.log" 2>&1 || return 1
 }
 
 install_gb() {
-	display_message " * Installing gb..."
-	$GVM_GOINSTALL github.com/jbussdieker/go-gb/gb > "$GVM_ROOT/logs/$GO_NAME-gb.log" 2>&1 || return 1
+    display_message " * Installing gb..."
+    $GVM_GOINSTALL github.com/jbussdieker/go-gb/gb > "$GVM_ROOT/logs/$GO_NAME-gb.log" 2>&1 || return 1
 }
 
 install_goprotobuf() {
-	command -v protoc &> /dev/null || display_warning "Could not find protocol buffer compiler
+    command -v protoc &> /dev/null || display_warning "Could not find protocol buffer compiler
 
   linux: apt-get install protobuf-compiler
   mac:   brew install protobuf
 "
-	display_message " * Installing goprotobuf..."
-	if [[ "$GVM_GOINSTALL" == "goinstall" ]]; then
-		$GVM_GOINSTALL goprotobuf.googlecode.com/hg/proto > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
-		if [[ $? -ne 0 ]]; then
-			display_warning "Failed to install goprotobuf. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
-			return 1
-		fi
-		builtin cd "$GVM_ROOT/gos/$GO_NAME/src/pkg/goprotobuf.googlecode.com/hg/compiler"
-		make install >> "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
-		if [[ $? -ne 0 ]]; then
-			display_warning "Failed to install goprotobuf compiler. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
-			return 1
-		fi
-	else
-		$GVM_GOINSTALL code.google.com/p/goprotobuf/proto > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
-		if [[ $? -ne 0 ]]; then
-			display_warning "Failed to install goprotobuf. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
-			return 1
-		fi
-		$GVM_GOINSTALL code.google.com/p/goprotobuf/protoc-gen-go > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
-		if [[ $? -ne 0 ]]; then
-			display_warning "Failed to install goprotobuf compiler. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
-			return 1
-		fi
-	fi
+    display_message " * Installing goprotobuf..."
+    if [[ "$GVM_GOINSTALL" == "goinstall" ]]; then
+        $GVM_GOINSTALL goprotobuf.googlecode.com/hg/proto > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
+        if [[ $? -ne 0 ]]; then
+            display_warning "Failed to install goprotobuf. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
+            return 1
+        fi
+        builtin cd "$GVM_ROOT/gos/$GO_NAME/src/pkg/goprotobuf.googlecode.com/hg/compiler"
+        make install >> "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
+        if [[ $? -ne 0 ]]; then
+            display_warning "Failed to install goprotobuf compiler. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
+            return 1
+        fi
+    else
+        $GVM_GOINSTALL code.google.com/p/goprotobuf/proto > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
+        if [[ $? -ne 0 ]]; then
+            display_warning "Failed to install goprotobuf. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
+            return 1
+        fi
+        $GVM_GOINSTALL code.google.com/p/goprotobuf/protoc-gen-go > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
+        if [[ $? -ne 0 ]]; then
+            display_warning "Failed to install goprotobuf compiler. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
+            return 1
+        fi
+    fi
 }
 
 install_from_source() {
-	download_source
-	check_tag
-	if [[ "$?" == "1" ]]; then
-		update_source
-		check_tag || display_fatal "Unrecognized Go version"
-	fi
-	if [[ "$GO_NAME" == "" ]]; then
-		GO_NAME=$version
-	fi
-	install_go
+    download_source
+    check_tag
+    if [[ "$?" == "1" ]]; then
+        update_source
+        check_tag || display_fatal "Unrecognized Go version"
+    fi
+    if [[ "$GO_NAME" == "" ]]; then
+        GO_NAME=$version
+    fi
+    install_go
 
-	GVM_GOINSTALL="goinstall"
-	command -v goinstall &> /dev/null ||
-		GVM_GOINSTALL="go get"
+    GVM_GOINSTALL="goinstall"
+    command -v goinstall &> /dev/null ||
+        GVM_GOINSTALL="go get"
 
-	x="$(builtin cd "$GO_CACHE_PATH" && git tag)"; echo "${x#*b0819469a6df}" | $GREP_PATH "$version " &> /dev/null
-	if [[ "$?" == "1" ]]; then
-		if [[ "$INSTALL_BUILD_TOOLS" == "true" ]]; then
-			install_gb || display_warning "Failed to install gb"
-			install_gpkg || display_warning "Failed to install gpkg"
-		fi
-		if [[ "$INSTALL_PB" == "true" ]]; then
-			install_goprotobuf
-		fi
-	fi
+    x="$(builtin cd "$GO_CACHE_PATH" && git tag)"; echo "${x#*b0819469a6df}" | $GREP_PATH "$version " &> /dev/null
+    if [[ "$?" == "1" ]]; then
+        if [[ "$INSTALL_BUILD_TOOLS" == "true" ]]; then
+            install_gb || display_warning "Failed to install gb"
+            install_gpkg || display_warning "Failed to install gpkg"
+        fi
+        if [[ "$INSTALL_PB" == "true" ]]; then
+            install_goprotobuf
+        fi
+    fi
 
-	builtin cd "$GO_INSTALL_ROOT" && find . > manifest
+    builtin cd "$GO_INSTALL_ROOT" && find . > manifest
 }
 
 main() {
-	trap 'display_fatal "Canceled!"' INT
-	read_command_line "$@"
-	[[ "$VERSION" == "" ]] && display_fatal "No version specified"
+    trap 'display_fatal "Canceled!"' INT
+    read_command_line "$@"
+    [[ "$VERSION" == "" ]] && display_fatal "No version specified"
 
-	if [[ "$GO_NAME" == "" ]]; then
-		GO_NAME=$VERSION
-	fi
+    if [[ "$GO_NAME" == "" ]]; then
+        GO_NAME=$VERSION
+    fi
 
-	if [[ "x$INSTALL_SOURCE" == "xbinary" ]]; then
-		install_go_binary
-	elif [[ "x$INSTALL_SOURCE" == "xprefer-binary" ]]; then
-		install_go_binary || {
-			display_message "Falling back to source installation of $GO_NAME"
-			install_from_source
-		}
-	else
-		install_from_source
-	fi
+    if [[ "x$INSTALL_SOURCE" == "xbinary" ]]; then
+        install_go_binary
+    elif [[ "x$INSTALL_SOURCE" == "xprefer-binary" ]]; then
+        install_go_binary || {
+            display_message "Falling back to source installation of $GO_NAME"
+            install_from_source
+        }
+    else
+        install_from_source
+    fi
 
-	builtin cd "$GO_INSTALL_ROOT" && find . > manifest
+    builtin cd "$GO_INSTALL_ROOT" && find . > manifest
 }
 
 main "$@"

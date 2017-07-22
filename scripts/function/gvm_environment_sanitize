@@ -1,10 +1,64 @@
 #!/usr/bin/env bash
 function gvm_environment_sanitize() {
-	local ACTIVE_GO=$(which go)
-	if [[ "${ACTIVE_GO/${GOROOT}}" != "/bin/go" ]]; then
-		OLD_GOROOT=$GOROOT && unset GOROOT
-		GOROOT=$(go env GOROOT)
-		sed -i 's|'${OLD_GOROOT}'|'${GOROOT}'|g' "$GVM_ROOT/environments/$1"
-		. "$GVM_ROOT/environments/$1" &> /dev/null
-	fi
+    local environment="${1}"; shift
+    local path="${1:-$PATH}"
+    local active_go="$(PATH="${path}" which go)"
+    local active_go_root="${GOROOT}"
+    local system_list; system_list=()
+    local defaultIFS="${IFS}"
+    local IFS="${defaultIFS}"
+
+    # We only sanitize 'system' and 'system@'' environments
+    [[ "${environment}" =~ ^system(@.*)?$ ]] || return 0
+
+    # If env is 'system' or 'system@global', GOROOT might point to a non-existing path if user has upgraded the binary
+    # since the 'system' env files were generated. We need to try and update GOROOT or warn user.
+
+    if [[ -x "${active_go}" && ! -d "${active_go_root}" ]]
+    then
+        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "gvm_environment_sanitize() - Original GOROOT: ${GOROOT}"
+
+        local old_go_root="${active_go_root}" && unset GOROOT
+        local new_go_root="$(PATH="${path}" go env GOROOT 2>/dev/null)"
+
+        # set GOROOT based on currently active go
+        #
+        # This should not be needed for a correctly installed system go (found in standard path locations). If the user
+        # has somehow placed a go binary (installed with GVM) in the PATH, then GOROOT will be empty now (the binaries
+        # have set a GOROOT of /usr/local/go). Essentially, this is just here for unit testing.
+        #
+        if [[ -z "${new_go_root}" ]]
+        then
+            new_go_root="${active_go%/bin/go}"
+        fi
+
+        # update system and system@global environments
+        IFS=$'\n' system_list=( $($LS_PATH -1 "${GVM_ROOT}/environments/system"*) ) IFS="${defaultIFS}"
+
+        local _env_file
+        for _env_file in "${system_list[@]}"
+        do
+            sed -i.bak 's|'${old_go_root}'|'${new_go_root}'|g' "${_env_file}" \
+            && rm "${_env_file}.bak"
+        done
+        unset _env_file
+
+        # source updated environment file
+        source "${GVM_ROOT}/environments/${environment}" &> /dev/null
+
+        unset new_go_root
+        unset old_go_root
+
+        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "gvm_environment_sanitize() - Sanitized GOROOT: ${GOROOT}"
+    elif [[ ! -x "${active_go}" ]]
+    then
+        display_error "Failed to find a path to Go for requested environment: '${environment}'." || return 1
+    fi
+
+    unset defaultIFS IFS
+    unset system_list
+    unset active_go_root
+    unset active_go
+    unset path
+    unset environment
 }
