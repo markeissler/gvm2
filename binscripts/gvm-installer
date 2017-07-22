@@ -49,7 +49,9 @@ check_existing_go() {
 	mkdir -p "${gvm_dest}/${gvm_name}/pkgsets/system/global" &> /dev/null || display_error "Failed to create new package set"
 	mkdir -p "${gvm_dest}/${gvm_name}/gos/system" &> /dev/null || display_error "Failed to create new Go folder"
 	cat << EOF > $gvm_dest/$gvm_name/environments/system
-# Automatically generated file. DO NOT EDIT!
+#
+# GVM2 - Automatically generated file. DO NOT EDIT!
+#
 export GVM_ROOT; GVM_ROOT="${gvm_dest}/${gvm_name}"
 export gvm_go_name; gvm_go_name="system"
 export gvm_pkgset_name; gvm_pkgset_name="global"
