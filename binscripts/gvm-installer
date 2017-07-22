@@ -70,7 +70,7 @@ export GOPATH; GOPATH="${gvm_dest}/${gvm_name}/pkgsets/system/global:\${GOPATH}"
 export PATH; PATH="${gvm_dest}/${gvm_name}/pkgsets/system/global/bin:\${PATH}"
 EOF
 
-    active_go_root
+    unset active_go_root
     unset active_go
     unset path
     unset gvm_name
