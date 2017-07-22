@@ -18,15 +18,15 @@ sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sani
 mkdir "${SANDBOX}/gvm2/gos/system"
 
 expectedSanitizedGOROOT="${SANDBOX}/gvm2/gos/go1.8.1"
-expectedSanitizedConfig="$(grep "GOROOT" "${SANDBOX}/gvm2/environments/go1.8.1")"
+expectedSanitizedConfig="$(grep "GOROOT=" "${SANDBOX}/gvm2/environments/go1.8.1")"
 ## replace $GVM_ROOT with $SANDBOX/gvm2 path (system envs have static paths)
-expectedSanitizedConfig="${expectedSanitizedConfig/\$GVM_ROOT/$SANDBOX\/gvm2}"
+expectedSanitizedConfig="${expectedSanitizedConfig/\$\{GVM_ROOT\}/${SANDBOX}\/gvm2}"
 
 ## Execute command
 source ${SANDBOX}/gvm2/environments/system
 gvm_environment_sanitize "system" "${SANDBOX}/gvm2/gos/go1.8.1/bin:${PATH}"
 sanitizedGOROOT="${GOROOT}"
-sanitizedConfig="$(grep "GOROOT" "${SANDBOX}/gvm2/environments/system")"
+sanitizedConfig="$(grep "GOROOT=" "${SANDBOX}/gvm2/environments/system")"
 
 ## Evaluate result
 [[ "${sanitizedGOROOT}" == ${expectedSanitizedGOROOT} ]] # status=0
@@ -44,15 +44,15 @@ sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sani
 sed -e "s%\${SANDBOX}%${SANDBOX}%g" "${SANDBOX}/gvm2/tests/func_environment_sanitize_test_input_system@global.sh" > "${SANDBOX}/gvm2/environments/system@global"
 
 expectedSanitizedGOROOT="${SANDBOX}/gvm2/gos/go1.8.1"
-expectedSanitizedConfig="$(grep "GOROOT" "${SANDBOX}/gvm2/environments/go1.8.1")"
+expectedSanitizedConfig="$(grep "GOROOT=" "${SANDBOX}/gvm2/environments/go1.8.1")"
 ## replace $GVM_ROOT with $SANDBOX/gvm2 path (system envs have static paths)
-expectedSanitizedConfig="${expectedSanitizedConfig/\$GVM_ROOT/$SANDBOX\/gvm2}"
+expectedSanitizedConfig="${expectedSanitizedConfig/\$\{GVM_ROOT\}/${SANDBOX}\/gvm2}"
 
 ## Execute command
 source ${SANDBOX}/gvm2/environments/system@global
 gvm_environment_sanitize "system@global" "${SANDBOX}/gvm2/gos/go1.8.1/bin:$PATH}"
 sanitizedGOROOT="${GOROOT}"
-sanitizedConfig="$(grep "GOROOT" "${SANDBOX}/gvm2/environments/system@global")"
+sanitizedConfig="$(grep "GOROOT=" "${SANDBOX}/gvm2/environments/system@global")"
 
 ## Evaluate result
 [[ "${sanitizedGOROOT}" == ${expectedSanitizedGOROOT} ]] # status=0

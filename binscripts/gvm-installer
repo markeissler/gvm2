@@ -26,38 +26,53 @@ update_profile() {
 }
 
 check_existing_go() {
+    local gvm_dest="${1}"; shift
+    local gvm_name="${1}"; shift
+    local path="${1:-$PATH}"
+    local active_go="$(PATH="${path}" which go)"
+    local active_go_root="${GOROOT}"
 
-	if [ "$GOROOT" = "" ]; then
-		if which go > /dev/null 2>&1; then
-			GOROOT=$(go env | grep GOROOT | cut -d"=" -f2)
+    [[ -z "${gvm_dest}" ]] && return 1
+    [[ -z "${gvm_name}" ]] && return 1
+
+	if [[ "x${active_go_root}" == "x" ]]; then
+		if [[ "x${active_go}" != "x" ]]; then
+            active_go_root="$(PATH="${path}" go env GOROOT 2>/dev/null)"
 		else
 			echo "No existing Go versions detected"
-			return
+			return 1
 		fi
 	fi
-	echo "Created profile for existing install of Go at $GOROOT"
-	mkdir -p "$GVM_DEST/$GVM_NAME/environments" &> /dev/null || display_error "Failed to create environment directory"
-	mkdir -p "$GVM_DEST/$GVM_NAME/pkgsets/system/global" &> /dev/null || display_error "Failed to create new package set"
-	mkdir -p "$GVM_DEST/$GVM_NAME/gos/system" &> /dev/null || display_error "Failed to create new Go folder"
-	cat << EOF > $GVM_DEST/$GVM_NAME/environments/system
+
+	echo "Created profile for existing install of Go at ${active_go_root}"
+	mkdir -p "${gvm_dest}/${gvm_name}/environments" &> /dev/null || display_error "Failed to create environment directory"
+	mkdir -p "${gvm_dest}/${gvm_name}/pkgsets/system/global" &> /dev/null || display_error "Failed to create new package set"
+	mkdir -p "${gvm_dest}/${gvm_name}/gos/system" &> /dev/null || display_error "Failed to create new Go folder"
+	cat << EOF > $gvm_dest/$gvm_name/environments/system
 # Automatically generated file. DO NOT EDIT!
-export GVM_ROOT; GVM_ROOT="$GVM_DEST/$GVM_NAME"
+export GVM_ROOT; GVM_ROOT="${gvm_dest}/${gvm_name}"
 export gvm_go_name; gvm_go_name="system"
 export gvm_pkgset_name; gvm_pkgset_name="global"
-export GOROOT; GOROOT="$GOROOT"
-export GOPATH; GOPATH="$GVM_DEST/$GVM_NAME/pkgsets/system/global"
-export PATH; PATH="$GVM_DEST/$GVM_NAME/pkgsets/system/global/bin:$GOROOT/bin:$GVM_ROOT/bin:\$PATH"
+export GOROOT; GOROOT="${active_go_root}"
+export GOPATH; GOPATH="${gvm_dest}/${gvm_name}/pkgsets/system/global"
+export PATH; PATH="${gvm_dest}/${gvm_name}/pkgsets/system/global/bin:\${GOROOT}/bin:\${GVM_ROOT}/bin:\${PATH}"
 EOF
 
 	# create system@global pkgset
-	cp $GVM_DEST/$GVM_NAME/environments/system $GVM_DEST/$GVM_NAME/environments/system@global
+	cp $gvm_dest/$gvm_name/environments/system $gvm_dest/$gvm_name/environments/system@global
 	# @TODO: This is here for consistency with 'gvm pkgset create' which adds
 	# some duplicated entries when the pkgset is 'global'. Need to fix it!
-	cat << EOF >> $GVM_DEST/$GVM_NAME/environments/system@global
+	cat << EOF >> ${gvm_dest}/${gvm_name}/environments/system@global
 export gvm_pkgset_name="global"
-export GOPATH; GOPATH="$GVM_DEST/$GVM_NAME/pkgsets/system/global:\$GOPATH"
-export PATH; PATH="$GVM_DEST/$GVM_NAME/pkgsets/system/global/bin:\$PATH"
+export GOPATH; GOPATH="${gvm_dest}/${gvm_name}/pkgsets/system/global:\${GOPATH}"
+export PATH; PATH="${gvm_dest}/${gvm_name}/pkgsets/system/global/bin:\${PATH}"
 EOF
+
+    active_go_root
+    unset active_go
+    unset path
+    unset gvm_name
+    unset gvm_dest
 }
 
 BRANCH=${1:-master}
@@ -147,7 +162,7 @@ fi
 
 echo "export GVM_ROOT=$GVM_DEST/$GVM_NAME" > "$GVM_DEST/$GVM_NAME/scripts/gvm"
 echo ". \$GVM_ROOT/scripts/gvm-default" >> "$GVM_DEST/$GVM_NAME/scripts/gvm"
-check_existing_go
+check_existing_go "${GVM_DEST}" "${GVM_NAME}" "${PATH}"
 [[ -s "$GVM_DEST/$GVM_NAME/scripts/gvm" ]] && source "$GVM_DEST/$GVM_NAME/scripts/gvm"
 echo "Installed GVM v${GVM_VERSION}"
 echo
