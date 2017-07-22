@@ -162,11 +162,36 @@ To list all installed Go versions:
 prompt> gvm list
 ```
 
-To list all Go versions available for download:
+To list all Go source versions available for download:
 
 ```sh
 prompt> gvm listall
 ```
+
+Additional options can be specified:
+
+```txt
+usage: gvm listall [options]
+
+OPTIONS:
+    -a, --all                   List all versions available
+    -B, --binary                List available pre-built versions available
+    -s, --source                List available source versions available
+        --porcelain             Machine-readable output
+    -h, --help                  Show this message
+```
+
+The `gvm listall` command will, by default, list all __source__ versions that are available to build on the target
+platform. The list will be considerably shorted for macOS due to changes in the build environment as of macOS 10.12
+(Sierra). In general, you can install older versions of Go on macOS by installing pre-built packages (binaries).
+
+To list all pre-built packages available for the target platform specify the `--binary` option to the `gvm listall`
+command.
+
+### Suppression of rc, beta, release, weekly tags
+
+The `gvm listall` command suppresses output of __rc__ and __beta__ tags for pre-built packages simply because they are
+not available. The legacy __release__ and __weekly__ tags are suppressed for brevity.
 
 ## Using a Go Version
 
@@ -319,7 +344,7 @@ GVM pkgset:
     global pkgset for the version of Go selected
 ```
 
-## MacOS Requirements
+## macOS Requirements
 
 ### Install Xcode command line tools
 
@@ -338,6 +363,8 @@ prompt> brew install mercurial
 ```
 
 ## Linux Requirements
+
+<a name="install-ubuntu"></a>
 
 ### Debian/Ubuntu
 
@@ -358,6 +385,13 @@ prompt> sudo yum install curl git make bison gcc glibc-devel
 ```sh
 prompt> sudo pkg_add -r bash git mercurial
 ```
+
+> WARNING: __GVM2__ is not currently tested or developed for FreeBSD. Complete support for this platform will likely
+be restored in the future but is not currently scheduled.
+
+## Windows 10 WSL (aka Bash on Ubuntu on Windows)
+
+__GVM2__ works on WSL. Instructions are the same as for [Debian/Ubuntu](#install-ubuntu).
 
 ## Typical Usage
 
