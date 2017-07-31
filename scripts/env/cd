@@ -8,7 +8,7 @@
 # pkgset when changing into a directory.
 #
 . "$GVM_ROOT/scripts/functions" || return 1
-. "$GVM_ROOT/scripts/function/_bash_pseudo_hash" || return 1
+. "$GVM_ROOT/scripts/function/_bash_pseudo_hash.sh" || return 1
 . "$GVM_ROOT/scripts/function/_shell_compat" || return 1
 
 # user could be reloading this file, restore preserved functions if we've been

@@ -11,7 +11,7 @@
 dep_load() {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
     local deps; deps=(
-        "_bash_pseudo_hash"
+        "_bash_pseudo_hash.sh"
         "read_environment_file"
         "tools"
     )
