@@ -12,7 +12,7 @@ dep_load() {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
     local deps; deps=(
         "_bash_pseudo_hash.sh"
-        "_shell_compat"
+        "_shell_compat.sh"
         "tools"
     )
     for file in "${deps[@]}"

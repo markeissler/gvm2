@@ -4,7 +4,7 @@
 # vi: set ft=bash
 #
 . "$GVM_ROOT/scripts/function/_bash_pseudo_hash.sh" || return 1
-. "$GVM_ROOT/scripts/function/_shell_compat" || return 1
+. "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
 
 # gvm_pkgset_use()
 # /*!
