@@ -1,4 +1,4 @@
-# find_path_upwards
+# scripts/function/find_path_upwards.sh
 #
 # shellcheck shell=bash
 # vi: set ft=bash
@@ -8,7 +8,7 @@
 # /*!
 # @abstract Search upwards through the directory tree for a target file or
 #   directory and return the path to the first instance found
-# @discussione
+# @discussion
 # Searches upwards through the directory tree starting at start_dir for a target
 #   file or directory basename.
 # @param target Basename of file or directory to find
@@ -19,12 +19,14 @@
 #   directory.
 # @return Returns a string containing path of found file or directory (status 0)
 #   or an empty string (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_find_path_upwards()
 {
     local target="${1}"
     local start_dir="${2:-$PWD}"
     local final_dir="${3:-$HOME}"
+    unset RETVAL
 
     if [[ \
         "x${target}" == "x" || \
@@ -32,18 +34,17 @@ __gvm_find_path_upwards()
         "x${final_dir}" == "x"
         ]]
     then
-        echo "" && return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    local found_file="$(__gvmp_find_path_for_target "${target}" "${start_dir}" "${final_dir}")"
-    echo "${found_file}"
+    __gvmp_find_path_for_target "${target}" "${start_dir}" "${final_dir}" > /dev/null
 
-    if [[ -z "${found_file}" ]]
+    if [[ -z "${RETVAL}" ]]
     then
-        return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    return 0
+    echo "${RETVAL}" && return 0
 }
 
 __gvmp_find_path_for_target()
@@ -51,11 +52,9 @@ __gvmp_find_path_for_target()
     local target="${1}"
     local start_dir="${2}"
     local final_dir="${3}"
+    unset RETVAL
 
-    if [[ ${#target} -eq 0 ]]
-    then
-        echo ""; return 1
-    fi
+    [[ ${#target} -eq 0 ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     # resolve tilde for HOME
     start_dir="${start_dir/#\~/$HOME}"
@@ -63,7 +62,7 @@ __gvmp_find_path_for_target()
     # resolve dot for PWD
     if [[ "${start_dir}" == "." ]]
     then
-        start_dir="$PWD"
+        start_dir="$(builtin pwd)"
     fi
 
     local current_dir="${start_dir}"
@@ -74,13 +73,13 @@ __gvmp_find_path_for_target()
     do
         if [[ -f "${current_dir}/${target}" ||  -d "${current_dir}/${target}" ]]
         then
-            echo "${current_dir}/${target}"; return 0
-            break
+            RETVAL="${current_dir}/${target}"
+            echo "${RETVAL}" && return 0
         fi
 
         builtin cd ..
-        current_dir="$(pwd)"
+        current_dir="$(builtin pwd)"
     done
 
-    echo ""; return 1
+    RETVAL="" && echo "${RETVAL}" && return 1
 }
