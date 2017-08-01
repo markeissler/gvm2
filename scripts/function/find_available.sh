@@ -55,7 +55,6 @@ __gvm_find_available()
 
     if [[ ${#versions_hash[@]} -eq 0 ]]
     then
-        unset versions_hash
         RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
