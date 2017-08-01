@@ -278,7 +278,7 @@ download_binary() {
 
     # go binaries previous to 1.4.3 have a different naming convention
     SEMVER=$(extract_version $VERSION)
-    compare_version $SEMVER "1.4.3"
+    __gvm_compare_versions $SEMVER "1.4.3"
     if [ $? -eq 2 ]; then
         local _binary_os_version
         _binary_os_version="${_os_version:+-}${_os_version}"
