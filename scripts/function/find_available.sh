@@ -29,14 +29,16 @@ dep_load() {
 # @param source Url of download source.
 # @return Returns a pseudo hash where keys are Go versions and values are
 #   download urls (status 0) or an empty string (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_find_available()
 {
     local url="${1}"; shift
     local versions_hash; versions_hash=()
     local regex='^(go([0-9]+(\.[0-9]+[a-z0-9]*)*))$'
+    unset RETVAL
 
-    [[ "x${url}" != "x" ]] || (echo "" && return 1)
+    [[ "x${url}" == "x" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     while IFS=$'\n' read -r _line; do
         if __gvm_rematch "${_line}" "${regex}"
@@ -54,11 +56,10 @@ __gvm_find_available()
     if [[ ${#versions_hash[@]} -eq 0 ]]
     then
         unset versions_hash
-        echo "" && return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    printf "%s" "${versions_hash[*]}"
+    RETVAL="${versions_hash[*]}"
 
-    unset versions_hash
-    return 0
+    echo "${RETVAL}" && return 0
 }
