@@ -1,13 +1,13 @@
-# scripts/function/compare_versions.sh
+# scripts/function/semver_tools.sh
 #
 # shellcheck shell=bash
 # vi: set ft=bash
 #
-# Compare SemVer versions.
+# Functions for manipulating SemVer format strings.
 #
 
 # source once and only once!
-[[ ${GVM_COMPARE_VERSION:-} -eq 1 ]] && return || readonly GVM_COMPARE_VERSION=1
+[[ ${GVM_SEMVER_TOOLS:-} -eq 1 ]] && return || readonly GVM_SEMVER_TOOLS=1
 
 # __gvm_compare_versions()
 # /*!
