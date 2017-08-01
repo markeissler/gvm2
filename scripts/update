@@ -2,7 +2,6 @@
 . "$GVM_ROOT/scripts/functions"
 
 builtin cd "$GVM_ROOT/archive/go" &> /dev/null ||
-	display_fatal "Failed to find local Go source"
+	__gvm_display_fatal "Failed to find local Go source"
 
-git pull || display_fatal "Failed to update"
-
+git pull || __gvm_display_fatal "Failed to update"

@@ -28,7 +28,7 @@ for i in "$@"; do
 done
 
 if [ -z "$gvm_go_name" ]; then
-  display_fatal "current go version not managed by gvm"
+  __gvm_display_fatal "current go version not managed by gvm"
 fi
 
 if [ ! -z "$gvm_env" ]; then

@@ -8,9 +8,7 @@ dep_load() {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
     local deps; deps=(
         "function/_bash_pseudo_hash.sh"
-        "function/display_fatal"
-        "function/display_message"
-        "function/display_warning"
+        "function/display_notices.sh"
         "function/detect_runos.sh"
         "function/find_available.sh"
     )
@@ -156,7 +154,7 @@ main() {
     local opt_filter="source"
     local opt_porcelein=false
 
-    trap 'display_fatal "Canceled!"' INT
+    trap '__gvm_display_fatal "Canceled!"' INT
     read_command_line "$@"
 
     if [[ "${opt_porcelein}" == false ]]
@@ -171,7 +169,7 @@ main() {
 
     if [[ $? -ne 0 ]]
     then
-        display_fatal "Failed to retrieve list of available versions"
+        __gvm_display_fatal "Failed to retrieve list of available versions"
         return 1
     fi
 

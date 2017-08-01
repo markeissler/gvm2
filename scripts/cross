@@ -20,7 +20,7 @@ display_list() {
 	exit 1
 }
 
-command -v go &> /dev/null || display_fatal "Only available in versions after Go 1"
+command -v go &> /dev/null || __gvm_display_fatal "Only available in versions after Go 1"
 
 [ -z "$1" ] && display_list
 
@@ -30,7 +30,7 @@ if [ ! -f "$GOROOT/pkg/tool/cross" ]; then
 	for arch in 8 6 5; do
 		for cmd in a c g l; do
 			go tool dist install -v cmd/$arch$cmd ||
-				display_fatal "Couldn't compile tool: $arch$cmd"
+				__gvm_display_fatal "Couldn't compile tool: $arch$cmd"
 		done
 	done
 	touch "$GOROOT/pkg/tool/cross"
@@ -38,7 +38,7 @@ fi
 
 export GOOS=$1
 shift
-[ -z "$1" ] && display_usage && display_fatal "arch is not specified"
+[ -z "$1" ] && display_usage && __gvm_display_fatal "arch is not specified"
 export GOARCH=$1
 
 if [ ! -d "$GOROOT/pkg/${GOOS}_${GOARCH}" ]; then
@@ -55,9 +55,9 @@ if [ ! -d "$GOROOT/pkg/${GOOS}_${GOARCH}" ]; then
 		runtime='runtime'
 	fi
 	go tool dist install -v "$runtime" ||
-		display_fatal "Couldn't compile runtime library for $GOOS $GOARCH"
+		__gvm_display_fatal "Couldn't compile runtime library for $GOOS $GOARCH"
 	go install -v -a std ||
-		display_fatal "Install runtime library for $GOOS $GOARCH"
+		__gvm_display_fatal "Install runtime library for $GOOS $GOARCH"
 else
 	display_message "Runtime library already installed for $GOOS $GOARCH"
 fi
