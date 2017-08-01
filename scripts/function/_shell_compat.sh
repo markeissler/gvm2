@@ -119,39 +119,39 @@ __gvm_rematch()
 # */
 __gvm_setenv()
 {
-  local name="${1}"; shift
-  local value="${1}"
+    local name="${1}"; shift
+    local value="${1}"
 
-  if [[ "x${BASH_VERSION}" != "x" ]]
-  then
-      if [[ "${BASH_VERSION:0:1}" -gt 3 ]]
-      then
-        name="${name^^}"
-      else
-        name="$(tr '[:lower:]' '[:upper:]' <<< "$name")"
-      fi
-  elif [[ "x${ZSH_VERSION}" != "x" ]]
-  then
-      name="${name:u}"
-  else
-      return 1
-  fi
+    if [[ "x${BASH_VERSION}" != "x" ]]
+    then
+        if [[ "${BASH_VERSION:0:1}" -gt 3 ]]
+        then
+            name="${name^^}"
+        else
+            name="$(tr '[:lower:]' '[:upper:]' <<< "$name")"
+        fi
+    elif [[ "x${ZSH_VERSION}" != "x" ]]
+    then
+        name="${name:u}"
+    else
+        return 1
+    fi
 
-  [[ ${#name} -eq 0 ]] && return 1
+    [[ ${#name} -eq 0 ]] && return 1
 
-  if [[ ${#value} -eq 0 ]]
-  then
-    unset "${name}"
-    # verify var removed or return error
-    [[ "x${name}" != "x" ]] && return 1
-    # success!
+    if [[ ${#value} -eq 0 ]]
+    then
+        unset "${name}"
+        # verify var removed or return error
+        [[ "x${name}" != "x" ]] && return 1
+        # success!
+        return 0
+    fi
+
+    export "${name}=${value}"
+
+    # value not set?
+    [[ "x${name}" == "x" || "${name}" != "${value}" ]] && return 1
+
     return 0
-  fi
-
-  export "${name}=${value}"
-
-  # value not set?
-  [[ "x${name}" == "x" || "${name}" != "${value}" ]] && return 1
-
-  return 0
 }
