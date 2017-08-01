@@ -3,16 +3,13 @@
 ##
 ## find a directory
 ##
-
-## - Determine basename (baseDir) to use as input dynamically since we don't
-##   know where we are installed!
 targetDir="tests"
 startDir="${SANDBOX}/gvm2"
 expectedPath="${startDir}/${targetDir}"
 
 ## Setup expectation (target, startdir, finaldir, retval, retstatus)
 expect_1=( "${targetDir}"  "${startDir}"  "${HOME}"  "${expectedPath}"  "0")
-expect_2=( "/tmp"          "${startDir}"  "${HOME}"  ""                 "1")
+expect_2=( "abcd12345afg"  "${startDir}"  "${HOME}"  ""                 "1")
 
 ##
 ## find directory (return status)
@@ -59,7 +56,7 @@ expectedPath="${startDir}/${targetFile}"
 
 ## Setup expectation (target, startdir, finaldir, retval, retstatus)
 expect_1=( "${targetFile}"  "${startDir}"  "${HOME}"  "${expectedPath}"  "0")
-expect_2=( "/tmp"           "${startDir}"  "${HOME}"  ""                 "1")
+expect_2=( "abcd12345a.sh"  "${startDir}"  "${HOME}"  ""                 "1")
 
 ##
 ## find a file (return status)
