@@ -30,8 +30,9 @@ dep_load() {
 # @param target [optional] Go version to find
 # @param installed_path [optional] Go install path (directory to installed gos)
 # @return Returns a pseudo hash where keys are Go versions and values are paths
-#   to Go version installations (status 0) or an empty string (status 1) on 
+#   to Go version installations (status 0) or an empty string (status 1) on
 #   failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_find_installed()
 {
@@ -39,8 +40,9 @@ __gvm_find_installed()
     local installed_path="${1:-$GVM_ROOT/gos}"
     local installed_hash; installed_hash=()
     local versions_hash; versions_hash=()
+    unset RETVAL
 
-    [[ -d "${installed_path}" ]] || (echo "" && return 1)
+    [[ ! -d "${installed_path}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     if [[ -z "${target}" ]]
     then
@@ -74,18 +76,12 @@ __gvm_find_installed()
         fi
     fi
 
-    unset installed_hash
-    unset installed_path
-    unset target
-
     if [[ ${#versions_hash[@]} -eq 0 ]]
     then
-        unset versions_hash
-        echo "" && return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    printf "%s" "${versions_hash[*]}"
+    RETVAL="${versions_hash[*]}"
 
-    unset versions_hash
-    return 0
+    echo "${RETVAL}" && return 0
 }
