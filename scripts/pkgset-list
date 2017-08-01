@@ -20,7 +20,7 @@ list() {
     if [[ "${porcelain}" == false ]]
     then
         echo
-        display_message "gvm go package sets ($gvm_go_name)"
+        __gvm_display_message "gvm go package sets ($gvm_go_name)"
         echo
     else
         echo "  G ${gvm_go_name}"

@@ -2,7 +2,7 @@
 . "$GVM_ROOT/scripts/functions"
 
 echo
-display_message "gvm go aliases"
+__gvm_display_message "gvm go aliases"
 echo
 
 for a in $(builtin cd "$GVM_ROOT/environments" ; $GREP_PATH -l "gvm_alias_name" ./*); do

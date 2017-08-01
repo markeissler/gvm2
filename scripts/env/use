@@ -272,7 +272,7 @@ function gvm_use() {
 
     if [[ -z "$(valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}")" ]]
     then
-        display_message "Now using version ${version}"
+        __gvm_display_message "Now using version ${version}"
     fi
 
     unset options_hash

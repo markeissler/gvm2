@@ -21,9 +21,9 @@ if [[ -d $foldername ]]; then
 	find . > /tmp/manifest.test
 	diff manifest /tmp/manifest.test
 	if [[ "$?" == "0" ]]; then
-		display_message "Clean $foldername"
+		__gvm_display_message "Clean $foldername"
 	else
-		display_message "*Dirty* $foldername"
+		__gvm_display_message "*Dirty* $foldername"
 	fi
 else
 	__gvm_display_fatal "Invalid version"

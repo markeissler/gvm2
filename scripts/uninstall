@@ -16,7 +16,7 @@ if [[ -d $GVM_ROOT/gos/$fuzzy_match ]]; then
 		__gvm_display_fatal "Couldn't remove pkgset environment files"
 	rm -rf "$GVM_ROOT/gos/$fuzzy_match" &> /dev/null ||
 		__gvm_display_fatal "Couldn't remove Go folder"
-	display_message "Uninstalled version $fuzzy_match"
+	__gvm_display_message "Uninstalled version $fuzzy_match"
 else
 	__gvm_display_fatal "Invalid version"
 fi

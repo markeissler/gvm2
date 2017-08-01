@@ -160,7 +160,7 @@ main() {
     if [[ "${opt_porcelein}" == false ]]
     then
         echo
-        display_message "gvm gos (available)"
+        __gvm_display_message "gvm gos (available)"
         echo
     fi
 

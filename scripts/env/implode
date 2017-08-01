@@ -7,8 +7,8 @@ function gvm_implode() {
   read -p "Are you sure? [Y/n] " -n 1 -r
   echo
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-   display_message "Action cancelled"
+   __gvm_display_message "Action cancelled"
  else
-   (rm -rf "$GVM_ROOT" && display_message "GVM successfully removed") || __gvm_display_error "Failed to uninstall gvm"
+   (rm -rf "$GVM_ROOT" && __gvm_display_message "GVM successfully removed") || __gvm_display_error "Failed to uninstall gvm"
  fi
 }

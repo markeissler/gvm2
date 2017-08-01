@@ -20,7 +20,7 @@ list() {
     if [[ "${porcelain}" == false ]]
     then
         echo
-        display_message "gvm gos (installed)"
+        __gvm_display_message "gvm gos (installed)"
         echo
     fi
     if [[ -d $GVM_ROOT/gos ]]; then
