@@ -59,7 +59,7 @@ read_command_line() {
                 show_usage; exit 0
             ;;
             *)
-                display_warning "Unrecognized command line argument: '$option'"
+                __gvm_display_warning "Unrecognized command line argument: '$option'"
                 show_usage
                 exit 65 # Bad arguments
             ;;

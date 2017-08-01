@@ -153,7 +153,7 @@ function gvm_use() {
             echo
             return 0
         else
-            display_warning "Unrecognized command line argument: '${_option}'"
+            __gvm_display_warning "Unrecognized command line argument: '${_option}'"
             return 1
         fi
         # flush accumulator when we reach an even number of key/value pairs
@@ -221,7 +221,7 @@ function gvm_use() {
         # source archive installed and version can be built locally
         if [[ -d "${go_archive_path}" && "$(builtin cd "${go_archive_path}" && git tag -l "${version}")" != "" ]]
         then
-            display_warning "$(locale_text_for_key "go_install_version_local")"
+            __gvm_display_warning "$(locale_text_for_key "go_install_version_local")"
             return 1
         fi
         unset go_archive_path

@@ -46,7 +46,7 @@ then
             list true; exit $?
             ;;
         *)
-            display_warning "Unrecognized command line argument: '$option'"
+            __gvm_display_warning "Unrecognized command line argument: '$option'"
             usage; exit 1
             ;;
     esac

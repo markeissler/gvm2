@@ -133,7 +133,7 @@ function gvm_pkgset_use() {
             echo
             return 0
         else
-            display_warning "Unrecognized command line argument: '${_option}'"
+            __gvm_display_warning "Unrecognized command line argument: '${_option}'"
             return 1
         fi
         # flush accumulator when we reach an even number of key/value pairs

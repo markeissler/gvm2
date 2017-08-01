@@ -56,7 +56,7 @@ Could not find hexdump
 "
 
 if [ -n "$error_message" ]; then
-	display_warning "$error_message"
+	__gvm_display_warning "$error_message"
 	exit 1
 else
 	# All good!
