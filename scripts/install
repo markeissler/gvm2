@@ -270,7 +270,7 @@ download_binary() {
     fi
 
     if [[ "${_os}" == "unknown" ]]; then
-        display_error "Binary for ${GO_NAME} unavailable for this platform"
+        __gvm_display_error "Binary for ${GO_NAME} unavailable for this platform"
         rm -rf $GO_INSTALL_ROOT
         rm -f $GO_BINARY_PATH
         exit 1
@@ -303,13 +303,13 @@ download_binary() {
         curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
 
         if [[ $? -ne 0 ]]; then
-            display_error "Failed to download binary go from http://golang.org. Trying https://go.googlecode.com"
+            __gvm_display_error "Failed to download binary go from http://golang.org. Trying https://go.googlecode.com"
             GO_BINARY_URL="https://go.googlecode.com/files/${GO_BINARY_FILE}"
 
             curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
 
             if [[ $? -ne 0 ]]; then
-                display_error "Failed to download binary go"
+                __gvm_display_error "Failed to download binary go"
                 rm -rf $GO_INSTALL_ROOT
                 rm -f $GO_BINARY_PATH
                 exit 1
@@ -320,7 +320,7 @@ download_binary() {
     tar zxf ${GO_BINARY_PATH} -C $GO_INSTALL_ROOT --strip-components 1 >> "${GVM_ROOT}/logs/go-${GO_NAME}-download-binary" 2>&1
 
     if [[ $? -ne 0 ]]; then
-        display_error "Failed to extract binary go"
+        __gvm_display_error "Failed to extract binary go"
         rm -rf $GO_INSTALL_ROOT
         rm -f $GO_BINARY_PATH
         exit 1

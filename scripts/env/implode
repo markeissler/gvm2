@@ -9,6 +9,6 @@ function gvm_implode() {
   if [[ ! $REPLY =~ ^[Yy]$ ]]; then
    display_message "Action cancelled"
  else
-   (rm -rf "$GVM_ROOT" && display_message "GVM successfully removed") || display_error "Failed to uninstall gvm"
+   (rm -rf "$GVM_ROOT" && display_message "GVM successfully removed") || __gvm_display_error "Failed to uninstall gvm"
  fi
 }

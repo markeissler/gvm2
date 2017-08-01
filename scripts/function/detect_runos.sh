@@ -60,7 +60,7 @@ __gvm_detect_runos()
         then
 			_run_os="${_run_os},osx10.6"
 		else
-			display_error "Binary Go unavailable for this platform"
+			__gvm_display_error "Binary Go unavailable for this platform"
 			rm -rf $GO_INSTALL_ROOT
 			rm -f $GO_BINARY_PATH
 			exit 1

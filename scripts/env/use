@@ -190,7 +190,7 @@ function gvm_use() {
 
     if [[ -z "${version}" ]]
     then
-        display_error "Please specify the version. Execute 'gvm use --help' for command help."
+        __gvm_display_error "Please specify the version. Execute 'gvm use --help' for command help."
         return 1
     fi
 
@@ -214,7 +214,7 @@ function gvm_use() {
         # no binaries installed and no source archive installed?
         if [[ ${#installed_hash[@]} -eq 0 && ! -d "${go_archive_path}" ]]
         then
-            display_error "$(locale_text_for_key "go_install_prompt")"
+            __gvm_display_error "$(locale_text_for_key "go_install_prompt")"
             return 1
         fi
 
@@ -230,10 +230,10 @@ function gvm_use() {
         local available_hash; available_hash=( "$(__gvm_find_available "https://go.googlesource.com/go")" )
         if [[ -n "$(valueForKeyFakeAssocArray "${version}" "${available_hash[*]}")" ]]
         then
-            display_error "$(locale_text_for_key "go_install_version_upstream")"
+            __gvm_display_error "$(locale_text_for_key "go_install_version_upstream")"
             return 1
         else
-            display_error "$(locale_text_for_key "go_install_version_invalid")"
+            __gvm_display_error "$(locale_text_for_key "go_install_version_invalid")"
             return 1
         fi
         unset available_hash
@@ -241,7 +241,7 @@ function gvm_use() {
     unset installed_hash
 
     gvm_export_path
-    . "$GVM_ROOT/environments/$version" &> /dev/null || display_error "Couldn't source environment" || return 1
+    . "$GVM_ROOT/environments/$version" &> /dev/null || __gvm_display_error "Couldn't source environment" || return 1
     gvm_environment_sanitize "$version"
 
     # fix PATH to correct order
@@ -253,7 +253,7 @@ function gvm_use() {
     if [[ -n "$(valueForKeyFakeAssocArray "--default" "${options_hash[*]}")" ]]
     then
         cp "$GVM_ROOT/environments/$version" "$GVM_ROOT/environments/default"
-        [[ $? -ne 0 ]] && display_error "Couldn't make ${version} default"
+        [[ $? -ne 0 ]] && __gvm_display_error "Couldn't make ${version} default"
     fi
 
     local pkgset="$(valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}")"

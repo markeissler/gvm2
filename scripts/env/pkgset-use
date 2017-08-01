@@ -179,7 +179,7 @@ function gvm_pkgset_use() {
         unset _item
     fi
 
-    [[ -n "$gvm_go_name" ]] || display_error "No Go version selected" || return 1
+    [[ -n "$gvm_go_name" ]] || __gvm_display_error "No Go version selected" || return 1
 
     if [[ -n "$(valueForKeyFakeAssocArray "--local" "${options_hash[*]}")" ]]
     then
@@ -193,23 +193,23 @@ function gvm_pkgset_use() {
         fi
 
         [[ -d "${local_pkgset}" ]] ||
-            display_error "Cannot find local package set" || return 1
+            __gvm_display_error "Cannot find local package set" || return 1
 
         local_pkgset="${local_pkgset}/.gvm_local"
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Resolved local directory: ${local_pkgset}"
 
         fuzzy_match=$($LS_PATH -1 "$local_pkgset/environments" | $SORT_PATH | $GREP_PATH "$gvm_go_name@" | $GREP_PATH "local" | $HEAD_PATH -n 1)
-        [[ -n "${fuzzy_match}" ]] || display_error "Cannot find local package set" || return 1
+        [[ -n "${fuzzy_match}" ]] || __gvm_display_error "Cannot find local package set" || return 1
 
         if [[ -n "$(valueForKeyFakeAssocArray "--default" "${options_hash[*]}")" ]]
         then
-            display_error "Cannot set local pkgset as default"
+            __gvm_display_error "Cannot set local pkgset as default"
             return 1
         fi
 
         gvm_export_path
         . "$local_pkgset/environments/$fuzzy_match" ||
-            display_error "Failed to source the package set environment" || return 1
+            __gvm_display_error "Failed to source the package set environment" || return 1
 
         # fix PATH to correct order
         local fixed_path="$(__gvm_munge_path)"
@@ -229,11 +229,11 @@ function gvm_pkgset_use() {
         local pkgset="$(valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}")"
 
         fuzzy_match=$($LS_PATH -1 "$GVM_ROOT/environments" | $SORT_PATH | $GREP_PATH "$gvm_go_name@" | $GREP_PATH "${pkgset}" | $HEAD_PATH -n 1)
-        [[ -n "${fuzzy_match}" ]] || display_error "Invalid package set: ${pkgset}" || return 1
+        [[ -n "${fuzzy_match}" ]] || __gvm_display_error "Invalid package set: ${pkgset}" || return 1
 
         gvm_export_path
         . "$GVM_ROOT/environments/$fuzzy_match" ||
-            display_error "Failed to source the package set environment" || return 1
+            __gvm_display_error "Failed to source the package set environment" || return 1
 
         # fix PATH to correct order
         local fixed_path="$(__gvm_munge_path)"
@@ -244,7 +244,7 @@ function gvm_pkgset_use() {
         if [[ -n "$(valueForKeyFakeAssocArray "--default" "${options_hash[*]}")" ]]
         then
             cp "$GVM_ROOT/environments/$fuzzy_match" "$GVM_ROOT/environments/default"
-            [[ $? -ne 0 ]] && display_error "Couldn't make $fuzzy_match default"
+            [[ $? -ne 0 ]] && __gvm_display_error "Couldn't make $fuzzy_match default"
         fi
 
         if [[ -z "$(valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}")" ]]
@@ -254,7 +254,7 @@ function gvm_pkgset_use() {
 
         unset pkgset
     else
-        display_error "Please specify a package set. Execute 'gvm pkgset use' --help for command help."
+        __gvm_display_error "Please specify a package set. Execute 'gvm pkgset use' --help for command help."
         return 1
     fi
 

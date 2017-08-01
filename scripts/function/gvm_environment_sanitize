@@ -52,7 +52,7 @@ function gvm_environment_sanitize() {
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "gvm_environment_sanitize() - Sanitized GOROOT: ${GOROOT}"
     elif [[ ! -x "${active_go}" ]]
     then
-        display_error "Failed to find a path to Go for requested environment: '${environment}'." || return 1
+        __gvm_display_error "Failed to find a path to Go for requested environment: '${environment}'." || return 1
     fi
 
     unset defaultIFS IFS
