@@ -78,7 +78,7 @@ download_source() {
 }
 
 check_tag() {
-    version=$(builtin cd "$GO_CACHE_PATH" && git show-ref --heads --tags | awk -F/ '{ print $NF }' | \sort | \grep "$VERSION" | $HEAD_PATH -n 1 | \grep -w "$VERSION")
+    version=$(builtin cd "$GO_CACHE_PATH" && git show-ref --heads --tags | awk -F/ '{ print $NF }' | \sort | \grep "$VERSION" | \head -n 1 | \grep -w "$VERSION")
 }
 
 update_source() {
