@@ -1,8 +1,11 @@
-# resolve_fallback_pkgset
+# scripts/function/resolve_fallback_pkgset.sh
 #
 # shellcheck shell=bash
 # vi: set ft=bash
 #
+
+# source once and only once!
+[[ ${GVM_RESOLVE_FALLBACK_PKGSET:-} -eq 1 ]] && return || readonly GVM_RESOLVE_FALLBACK_PKGSET=1
 
 # load dependencies
 dep_load() {
@@ -30,6 +33,7 @@ dep_load() {
 #   defaults to the currently exported go_version_name.
 # @return Returns a string containing the fallback version name (status 0) or an
 #   empty string (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 function __gvm_resolve_fallback_pkgset() {
     local version="${1:-$gvm_go_name}"
@@ -37,8 +41,9 @@ function __gvm_resolve_fallback_pkgset() {
     local pkgset_regex='^([[:space:]]*[=>*]*[[:space:]]+)([A-Za-z0-9._#:%\/\+\-]+)$'
     local local_pkgset_regex='^([[:space:]]*[=>*]*)(L[[:space:]]+)(\/[^:\\\n\\\0]*)+$'
     local goversion_regex='^([[:space:]]*[=>*]*)(G[[:space:]]+)(go([0-9]+(\.[0-9]+)*))$'
+    unset RETVAL
 
-    [[ "x${version}" == "x" ]] && echo "" && return 1
+    [[ "x${version// /}" == "x" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     while IFS=$'\n' read -r _line; do
         # skip the G (go version) line
@@ -68,14 +73,14 @@ function __gvm_resolve_fallback_pkgset() {
             pkgset="global"
             break
         fi
-    done <<< "$(gvm_go_name="${version}" \gvm pkgset list --porcelain)"
+    done <<< "$(gvm_go_name="${version}" \gvm pkgset list --porcelain 2>/dev/null)"
 
-    echo "${pkgset}"
+    RETVAL="${pkgset}"
 
-    if [[ -z "${pkgset}" ]]
+    if [[ -z "${RETVAL// /}" ]]
     then
-        return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    return 0
+    echo "${RETVAL}" && return 0
 }
