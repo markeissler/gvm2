@@ -26,7 +26,7 @@ dep_load() {
 # */
 __gvm_export_path() {
     [[ "${GVM_DEBUG}" -eq 1 ]] && echo "__gvm_export_path() - Original path: ${PATH}"
-      export PATH="${GVM_ROOT}/bin:$(echo "${PATH}" | tr ":" "\n" | "${GREP_PATH}" -v '^$' | egrep -v "${GVM_ROOT}/(pkgsets|gos|bin)" | tr "\n" ":" | sed 's/:*$//')"
+      export PATH="${GVM_ROOT}/bin:$(echo "${PATH}" | tr ":" "\n" | \grep -v '^$' | \egrep -v "${GVM_ROOT}/(pkgsets|gos|bin)" | tr "\n" ":" | sed 's/:*$//')"
       export GVM_PATH_BACKUP="${PATH}"
     [[ "${GVM_DEBUG}" -eq 1 ]] && echo "__gvm_export_path() - Updated path: ${PATH}"
 

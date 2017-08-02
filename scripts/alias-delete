@@ -7,7 +7,7 @@
 [[ -f $GVM_ROOT/environments/$1 ]] ||
 	__gvm_display_fatal "Alias doesn't exist!"
 
-$GREP_PATH "gvm_alias_name" "$GVM_ROOT/environments/$1" > /dev/null ||
+\grep "gvm_alias_name" "$GVM_ROOT/environments/$1" > /dev/null ||
 	__gvm_display_fatal "$1 is not an alias!"
 
 rm -rf "$GVM_ROOT/environments/$1" ||
