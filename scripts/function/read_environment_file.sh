@@ -1,7 +1,11 @@
-# read_environment_file
+# scripts/function/read_environment_file.sh
 #
-# -*- Shell-Unix-Generic -*-
+# shellcheck shell=bash
+# vi: set ft=bash
 #
+
+# source once and only once!
+[[ ${GVM_READ_ENVIRONMENT_FILE:-} -eq 1 ]] && return || readonly GVM_READ_ENVIRONMENT_FILE=1
 
 # load dependencies
 dep_load() {
@@ -35,15 +39,17 @@ dep_load() {
 # @param path Path to environment file
 # @return Returns a bash_pseudo_hash containing parsed key/val pairs (status 0)
 #   or an empty string (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_read_environment_file() {
     local filepath="${1}"
     local regex='^export ([^[:digit:]]+[[:alnum:]_]+);[[:space:]]*([^[:digit:]]+[[:alnum:]_]+=(.*))$'
     local hash; hash=()
+    unset RETVAL
 
-    if [[ -z "${filepath}" || ! -r "${filepath}" ]]
+    if [[ -z "${filepath// /}" || ! -r "${filepath}" ]]
     then
-        echo ""; return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
     while IFS=$'\n' read -r _line; do
@@ -65,12 +71,12 @@ __gvm_read_environment_file() {
         unset __key __val
     done <<< "$(cat "${filepath}")"
 
-    echo "${hash[@]}"
-
     if [[ ${#hash[@]} -eq 0 ]]
     then
-        return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    return 0
+    RETVAL="${hash[*]}"
+
+    echo "${RETVAL}" && return 0
 }
