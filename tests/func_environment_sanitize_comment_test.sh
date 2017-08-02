@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/gvm_environment_sanitize" || return 1
+. "${SANDBOX}/gvm2/scripts/function/environment_sanitize.sh" || return 1
 
 ##
 ## sanitize system environment
@@ -24,7 +24,7 @@ expectedSanitizedConfig="${expectedSanitizedConfig/\$\{GVM_ROOT\}/${SANDBOX}\/gv
 
 ## Execute command
 source ${SANDBOX}/gvm2/environments/system
-gvm_environment_sanitize "system" "${SANDBOX}/gvm2/gos/go1.8.1/bin:${PATH}"
+__gvm_environment_sanitize "system" "${SANDBOX}/gvm2/gos/go1.8.1/bin:${PATH}"
 sanitizedGOROOT="${GOROOT}"
 sanitizedConfig="$(grep "GOROOT=" "${SANDBOX}/gvm2/environments/system")"
 
@@ -50,7 +50,7 @@ expectedSanitizedConfig="${expectedSanitizedConfig/\$\{GVM_ROOT\}/${SANDBOX}\/gv
 
 ## Execute command
 source ${SANDBOX}/gvm2/environments/system@global
-gvm_environment_sanitize "system@global" "${SANDBOX}/gvm2/gos/go1.8.1/bin:$PATH}"
+__gvm_environment_sanitize "system@global" "${SANDBOX}/gvm2/gos/go1.8.1/bin:$PATH}"
 sanitizedGOROOT="${GOROOT}"
 sanitizedConfig="$(grep "GOROOT=" "${SANDBOX}/gvm2/environments/system@global")"
 

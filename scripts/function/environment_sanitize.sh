@@ -1,5 +1,30 @@
-#!/usr/bin/env bash
-function gvm_environment_sanitize() {
+# scripts/function/environment_sanitize.sh
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
+
+# source once and only once!
+[[ ${GVM_ENVIRONMENT_SANITIZE:-} -eq 1 ]] && return || readonly GVM_ENVIRONMENT_SANITIZE=1
+
+# __gvm_environment_sanitize()
+# /*!
+# @abstract Repair the system and system@global environments
+# @discussion
+# The system and system@global environments are created when GVM2 is installed
+#   and settings are determined from an existing system-install of Go (usually,
+#   in the /usr/local directory). If the system-install is later changed (either
+#   during a routine update or manually) then these environments will likely
+#   break as PATHs become stale.
+#
+#   This function will attempt to find the current system-install of Go and make
+#   corrections to the system and system@global environments if needed.
+# @note Only the system and system@global environments are currently supported.
+# @param environment Environment to be sanitized.
+# @param path [optional] A search path, defaults to PATH.
+# @return Returns success (status 0) or failure (status 1).
+# */
+__gvm_environment_sanitize() {
     local environment="${1}"; shift
     local path="${1:-$PATH}"
     local active_go="$(PATH="${path}" which go)"
@@ -16,7 +41,7 @@ function gvm_environment_sanitize() {
 
     if [[ -x "${active_go}" && ! -d "${active_go_root}" ]]
     then
-        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "gvm_environment_sanitize() - Original GOROOT: ${GOROOT}"
+        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "__gvm_environment_sanitize() - Original GOROOT: ${GOROOT}"
 
         local old_go_root="${active_go_root}" && unset GOROOT
         local new_go_root="$(PATH="${path}" go env GOROOT 2>/dev/null)"
@@ -49,16 +74,11 @@ function gvm_environment_sanitize() {
         unset new_go_root
         unset old_go_root
 
-        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "gvm_environment_sanitize() - Sanitized GOROOT: ${GOROOT}"
+        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "__gvm_environment_sanitize() - Sanitized GOROOT: ${GOROOT}"
     elif [[ ! -x "${active_go}" ]]
     then
         __gvm_display_error "Failed to find a path to Go for requested environment: '${environment}'." || return 1
     fi
 
-    unset defaultIFS IFS
-    unset system_list
-    unset active_go_root
-    unset active_go
-    unset path
-    unset environment
+    return 0
 }
