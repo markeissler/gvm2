@@ -1,8 +1,11 @@
-# munge_path
+# # scripts/function/munge_path.sh
 #
 # shellcheck shell=bash
 # vi: set ft=bash
 #
+
+# source once and only once!
+[[ ${GVM_MUNGE_PATH:-} -eq 1 ]] && return || readonly GVM_MUNGE_PATH=1
 
 # load dependencies
 dep_load() {
@@ -34,6 +37,7 @@ dep_load() {
 #   leave them in place (false), defaults to true
 # @return Returns a string containing munged path (status 0) or an empty string
 #   (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_munge_path() {
     local path_in="${1:-$PATH}"
@@ -49,8 +53,9 @@ __gvm_munge_path() {
     local defaultIFS="$IFS"
     local IFS="$defaultIFS"
     local spaceChar=$' '
+    unset RETVAL
 
-    [[ -z "${path_in}" ]] && echo "" && return 1
+    [[ -z "${path_in// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     # convert path into an array of elements, encode spaces
     IFS=':' path_in_ary=( $(printf "%s" "${path_in//$spaceChar/%2f}") ) IFS="$defaultIFS"
@@ -98,12 +103,12 @@ __gvm_munge_path() {
     # convert path elements array into path string, decode spaces
     IFS=":" path_out="${path_out_ary[*]}" IFS="$defaultIFS"
 
-    printf "%s" "${path_out//%2f/$spaceChar}"
+    RETVAL="${path_out//%2f/$spaceChar}"
 
-    if [[ -z "${path_out}" ]]
+    if [[ -z "${RETVAL// /}" ]]
     then
-        return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    return 0
+    echo "${RETVAL}" && return 0
 }

@@ -1,7 +1,7 @@
 . "${SANDBOX}/gvm2/scripts/function/munge_path.sh" || return 1
 
 ##
-## munge a path
+## munge a path with deduplication
 ##
 
 ## Setup expectation
@@ -12,7 +12,6 @@ expectedMungedPath+=":/Users/me/.rvm/bin"
 expectedMungedPath+=":/Users/me/.gvm/pkgsets/go1.7/global/bin"
 expectedMungedPath+=":/Users/me/.gvm/gos/go1.7/bin"
 expectedMungedPath+=":/Users/me/.gvm/pkgsets/go1.7/global/overlay/bin"
-expectedMungedPath+=":/Users/me/.gvm/bin"
 expectedMungedPath+=":/Users/me/.gvm/bin"
 expectedMungedPath+=":/Applications/Path With Spaces/bin"
 expectedMungedPath+=":/usr/local/bin"
@@ -37,31 +36,31 @@ testPath+=":/usr/sbin"
 testPath+=":/sbin"
 
 ##
-## munge a path (return status)
+## munge a path with deduplication (return status)
 ##
 
 ## Execute command
-mungedPath="$(__gvm_munge_path "${testPath}" false > /dev/null; echo $?)"
+mungedPath="$(__gvm_munge_path "${testPath}" true > /dev/null; echo $?)"
 
 ## Evaluate result
 [[ "${mungedPath}" -eq "0" ]] # status=0
 
 ##
-## munge a path (return value)
+## munge a path with deduplication (return value)
 ##
 
 ## Execute command
-mungedPath="$(__gvm_munge_path "${testPath}" false)"
+mungedPath="$(__gvm_munge_path "${testPath}" true)"
 
 ## Evaluate result
 [[ "${mungedPath}" == "${expectedMungedPath}" ]] # status=0
 
 ##
-## munge a path (RETVAL value)
+## munge a path with deduplication (RETVAL value)
 ##
 
 ## Execute command
-mungedPath="$(__gvm_munge_path "${testPath}" false > /dev/null; echo "${RETVAL}")"
+mungedPath="$(__gvm_munge_path "${testPath}" true > /dev/null; echo "${RETVAL}")"
 
 ## Evaluate result
 [[ "${mungedPath}" == "${expectedMungedPath}" ]] # status=0
