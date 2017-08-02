@@ -11,7 +11,7 @@
 dep_load() {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
     local deps; deps=(
-        "tools"
+        "__shell_compat.sh"
     )
     for file in "${deps[@]}"
     do

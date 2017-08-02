@@ -7,6 +7,18 @@
 # source once and only once!
 [[ ${GVM_LOCALE_TEXT:-} -eq 1 ]] && return || readonly GVM_LOCALE_TEXT=1
 
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "_shell_compat.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
 # __gvm_locale_text_for_key()
 # /*!
 # @abstract Retrieve the locale text for the specified key

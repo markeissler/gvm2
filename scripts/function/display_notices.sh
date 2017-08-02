@@ -9,6 +9,18 @@
 # source once and only once!
 [[ ${GVM_DISPLAY_NOTICES:-} -eq 1 ]] && return || readonly GVM_DISPLAY_NOTICES=1
 
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "_shell_compat.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
 __gvm_display_error() {
     command -v tput &> /dev/null
     if [[ "$?" == "0" ]]  && [[ "$TERM" == "xterm" ]]; then

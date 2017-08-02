@@ -13,7 +13,6 @@ dep_load() {
     local deps; deps=(
         "_bash_pseudo_hash.sh"
         "read_environment_file.sh"
-        "tools"
     )
     for file in "${deps[@]}"
     do

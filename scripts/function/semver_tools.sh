@@ -9,6 +9,18 @@
 # source once and only once!
 [[ ${GVM_SEMVER_TOOLS:-} -eq 1 ]] && return || readonly GVM_SEMVER_TOOLS=1
 
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "_shell_compat.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
 # __gvm_compare_versions()
 # /*!
 # @abstract Compare two SemVer version strings.

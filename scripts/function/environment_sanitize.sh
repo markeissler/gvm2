@@ -7,6 +7,18 @@
 # source once and only once!
 [[ ${GVM_ENVIRONMENT_SANITIZE:-} -eq 1 ]] && return || readonly GVM_ENVIRONMENT_SANITIZE=1
 
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "_shell_compat.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
 # __gvm_environment_sanitize()
 # /*!
 # @abstract Repair the system and system@global environments

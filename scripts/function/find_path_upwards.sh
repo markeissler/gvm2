@@ -4,6 +4,21 @@
 # vi: set ft=bash
 #
 
+# source once and only once!
+[[ ${GVM_FIND_PATH_UPWARDS:-} -eq 1 ]] && return || readonly GVM_FIND_PATH_UPWARDS=1
+
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "_shell_compat.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
 # __gvm_find_path_upwards()
 # /*!
 # @abstract Search upwards through the directory tree for a target file or
