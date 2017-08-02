@@ -1,8 +1,11 @@
-# resolve_fallback_version
+# scripts/function/resolve_fallback_version.sh
 #
 # shellcheck shell=bash
 # vi: set ft=bash
 #
+
+# source once and only once!
+[[ ${GVM_RESOLVE_FALLBACK_VERSION:-} -eq 1 ]] && return || readonly GVM_RESOLVE_FALLBACK_VERSION=1
 
 # load dependencies
 dep_load() {
@@ -37,10 +40,12 @@ dep_load() {
 #   highest version number will be selected.
 # @return Returns a string containing the fallback version name (status 0) or an
 #   empty string (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_resolve_fallback_version() {
     local version=""
     local regex='^([[:space:]]*[=>*]*[[:space:]]+)(go([0-9]+(\.[0-9]+)*))$'
+    unset RETVAL
 
     while IFS=$'\n' read -r _line; do
         if __gvm_rematch "${_line}" "${regex}"
@@ -52,12 +57,12 @@ __gvm_resolve_fallback_version() {
         fi
     done <<< "$(\gvm list --porcelain)"
 
-    echo "${version}"
+    RETVAL="${version}"
 
-    if [[ -z "${version}" ]]
+    if [[ -z "${RETVAL// /}" ]]
     then
-        return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    return 0
+    echo "${RETVAL}" && return 0
 }
