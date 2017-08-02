@@ -51,7 +51,7 @@ __gvm_find_local_pkgset()
 
     __gvm_find_path_upwards ".gvm_local" "${start_dir}" "${final_dir}" > /dev/null
 
-    if [[ -z "${RETVAL}" ]]
+    if [[ -z "${RETVAL// /}" ]]
     then
         RETVAL="" && echo "${RETVAL}" && return 1
     fi
