@@ -8,8 +8,8 @@ startDir="${SANDBOX}/gvm2"
 expectedPath="${startDir}/${targetDir}"
 
 ## Setup expectation (target, startdir, finaldir, retval, retstatus)
-expect_1=( "${targetDir}"  "${startDir}"  "${HOME}"  "${expectedPath}"  "0")
-expect_2=( "abcd12345afg"  "${startDir}"  "${HOME}"  ""                 "1")
+expect_1=( "${targetDir}"  "${startDir}"  "${SANDBOX}/gvm2"  "${expectedPath}"  "0")
+expect_2=( "abcd12345afg"  "${startDir}"  "${SANDBOX}/gvm2"  ""                 "1")
 
 ##
 ## find directory (return status)

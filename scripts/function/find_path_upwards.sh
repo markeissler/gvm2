@@ -29,9 +29,9 @@ __gvm_find_path_upwards()
     unset RETVAL
 
     if [[ \
-        "x${target}" == "x" || \
-        "x${start_dir}" == "x" || \
-        "x${final_dir}" == "x"
+        "x${target// /}" == "x" || \
+        "x${start_dir// /}" == "x" || \
+        "x${final_dir// /}" == "x"
         ]]
     then
         RETVAL="" && echo "${RETVAL}" && return 1
@@ -54,7 +54,7 @@ __gvmp_find_path_for_target()
     local final_dir="${3}"
     unset RETVAL
 
-    [[ ${#target} -eq 0 ]] && RETVAL="" && echo "${RETVAL}" && return 1
+    [[ "x${target// /}" == "x" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     # resolve tilde for HOME
     start_dir="${start_dir/#\~/$HOME}"
@@ -69,16 +69,22 @@ __gvmp_find_path_for_target()
     local highest_dir="${final_dir}"
 
     builtin cd "${current_dir}"
-    while [[ "${current_dir}" != "${highest_dir}" && "${current_dir}" != "/" ]];
+    while [[ $? -eq 0 ]]
     do
+        current_dir="$(builtin pwd)"
+
         if [[ -f "${current_dir}/${target}" ||  -d "${current_dir}/${target}" ]]
         then
             RETVAL="${current_dir}/${target}"
             echo "${RETVAL}" && return 0
         fi
 
+        if [[ "${current_dir}" == "${highest_dir}" || "${current_dir}" == "/" ]]
+        then
+            break
+        fi
+
         builtin cd ..
-        current_dir="$(builtin pwd)"
     done
 
     RETVAL="" && echo "${RETVAL}" && return 1
