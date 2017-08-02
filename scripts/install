@@ -61,7 +61,7 @@ read_command_line() {
 download_source() {
     GO_CACHE_PATH=$GVM_ROOT/archive/go
     [[ -d $GO_CACHE_PATH ]] && return
-    display_message "Downloading Go source..."
+    __gvm_display_message "Downloading Go source..."
     git clone "$GO_SOURCE_URL" "$GO_CACHE_PATH" >> "$GVM_ROOT/logs/go-download.log" 2>&1 ||
         display_fatal "Couldn't download Go source. Check the logs $GVM_ROOT/logs/go-download.log"
     # clone the bootstrap branch, switch to the branch to create it locally,
@@ -82,7 +82,7 @@ check_tag() {
 }
 
 update_source() {
-    display_message "Updating Go source..."
+    __gvm_display_message "Updating Go source..."
     (builtin cd "$GO_CACHE_PATH" && git pull >> "$GVM_ROOT/logs/go-download.log" 2>&1 ||
         display_fatal "Couldn't get latest Go version info. Check the logs $GVM_ROOT/logs/go-download.log")
 }
@@ -99,7 +99,7 @@ copy_source() {
     #
     local _version="${version}"
     [[ "$_version" == "go1.4" ]] && _version="${GO_BOOTSTRAP_BRANCH}"
-    display_message "Copying Go source... (version: ${_version})"
+    __gvm_display_message "Copying Go source... (version: ${_version})"
     git clone -b "${_version}" "$GO_CACHE_PATH" "$GO_INSTALL_ROOT" >> "$GVM_ROOT/logs/go-$GO_NAME-install.log" 2>&1 ||
         display_fatal "Couldn't copy source to target folder. Check the logs $GVM_ROOT/logs/go-$GO_NAME-install.log"
     unset _version
@@ -107,7 +107,7 @@ copy_source() {
 
 
 compile_go() {
-    display_message " * Compiling..."
+    __gvm_display_message " * Compiling..."
 
     local _path="/usr/sbin:/usr/bin:/sbin:/bin"
     local _bootstrap="${GVM_ROOT}/gos/go1.4"
@@ -140,7 +140,7 @@ compile_go() {
 
 # patch old go versions to build on MacOS Sierra (10.12)
 patch_go() {
-    display_message " * Patching..."
+    __gvm_display_message " * Patching..."
     local _patch_applied _version _src_directory _run_os
 
     _patch_applied=0
@@ -175,7 +175,7 @@ patch_go() {
         fi
     fi
 
-    [[ "${_patch_applied}" -eq 0 ]] && display_message " ** Patching skipped (not needed)"
+    [[ "${_patch_applied}" -eq 0 ]] && __gvm_display_message " ** Patching skipped (not needed)"
 
     unset _run_os _src_directory _version _patch_applied
 }
@@ -227,7 +227,7 @@ install_go() {
     # Check for existing install
     if [[ -d "$GO_INSTALL_ROOT" ]]; then
         if [[ -f "$GO_INSTALL_ROOT/manifest" ]]; then
-            display_message "Already installed!"
+            __gvm_display_message "Already installed!"
             exit 0
         fi
         display_warning "Removing corrupt install..."
@@ -235,9 +235,9 @@ install_go() {
     fi
 
     if [[ "$version" != "$GO_NAME" ]]; then
-        display_message "Installing $version as $GO_NAME..."
+        __gvm_display_message "Installing $version as $GO_NAME..."
     else
-        display_message "Installing $version..."
+        __gvm_display_message "Installing $version..."
     fi
 
     create_global_package_set
@@ -246,7 +246,7 @@ install_go() {
     compile_go
     create_enviroment
 
-    display_message "$GO_NAME successfully installed!"
+    __gvm_display_message "$GO_NAME successfully installed!"
 }
 
 download_binary() {
@@ -338,14 +338,14 @@ install_go_binary() {
     # Check for existing install
     if [[ -d "$GO_INSTALL_ROOT" ]]; then
         if [[ -f "$GO_INSTALL_ROOT/manifest" ]]; then
-            display_message "Already installed!"
+            __gvm_display_message "Already installed!"
             exit 0
         fi
         display_warning "Removing corrupt install..."
         gvm uninstall "$GO_NAME"
     fi
 
-    display_message "Installing $GO_NAME from binary source"
+    __gvm_display_message "Installing $GO_NAME from binary source"
 
     create_global_package_set
     download_binary
@@ -353,12 +353,12 @@ install_go_binary() {
 }
 
 install_gpkg() {
-    display_message " * Installing gpkg..."
+    __gvm_display_message " * Installing gpkg..."
     $GVM_GOINSTALL github.com/moovweb/gpkg > "$GVM_ROOT/logs/$GO_NAME-gpkg.log" 2>&1 || return 1
 }
 
 install_gb() {
-    display_message " * Installing gb..."
+    __gvm_display_message " * Installing gb..."
     $GVM_GOINSTALL github.com/jbussdieker/go-gb/gb > "$GVM_ROOT/logs/$GO_NAME-gb.log" 2>&1 || return 1
 }
 
@@ -368,7 +368,7 @@ install_goprotobuf() {
   linux: apt-get install protobuf-compiler
   mac:   brew install protobuf
 "
-    display_message " * Installing goprotobuf..."
+    __gvm_display_message " * Installing goprotobuf..."
     if [[ "$GVM_GOINSTALL" == "goinstall" ]]; then
         $GVM_GOINSTALL goprotobuf.googlecode.com/hg/proto > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
         if [[ $? -ne 0 ]]; then
@@ -438,7 +438,7 @@ main() {
         install_go_binary
     elif [[ "x$INSTALL_SOURCE" == "xprefer-binary" ]]; then
         install_go_binary || {
-            display_message "Falling back to source installation of $GO_NAME"
+            __gvm_display_message "Falling back to source installation of $GO_NAME"
             install_from_source
         }
     else
