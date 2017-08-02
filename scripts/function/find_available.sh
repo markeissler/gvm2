@@ -51,7 +51,7 @@ __gvm_find_available()
             versions_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}") )
             unset __key __val
         fi
-    done <<< "$(\git ls-remote -t "${url}" | awk -F/ '{ print $NF }' | $SORT_PATH)"
+    done <<< "$(\git ls-remote -t "${url}" | awk -F/ '{ print $NF }' | \sort)"
 
     if [[ ${#versions_hash[@]} -eq 0 ]]
     then
