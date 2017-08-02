@@ -240,9 +240,9 @@ function gvm_use() {
     fi
     unset installed_hash
 
-    gvm_export_path
+    __gvm_export_path > /dev/null
     . "$GVM_ROOT/environments/$version" &> /dev/null || __gvm_display_error "Couldn't source environment" || return 1
-    __gvm_environment_sanitize "$version"
+    __gvm_environment_sanitize "$version" > /dev/null
 
     # fix PATH to correct order
     local fixed_path="$(__gvm_munge_path)"

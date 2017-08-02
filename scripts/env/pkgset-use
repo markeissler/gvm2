@@ -205,7 +205,7 @@ function gvm_pkgset_use() {
             return 1
         fi
 
-        gvm_export_path
+        __gvm_export_path > /dev/null
         . "$local_pkgset/environments/$fuzzy_match" ||
             __gvm_display_error "Failed to source the package set environment" || return 1
 
@@ -229,7 +229,7 @@ function gvm_pkgset_use() {
         fuzzy_match=$($LS_PATH -1 "$GVM_ROOT/environments" | $SORT_PATH | $GREP_PATH "$gvm_go_name@" | $GREP_PATH "${pkgset}" | $HEAD_PATH -n 1)
         [[ -n "${fuzzy_match}" ]] || __gvm_display_error "Invalid package set: ${pkgset}" || return 1
 
-        gvm_export_path
+        __gvm_export_path > /dev/null
         . "$GVM_ROOT/environments/$fuzzy_match" ||
             __gvm_display_error "Failed to source the package set environment" || return 1
 
