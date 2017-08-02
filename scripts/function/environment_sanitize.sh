@@ -58,7 +58,7 @@ __gvm_environment_sanitize() {
         fi
 
         # update system and system@global environments
-        IFS=$'\n' system_list=( $($LS_PATH -1 "${GVM_ROOT}/environments/system"*) ) IFS="${defaultIFS}"
+        IFS=$'\n' system_list=( $(\ls -1 "${GVM_ROOT}/environments/system"*) ) IFS="${defaultIFS}"
 
         local _env_file
         for _env_file in "${system_list[@]}"
