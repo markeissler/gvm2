@@ -10,7 +10,8 @@
 target_top=$GVM_ROOT
 target_set_name=$1
 if [[ $1 == "--local" ]]; then
-	target_top=$(find_local_pkgset)/.gvm_local
+    __gvm_find_local_pkgset > /dev/null
+	target_top="${RETVAL}"
 	target_set_name="local"
 fi
 

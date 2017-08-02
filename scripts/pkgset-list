@@ -26,12 +26,13 @@ list() {
         echo "  G ${gvm_go_name}"
     fi
     if [[ -d "${GVM_ROOT}/pkgsets/${gvm_go_name}" ]]; then
-        local pkgset_local="$(find_local_pkgset)"
+        __gvm_find_local_pkgset > /dev/null
+        local pkgset_local="${RETVAL}"
         if [[ -d "${pkgset_local}" ]]; then
             if [[ "${gvm_pkgset_name}" == "__local__" ]]; then
-                echo "=>L ${pkgset_local}"
+                echo "=>L ${pkgset_local%/.*}"
             else
-                echo "  L ${pkgset_local}"
+                echo "  L ${pkgset_local%/.*}"
             fi
         fi
         unset pkgset_local

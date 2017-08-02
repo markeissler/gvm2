@@ -11,11 +11,12 @@ add_gopath="$GVM_ROOT/pkgsets/$gvm_go_name/$1"
 add_path="$GVM_ROOT/pkgsets/$gvm_go_name/$1/bin"
 
 if [[ $1 == "--local" ]]; then
-	LOCAL_TOP=$(find_local_pkgset)
+    __gvm_find_local_pkgset > /dev/null
+	LOCAL_TOP="${RETVAL}"
 	if [[ ! -d LOCAL_TOP ]]; then
-		LOCAL_TOP=$PWD
+		LOCAL_TOP=${PWD}/.gvm_local
 	fi
-	target_top=$LOCAL_TOP/.gvm_local
+	target_top=$LOCAL_TOP
 	target_set_name="local"
 	target_set_name_str="__local__"
 	add_gopath="$target_top/pkgsets/$gvm_go_name/$target_set_name"

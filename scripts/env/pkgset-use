@@ -187,15 +187,13 @@ function gvm_pkgset_use() {
 
         if [[ -z "${local_pkgset}" || "${local_pkgset}" == "nil" ]]
         then
-            . "$GVM_ROOT/scripts/function/find_local_pkgset"
-            local_pkgset=$(find_local_pkgset)
-            unset -f find_local_pkgset
+            __gvm_find_local_pkgset > /dev/null
+            local_pkgset="${RETVAL}"
         fi
 
         [[ -d "${local_pkgset}" ]] ||
             __gvm_display_error "Cannot find local package set" || return 1
 
-        local_pkgset="${local_pkgset}/.gvm_local"
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Resolved local directory: ${local_pkgset}"
 
         fuzzy_match=$($LS_PATH -1 "$local_pkgset/environments" | $SORT_PATH | $GREP_PATH "$gvm_go_name@" | $GREP_PATH "local" | $HEAD_PATH -n 1)
