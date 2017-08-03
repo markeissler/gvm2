@@ -8,7 +8,7 @@
 dep_load() {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
-        "../scripts/functions"
+        "../functions"
     )
     for file in "${deps[@]}"
     do
