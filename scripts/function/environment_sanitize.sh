@@ -64,7 +64,7 @@ __gvm_environment_sanitize() {
         # has somehow placed a go binary (installed with GVM) in the PATH, then GOROOT will be empty now (the binaries
         # have set a GOROOT of /usr/local/go). Essentially, this is just here for unit testing.
         #
-        if [[ -z "${new_go_root}" ]]
+        if [[ -z "${new_go_root// /}" ]]
         then
             new_go_root="${active_go%/bin/go}"
         fi

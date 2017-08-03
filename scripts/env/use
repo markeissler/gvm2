@@ -188,7 +188,7 @@ function gvm_use() {
 
     local version="$(valueForKeyFakeAssocArray "--version" "${options_hash[*]}")"
 
-    if [[ -z "${version}" ]]
+    if [[ -z "${version// /}" ]]
     then
         __gvm_display_error "Please specify the version. Execute 'gvm use --help' for command help."
         return 1

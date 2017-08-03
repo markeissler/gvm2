@@ -32,8 +32,8 @@ check_existing_go() {
     local active_go="$(PATH="${path}" which go)"
     local active_go_root="${GOROOT}"
 
-    [[ -z "${gvm_dest}" ]] && return 1
-    [[ -z "${gvm_name}" ]] && return 1
+    [[ -z "${gvm_dest// /}" ]] && return 1
+    [[ -z "${gvm_name// /}" ]] && return 1
 
 	if [[ "x${active_go_root}" == "x" ]]; then
 		if [[ "x${active_go}" != "x" ]]; then

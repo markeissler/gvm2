@@ -54,7 +54,7 @@ __gvm_find_path_upwards()
 
     __gvmp_find_path_for_target "${target}" "${start_dir}" "${final_dir}" > /dev/null
 
-    if [[ -z "${RETVAL}" ]]
+    if [[ -z "${RETVAL// /}" ]]
     then
         RETVAL="" && echo "${RETVAL}" && return 1
     fi

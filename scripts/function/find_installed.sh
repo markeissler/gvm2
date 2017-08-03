@@ -43,7 +43,7 @@ __gvm_find_installed()
 
     [[ ! -d "${installed_path}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
-    if [[ -z "${target}" ]]
+    if [[ -z "${target// /}" ]]
     then
         installed_hash=( $(\ls -1 "${installed_path}") )
         for (( i=0; i<${#installed_hash[@]}; i++ ))

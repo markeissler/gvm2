@@ -185,7 +185,7 @@ function gvm_pkgset_use() {
     then
         local local_pkgset="$(valueForKeyFakeAssocArray "--local" "${options_hash[*]}")"
 
-        if [[ -z "${local_pkgset}" || "${local_pkgset}" == "nil" ]]
+        if [[ -z "${local_pkgset// /}" || "${local_pkgset}" == "nil" ]]
         then
             __gvm_find_local_pkgset > /dev/null
             local_pkgset="${RETVAL}"
