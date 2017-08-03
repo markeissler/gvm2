@@ -84,19 +84,19 @@ cd() {
     # gather default environment settings, they can change at any time!
     [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Resolving defaults..."
 
-    __gvm_read_environment_file "${GVM_ROOT}/environments/default" > /dev/null
+    __gvm_read_environment_file "${GVM_ROOT}/environments/default" > /dev/null; rslt=$?
     defaults_hash=( ${RETVAL} )
 
-    if [[ $? -eq 0 ]]
+    if [[ $rslt -eq 0 ]]
     then
         defaults_resolved=true
     else
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Can't find default environment. Falling back to system."
 
-        __gvm_read_environment_file "${GVM_ROOT}/environments/system" > /dev/null
+        __gvm_read_environment_file "${GVM_ROOT}/environments/system" > /dev/null; rslt=$?
         defaults_hash=( ${RETVAL} )
 
-        if [[ $? -eq 0 ]]
+        if [[ $rslt -eq 0 ]]
         then
             defaults_resolved=true
         else
@@ -133,10 +133,10 @@ cd() {
         echo "Resolved default pkgset: ${defaults_go_pkgset:-[EMPTY]}"
     fi
 
-    __gvmp_find_closest_dot_go_version > /dev/null
+    __gvmp_find_closest_dot_go_version > /dev/null; rslt=$?
     dot_go_version="${RETVAL}"
 
-    if [[ $? -eq 0 ]]
+    if [[ $rslt -eq 0 ]]
     then
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Found dot_go_version: ${dot_go_version}"
 
@@ -181,10 +181,10 @@ cd() {
         return 0
     fi
 
-    __gvmp_find_closest_dot_go_pkgset > /dev/null
+    __gvmp_find_closest_dot_go_pkgset > /dev/null; rslt=$?
     dot_go_pkgset="${RETVAL}"
 
-    if [[ $? -eq 0 ]]
+    if [[ $rslt -eq 0 ]]
     then
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Found .go-pkgset: ${dot_go_pkgset}"
 
