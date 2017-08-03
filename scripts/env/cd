@@ -12,7 +12,7 @@
 dep_load() {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
-        "../scripts/functions"
+        "../functions"
         "../function/_bash_pseudo_hash.sh"
         "../function/_shell_compat.sh"
     )
@@ -49,7 +49,7 @@ fi
 # executed but we do it now just to call it from some place on login.
 #
 __gvm_munge_path > /dev/null
-[[ $? -ne 0 ]] && __gvm_display_warning "Unable cleanup PATH. Leaving it alone." && return 1
+[[ $? -ne 0 ]] && __gvm_display_warning "Unable to cleanup PATH. Leaving it alone." && return 1
 export PATH="${RETVAL}"
 
 # cd()
@@ -63,6 +63,8 @@ export PATH="${RETVAL}"
 # @return Returns success (status 0) or failure (status 1).
 # */
 cd() {
+    unset RETVAL
+
     # @FIXME: gvm_oldcd is broken on re-sourcing .bashrc!
     if __gvm_is_function __gvm_oldcd
     then
@@ -81,15 +83,19 @@ cd() {
 
     # gather default environment settings, they can change at any time!
     [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Resolving defaults..."
+
     __gvm_read_environment_file "${GVM_ROOT}/environments/default" > /dev/null
     defaults_hash=( ${RETVAL} )
+
     if [[ $? -eq 0 ]]
     then
         defaults_resolved=true
     else
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Can't find default environment. Falling back to system."
+
         __gvm_read_environment_file "${GVM_ROOT}/environments/system" > /dev/null
         defaults_hash=( ${RETVAL} )
+
         if [[ $? -eq 0 ]]
         then
             defaults_resolved=true
@@ -127,9 +133,10 @@ cd() {
         echo "Resolved default pkgset: ${defaults_go_pkgset:-[EMPTY]}"
     fi
 
-    dot_go_version="$(__gvmp_find_closest_dot_go_version)"
-    rslt=$?
-    if [[ $rslt -eq 0 ]]
+    __gvmp_find_closest_dot_go_version > /dev/null
+    dot_go_version="${RETVAL}"
+
+    if [[ $? -eq 0 ]]
     then
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Found dot_go_version: ${dot_go_version}"
 
@@ -174,9 +181,10 @@ cd() {
         return 0
     fi
 
-    dot_go_pkgset="$(__gvmp_find_closest_dot_go_pkgset)"
-    rslt=$?
-    if [[ $rslt -eq 0 ]]
+    __gvmp_find_closest_dot_go_pkgset > /dev/null
+    dot_go_pkgset="${RETVAL}"
+
+    if [[ $? -eq 0 ]]
     then
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Found .go-pkgset: ${dot_go_pkgset}"
 
@@ -201,29 +209,36 @@ cd() {
 }
 
 function __gvmp_find_closest_dot_go_version() {
-    local resp rslt
+    unset RETVAL
 
     __gvm_find_path_upwards ".go-version" > /dev/null
-    resp="${RETVAL}"
-    rslt=$?
 
-    echo "${resp}"; return $rslt
+    if [[ -z "${RETVAL// /}" ]]
+    then
+        RETVAL="" && echo "${RETVAL}" && return 1
+    fi
+
+    echo "${RETVAL}" && return 0
 }
 
 function __gvmp_find_closest_dot_go_pkgset() {
-    local resp rslt
+    unset RETVAL
 
     __gvm_find_path_upwards ".go-pkgset" > /dev/null
-    resp="${RETVAL}"
-    rslt=$?
 
-    echo "${resp}"; return $rslt
+    if [[ -z "${RETVAL// /}" ]]
+    then
+        RETVAL="" && echo "${RETVAL}" && return 1
+    fi
+
+    echo "${RETVAL}" && return 0
 }
 
 function __gvmp_read_dot_go_version() {
     local filepath="${1}"
     local version=""
     local regex='^(go([0-9]+(\.[0-9]+)*))$'
+    unset RETVAL
 
     while IFS=$'\n' read -r _line; do
         # skip comment lines
@@ -237,20 +252,21 @@ function __gvmp_read_dot_go_version() {
         fi
     done <<< "$(cat "${filepath}")"
 
-    echo "${version}"
+    RETVAL="${version}"
 
-    if [[ -z "${version// /}" ]]
+    if [[ -z "${RETVAL// /}" ]]
     then
-        return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    return 0
+    echo "${RETVAL}" && return 0
 }
 
 function __gvmp_read_dot_go_pkgset() {
     local filepath="${1}"
     local pkgset=""
     local regex='^([A-Za-z0-9._#:%\+\-]+)$'
+    unset RETVAL
 
     while IFS=$'\n' read -r _line; do
         # skip comment lines
@@ -264,12 +280,12 @@ function __gvmp_read_dot_go_pkgset() {
         fi
     done <<< "$(cat "${filepath}")"
 
-    echo "${pkgset}"
+    RETVAL="${pkgset}"
 
-    if [[ -z "${pkgset// /}" ]]
+    if [[ -z "${RETVAL// /}" ]]
     then
-        return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    return 0
+    echo "${RETVAL}" && return 0
 }
