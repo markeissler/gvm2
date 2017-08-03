@@ -56,7 +56,8 @@ __gvm_find_installed()
             if [[ "${__key}" == "system" ]]
             then
                 # resolve path from environment!
-                local system_env="$( __gvm_read_environment_file "${GVM_ROOT}/environments/system")"
+                __gvm_read_environment_file "${GVM_ROOT}/environments/system" > /dev/null
+                local system_env="${RETVAL}"
                 __val="$(valueForKeyFakeAssocArray "GOROOT" "${system_env[*]}")"
                 unset system_env
             fi

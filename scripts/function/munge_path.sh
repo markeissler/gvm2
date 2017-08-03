@@ -58,7 +58,7 @@ __gvm_munge_path() {
     [[ -z "${path_in// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     # convert path into an array of elements, encode spaces
-    IFS=':' path_in_ary=( $(printf "%s" "${path_in//$spaceChar/%2f}") ) IFS="$defaultIFS"
+    IFS=':' path_in_ary=( ${path_in//$spaceChar/%2f} ) IFS="$defaultIFS"
 
     # extract path elements
     local _path
