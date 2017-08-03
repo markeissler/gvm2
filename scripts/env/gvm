@@ -3,46 +3,89 @@
 # shellcheck shell=bash
 # vi: set ft=bash
 #
-. "$GVM_ROOT/scripts/functions" || return 1
 
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/functions"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
+# gvm2()
+# /*!
+# @abstract Alias of the gvm() function.
+# */
 function gvm2() {
-    gvm "$@"
+    gvm "$@"; return $?
 }
 
-function gvm() {
-	if [[ "$GVM_ROOT" == "" ]]; then
-		__gvm_display_error "GVM_ROOT not set. Try running: \'source \$GVM_ROOT/scripts/gvm\'."
+# gvm()
+# /*!
+# @abstract Main gvm entry point.
+# @discussion
+# This function will end up calling one of the following scripts:
+#   + scripts/env/use
+#   + scripts/env/implode
+#   + bin/gvm
+# @param command [optional] The GVM command to execute
+# @param sub_command [optional] The GVM sub_command to execute (only works with
+#   pkgset command)
+# @return Returns success (status 0) or failure (status 1).
+# */
+gvm() {
+    local command="${1}"
+    local sub_command=""
+
+    # shift commands off of the arg list, pkgset requires a sub_command
+    case "${command}" in
+        pkgset)
+            sub_command="${2}"
+            shift; shift
+            ;;
+        *)
+            shift;
+            ;;
+    esac
+
+	if [[ -z "${GVM_ROOT// /}" ]]; then
+        __gvm_locale_text_for_key "gvmroot_not_set" > /dev/null
+        __gvm_display_error "${RETVAL} \'source \${GVM_ROOT}/scripts/gvm\'."
 		return 1
 	fi
-	if [[ -z "$GVM_NO_GIT_BAK" && -d $GVM_ROOT/.git ]]; then
-		__gvm_display_error "Looks like the .git directory is present. Please reinstall GVM."
+	if [[ -z "${GVM_NO_GIT_BAK// /}" && -d "${GVM_ROOT}/.git" ]]; then
+        __gvm_locale_text_for_key "gvmgit_directory_present" > /dev/null
+        __gvm_display_error "${RETVAL}"
 		return 1
 	fi
-	if [[ ! -d $GVM_ROOT ]]; then
-		__gvm_display_error "GVM_ROOT does not exist. Please reinstall GVM."
+	if [[ ! -d "${GVM_ROOT}" ]]; then
+        __gvm_locale_text_for_key "gvmroot_not_exist" > /dev/null
+        __gvm_display_error "${RETVAL}"
 		return 1
 	fi
 
-	mkdir -p "$GVM_ROOT/logs" > /dev/null 2>&1
-	mkdir -p "$GVM_ROOT/gos" > /dev/null 2>&1
-	mkdir -p "$GVM_ROOT/archive" > /dev/null 2>&1
-	mkdir -p "$GVM_ROOT/archive/package" > /dev/null 2>&1
-	mkdir -p "$GVM_ROOT/environments" > /dev/null 2>&1
+	mkdir -p "${GVM_ROOT}/logs" > /dev/null 2>&1
+	mkdir -p "${GVM_ROOT}/gos" > /dev/null 2>&1
+	mkdir -p "${GVM_ROOT}/archive" > /dev/null 2>&1
+	mkdir -p "${GVM_ROOT}/archive/package" > /dev/null 2>&1
+	mkdir -p "${GVM_ROOT}/environments" > /dev/null 2>&1
 
-	if [[ "$1" == "use" ]]; then
-		. "$GVM_ROOT/scripts/env/use"
-		shift
+	if [[ "${command}" == "use" ]]; then
+		source "${GVM_ROOT}/scripts/env/use"
 		gvm_use "$@"
-	elif [[ "$1" == "implode" ]]; then
-		. "$GVM_ROOT/scripts/env/implode"
+	elif [[ "${command}" == "implode" ]]; then
+		source "${GVM_ROOT}/scripts/env/implode"
 		gvm_implode
-	elif [[ "$1" == "pkgset" ]] && [[ "$2" == "use" ]]; then
-		. "$GVM_ROOT/scripts/env/pkgset-use"
-		shift
-		shift
-		gvm_pkgset_use "$@"
+	elif [[ "${command}" == "pkgset" ]] && [[ "${sub_command}" == "use" ]]; then
+		source "${GVM_ROOT}/scripts/env/pkgset-use"
+        gvm_pkgset_use "$@"
 	else
-		"$GVM_ROOT/bin/gvm" "$@"
+		"${GVM_ROOT}/bin/gvm" "$@"
 	fi
-}
 
+    return 0
+}
