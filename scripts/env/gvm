@@ -89,5 +89,5 @@ gvm() {
         "${GVM_ROOT}/bin/gvm" "$@"
     fi
 
-    return 0
+    return $?
 }
