@@ -45,7 +45,7 @@ __gvm_find_installed()
 
     if [[ -z "${target}" ]]
     then
-        installed_hash=( $("${LS_PATH}" -1 "${installed_path}") )
+        installed_hash=( $(\ls -1 "${installed_path}") )
         for (( i=0; i<${#installed_hash[@]}; i++ ))
         do
             local __key __val
