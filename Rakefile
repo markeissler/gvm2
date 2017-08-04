@@ -32,10 +32,10 @@ def copy_logs(build_directory, label="")
   _label = ""
   _label = "(#{label})" unless (label.nil? || label.empty?)
 
+  printf "Copying log files #{_label}...\n"
+
   FileUtils.mkdir("#{root_path}/build_logs") unless Dir.exist?("#{root_path}/build_logs")
   _build_logs = Dir.glob("#{_build_directory}/gvm2/logs/*.log")
-
-  printf "Copying log files #{_label}...\n"
 
   # debug verbosity
   if ENV['GVM_DEBUG'] == '1'
@@ -48,13 +48,36 @@ def copy_logs(build_directory, label="")
     _build_logs.each_with_index { |f,i| printf("  [%3d] %s\n", i+1, f) }
   else
     printf "No log files found.\n"
+    return
   end
 
   FileUtils.cp(_build_logs, "#{root_path}/build_logs")
 end
 
+# remove old build logs from source directory
+def remove_logs(label="")
+  _label = ""
+  _label = "(#{label})" unless (label.nil? || label.empty?)
+
+  printf "Removing old log files ${_label}...\n"
+
+  _build_logs = Dir.glob("#{root_path}/build_logs/*.log")
+
+  if _build_logs.count > 0
+    printf "Log files found:\n"
+    _build_logs.each_with_index { |f,i| printf("  [%3d] %s\n", i+1, f) }
+  else
+    printf "No log files found.\n"
+    return
+  end
+
+  FileUtils.rm(_build_logs)
+end
+
 desc "Run simple tests"
 task :default do
+  remove_logs("task: default")
+
   Dir.mktmpdir('gvm-test') do |tmpdir|
     begin
       # install GVM in tmpdir, suppress updates to user shell config files
@@ -88,6 +111,8 @@ end
 
 desc "Run scenario tests"
 task :scenario do
+  remove_logs("task: scenario")
+
   Dir["#{root_path}/tests/scenario/*_comment_test.sh"].sort.each do |test|
     name = File.basename(test)
     puts "Running scenario #{name}..."
