@@ -66,8 +66,8 @@ task :default do
       EOSH
       Dir.glob("#{tmpdir}/gvm2/tests/*_comment_test.sh").sort.each do |f|
         # filter out platform tests for current target
-        next if platform() == :darwin && f.match('linux_comment_test.sh$')
-        next if platform() == :linux && f.match('darwin_comment_test.sh$')
+        next if platform() == :darwin && File.basename(f).match('linux_comment_test.sh$')
+        next if platform() == :linux && File.basename(f).match('darwin_comment_test.sh$')
         # run test
         system(<<-EOSH) || raise(SystemCallError, "system shell (bash) call failed")
           bash -c '
