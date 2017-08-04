@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+source "$GVM_ROOT/scripts/functions"
 
 [[ $gvm_go_name != "" ]] ||
 	__gvm_display_fatal "No Go version selected"

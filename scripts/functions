@@ -6,5 +6,5 @@ for function in $GVM_ROOT/scripts/function/*; do
 	then
 		continue
 	fi
-	. "$function"
+	source "$function"
 done

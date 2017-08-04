@@ -3,8 +3,8 @@
 # shellcheck shell=bash
 # vi: set ft=bash
 #
-. "$GVM_ROOT/scripts/function/_bash_pseudo_hash.sh" || return 1
-. "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
+source "$GVM_ROOT/scripts/function/_bash_pseudo_hash.sh" || return 1
+source "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
 
 # gvm_pkgset_use()
 # /*!
@@ -206,7 +206,7 @@ function gvm_pkgset_use() {
         fi
 
         __gvm_export_path > /dev/null
-        . "$local_pkgset/environments/$fuzzy_match" ||
+        source "$local_pkgset/environments/$fuzzy_match" ||
             __gvm_display_error "Failed to source the package set environment" || return 1
 
         # fix PATH to correct order
@@ -230,7 +230,7 @@ function gvm_pkgset_use() {
         [[ -n "${fuzzy_match}" ]] || __gvm_display_error "Invalid package set: ${pkgset}" || return 1
 
         __gvm_export_path > /dev/null
-        . "$GVM_ROOT/environments/$fuzzy_match" ||
+        source "$GVM_ROOT/environments/$fuzzy_match" ||
             __gvm_display_error "Failed to source the package set environment" || return 1
 
         # fix PATH to correct order

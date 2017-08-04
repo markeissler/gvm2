@@ -4,8 +4,8 @@
 # shellcheck shell=bash
 # vi: set ft=bash
 #
-. "$GVM_ROOT/scripts/function/_bash_pseudo_hash.sh" || return 1
-. "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
+source "$GVM_ROOT/scripts/function/_bash_pseudo_hash.sh" || return 1
+source "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
 
 # gvm_pkgset_use()
 # /*!
@@ -241,7 +241,7 @@ function gvm_use() {
     unset installed_hash
 
     __gvm_export_path > /dev/null
-    . "$GVM_ROOT/environments/$version" &> /dev/null || __gvm_display_error "Couldn't source environment" || return 1
+    source "$GVM_ROOT/environments/$version" &> /dev/null || __gvm_display_error "Couldn't source environment" || return 1
     __gvm_environment_sanitize "$version" > /dev/null
 
     # fix PATH to correct order

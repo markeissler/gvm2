@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+source "$GVM_ROOT/scripts/functions"
 
 usage() {
 cat <<EOF

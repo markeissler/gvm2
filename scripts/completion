@@ -1,4 +1,5 @@
-. $GVM_ROOT/scripts/functions
+#!/usr/bin/env bash
+source "${GVM_ROOT}/scripts/functions"
 
 _gvm()
 {

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+source "$GVM_ROOT/scripts/functions"
 
 [[ $1 != "" ]] ||
 	display_fatal "Please specify the name"
