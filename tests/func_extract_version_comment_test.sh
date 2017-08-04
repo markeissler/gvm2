@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/semver_tools.sh" || return 1
+source "${SANDBOX}/gvm2/scripts/function/semver_tools.sh" || return 1
 
 ##
 ## strip extraneous SemVer strings from a Go version string

@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/find_installed.sh" || return 1
+source "${SANDBOX}/gvm2/scripts/function/find_installed.sh" || return 1
 
 ##
 ## find installed Go versions

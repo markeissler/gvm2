@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/find_local_pkgset.sh" || return 1
+source "${SANDBOX}/gvm2/scripts/function/find_local_pkgset.sh" || return 1
 
 ##
 ## find a local package set

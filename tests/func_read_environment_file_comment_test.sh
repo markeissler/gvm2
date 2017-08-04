@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/read_environment_file.sh" || return 1
+source "${SANDBOX}/gvm2/scripts/function/read_environment_file.sh" || return 1
 
 ##
 ## read an environment file

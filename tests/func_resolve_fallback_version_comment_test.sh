@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/resolve_fallback_version.sh" || return 1
+source "${SANDBOX}/gvm2/scripts/function/resolve_fallback_version.sh" || return 1
 
 ##
 ## resolve fallback version

@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/locale_text.sh" || return 1
+source "${SANDBOX}/gvm2/scripts/function/locale_text.sh" || return 1
 
 ##
 ## find locale text

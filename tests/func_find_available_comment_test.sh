@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/find_available.sh" || return 1
+source "${SANDBOX}/gvm2/scripts/function/find_available.sh" || return 1
 
 ##
 ## find available Go versions
