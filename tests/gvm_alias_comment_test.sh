@@ -1,4 +1,4 @@
-source $GVM_ROOT/scripts/gvm
+source "${SANDBOX}/gvm2/scripts/gvm"
 
 ## Cleanup test objects
 gvm alias delete foo
