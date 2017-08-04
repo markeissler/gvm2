@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+#
+# @TODO: Add shell gvm-completion installation instructions here!
+#
 source "${GVM_ROOT}/scripts/functions"
 
 _gvm()
@@ -81,4 +84,3 @@ _gvm()
 	esac
 }
 complete -F _gvm gvm
-
