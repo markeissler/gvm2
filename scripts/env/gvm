@@ -9,6 +9,10 @@ dep_load() {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
         "../functions"
+        "../function/_shell_compat.sh"
+        "implode.sh"
+        "pkgset_use.sh"
+        "use.sh"
     )
     for file in "${deps[@]}"
     do
@@ -77,14 +81,11 @@ gvm() {
     mkdir -p "${GVM_ROOT}/environments" > /dev/null 2>&1
 
     if [[ "${command}" == "use" ]]; then
-        source "${GVM_ROOT}/scripts/env/use"
-        gvm_use "$@"
+        __gvm_use "$@"
     elif [[ "${command}" == "implode" ]]; then
-        source "${GVM_ROOT}/scripts/env/implode"
-        gvm_implode
+        __gvm_implode
     elif [[ "${command}" == "pkgset" ]] && [[ "${sub_command}" == "use" ]]; then
-        source "${GVM_ROOT}/scripts/env/pkgset-use"
-        gvm_pkgset_use "$@"
+        __gvm_pkgset_use "$@"
     else
         "${GVM_ROOT}/bin/gvm" "$@"
     fi

@@ -1,15 +1,28 @@
-#!/usr/bin/env bash
-# use
+# scripts/env/use.sh
 #
 # shellcheck shell=bash
 # vi: set ft=bash
 #
-source "$GVM_ROOT/scripts/function/_bash_pseudo_hash.sh" || return 1
-source "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
 
-# gvm_pkgset_use()
+# source once and only once!
+[[ ${GVM_USE:-} -eq 1 ]] && return || readonly GVM_USE=1
+
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../function/_bash_pseudo_hash.sh"
+        "../function/_shell_compat.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
+# __gvm_use()
 # /*!
-# @abstract Select a gvm version
+# @abstract Select a Go version
 # @discussion
 # For basic usage, this function select the version specified as a string
 #   argument. The argument list is parsed...
@@ -32,7 +45,8 @@ source "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
 # @return Returns success (status 0) if a pkgset was selected successfully or
 #   (status 1) failure if an error was encountered.
 # */
-function gvm_use() {
+__gvm_use()
+{
     local options_hash; options_hash=()
     local accumulator; accumulator=()
 
@@ -201,7 +215,8 @@ function gvm_use() {
     #   2. if source cache directory exists, then tell user they can build requested version from local cache.
     #   3. if version exists on download server, tell user they can either build from source or install binary from a
     #      remote server.
-    local installed_hash; installed_hash=( "$(__gvm_find_installed "" "${GVM_ROOT}/gos")" )
+    __gvm_find_installed "" "${GVM_ROOT}/gos" > /dev/null
+    local installed_hash; installed_hash=( ${RETVAL} )
     if [[ "${GVM_DEBUG}" -eq 1 ]]
     then
         printf "Command (%s) installed versions dump:\n" "${BASH_SOURCE[0]##*/}"
@@ -214,14 +229,16 @@ function gvm_use() {
         # no binaries installed and no source archive installed?
         if [[ ${#installed_hash[@]} -eq 0 && ! -d "${go_archive_path}" ]]
         then
-            __gvm_display_error "$(__gvm_locale_text_for_key "go_install_prompt")"
+            __gvm_locale_text_for_key "go_install_prompt" > /dev/null
+            __gvm_display_error "${RETVAL}"
             return 1
         fi
 
         # source archive installed and version can be built locally
         if [[ -d "${go_archive_path}" && "$(builtin cd "${go_archive_path}" && git tag -l "${version}")" != "" ]]
         then
-            __gvm_display_warning "$(__gvm_locale_text_for_key "go_install_version_local")"
+            __gvm_locale_text_for_key "go_install_version_local" > /dev/null
+            __gvm_display_warning "${RETVAL}"
             return 1
         fi
         unset go_archive_path
@@ -230,10 +247,12 @@ function gvm_use() {
         local available_hash; available_hash=( "$(__gvm_find_available "https://go.googlesource.com/go")" )
         if [[ -n "$(valueForKeyFakeAssocArray "${version}" "${available_hash[*]}")" ]]
         then
-            __gvm_display_error "$(__gvm_locale_text_for_key "go_install_version_upstream")"
+            __gvm_locale_text_for_key "go_install_version_upstream" > /dev/null
+            __gvm_display_error "${RETVAL}"
             return 1
         else
-            __gvm_display_error "$(__gvm_locale_text_for_key "go_install_version_invalid")"
+            __gvm_locale_text_for_key "go_install_version_invalid" > /dev/null
+            __gvm_display_error "${RETVAL}"
             return 1
         fi
         unset available_hash
@@ -245,7 +264,8 @@ function gvm_use() {
     __gvm_environment_sanitize "$version" > /dev/null
 
     # fix PATH to correct order
-    local fixed_path="$(__gvm_munge_path)"
+    __gvm_munge_path > /dev/null
+    local fixed_path="${RETVAL}"
     [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Original path: $PATH" && echo "Munged path: ${fixed_path}"
     export PATH="${fixed_path}"
     unset fixed_path
@@ -275,13 +295,5 @@ function gvm_use() {
         __gvm_display_message "Now using version ${version}"
     fi
 
-    unset options_hash
-    unset goversion_regex
-    unset goversion_release_regex
-    unset goversion_system_regex
-    unset goversion_master_regex
-    unset goversion_alias_regex
-    unset pkgset_regex
-    unset at_pkgset_regex
-    unset version_rematch
+    return $?
 }

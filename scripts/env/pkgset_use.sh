@@ -1,12 +1,26 @@
-#!/usr/bin/env bash
+# scripts/env/pkgset_use.sh
 #
 # shellcheck shell=bash
 # vi: set ft=bash
 #
-source "$GVM_ROOT/scripts/function/_bash_pseudo_hash.sh" || return 1
-source "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
 
-# gvm_pkgset_use()
+# source once and only once!
+[[ ${GVM_PKGSET_USE:-} -eq 1 ]] && return || readonly GVM_PKGSET_USE=1
+
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../function/_bash_pseudo_hash.sh"
+        "../function/_shell_compat.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
+# __gvm_pkgset_use()
 # /*!
 # @abstract Select a gvm pkgset
 # @discussion
@@ -36,7 +50,8 @@ source "$GVM_ROOT/scripts/function/_shell_compat.sh" || return 1
 # @return Returns success (status 0) if a pkgset was selected successfully or
 #   (status 1) failure if an error was encountered.
 # */
-function gvm_pkgset_use() {
+__gvm_pkgset_use()
+{
     local options_hash; options_hash=()
     local accumulator; accumulator=()
 
@@ -210,7 +225,8 @@ function gvm_pkgset_use() {
             __gvm_display_error "Failed to source the package set environment" || return 1
 
         # fix PATH to correct order
-        local fixed_path="$(__gvm_munge_path)"
+        __gvm_munge_path > /dev/null
+        local fixed_path="${RETVAL}"
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Original path: $PATH" && echo "Munged path: ${fixed_path}"
         export PATH="${fixed_path}"
         unset fixed_path
@@ -234,7 +250,8 @@ function gvm_pkgset_use() {
             __gvm_display_error "Failed to source the package set environment" || return 1
 
         # fix PATH to correct order
-        local fixed_path="$(__gvm_munge_path)"
+        __gvm_munge_path > /dev/null
+        local fixed_path="${RETVAL}"
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Original path: $PATH" && echo "Munged path: ${fixed_path}"
         export PATH="${fixed_path}"
         unset fixed_path
@@ -256,7 +273,5 @@ function gvm_pkgset_use() {
         return 1
     fi
 
-    unset options_hash
-    unset pkgset_regex pkgset_rematch
-    unset local_pkgset_regex local_pkgset_rematch
+    return $?
 }

@@ -1,6 +1,23 @@
 #!/usr/bin/env bash
 source "$GVM_ROOT/scripts/functions"
 
+# load dependencies
+dep_load() {
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local deps; deps=(
+        "functions"
+        "env/use.sh"
+        "function/_shell_compat.sh"
+        "function/display_notices.sh"
+        "function/detect_runos.sh"
+        "function/find_available.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load
+
 # const
 GO_BOOTSTRAP_BRANCH="release-branch.go1.4"
 
@@ -199,9 +216,7 @@ export DYLD_LIBRARY_PATH; DYLD_LIBRARY_PATH="\${GVM_OVERLAY_PREFIX}/lib:\${DYLD_
 export PKG_CONFIG_PATH; PKG_CONFIG_PATH="\${GVM_OVERLAY_PREFIX}/lib/pkgconfig:\${PKG_CONFIG_PATH}"
 EOF
 
-    source "${GVM_ROOT}/scripts/env/use"
-    source "${GVM_ROOT}/scripts/env/implode"
-    gvm_use "${GO_NAME}" &> /dev/null ||
+    __gvm_use "${GO_NAME}" &> /dev/null ||
         display_fatal "Failed to use installed version"
     gvm pkgset create global
     unset GOPATH
