@@ -64,7 +64,7 @@ __gvm_implode()
                 ;;
             *)
                 __gvm_locale_text_for_key "unrecognized_option" > /dev/null
-                printf "%s: %s\n" "${RETVAL}" "${1}"
+                printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
                 __gvm_locale_text_for_key "help/usage_implode" > /dev/null
                 printf "%s\n" "${RETVAL}"
                 return 1
