@@ -9,6 +9,19 @@
 # source once and only once!
 [[ ${GVM_SHELL_COMPAT:-} -eq 1 ]] && return || readonly GVM_SHELL_COMPAT=1
 
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "locale_text.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
+
 # force zsh to start arrays at index 0
 [[ -n $ZSH_VERSION ]] && setopt KSH_ARRAYS
 
@@ -47,6 +60,50 @@ __gvm_callstack()
     fi
 
     return 0
+}
+
+# __gvm_prompt_confirm()
+# /*!
+# @abstract Confirm a user action. Input case insensitive
+# @discussion
+# Read a simple case-insensitive [y]es or [N]o prompt, where "No" is the default
+#   if no answer is entered by the user. If no prompt is provided, the default
+#   (localized) prompt will be used.
+# @param prompt [optional] Message to precede the confirmation menu
+# @return Returns string containing "yes" on success (status 0), otherwise  "no"
+#   (status 1).
+# @note Also sets global variable RETVAL to the same return value.
+# */
+__gvm_prompt_confirm()
+{
+    local prompt="${1}"
+    local response
+    unset RETVAL
+
+    if [[ -z "${prompt// /}" ]]
+    then
+        __gvm_locale_text_for_key "are_you_sure_prompt" > /dev/null
+        prompt="${RETVAL}"
+    fi
+
+    while true
+    do
+        read -r -n 1 -p "${prompt} ([y]es or [N]o): " response
+        __gvm_str_lower "${response}"
+
+        case "${RETVAL}" in
+            y|yes)
+                RETVAL="yes"; echo "${RETVAL}"
+                return 0
+                ;;
+            n|no)
+                RETVAL="no"; echo "${RETVAL}"
+                return 1
+                ;;
+            *)
+                ;;
+        esac
+    done
 }
 
 # __gvm_rematch()
@@ -122,20 +179,8 @@ __gvm_setenv()
     local name="${1}"; shift
     local value="${1}"
 
-    if [[ "x${BASH_VERSION}" != "x" ]]
-    then
-        if [[ "${BASH_VERSION:0:1}" -gt 3 ]]
-        then
-            name="${name^^}"
-        else
-            name="$(tr '[:lower:]' '[:upper:]' <<< "$name")"
-        fi
-    elif [[ "x${ZSH_VERSION}" != "x" ]]
-    then
-        name="${name:u}"
-    else
-        return 1
-    fi
+    __gvm_str_upper "${name}" > /dev/null
+    name="${RETVAL}"
 
     [[ ${#name} -eq 0 ]] && return 1
 
@@ -154,4 +199,76 @@ __gvm_setenv()
     [[ "x${name}" == "x" || "${name}" != "${value}" ]] && return 1
 
     return 0
+}
+
+# __gvm_str_lower()
+# /*!
+# @abstract Convert a string to lowercase
+# @param string String to convert
+# @return Returns converted string on success (status 0), otherwise an empty
+#   string on failure (status 1).
+# @note Also sets global variable RETVAL to the same return value.
+# */
+__gvm_str_lower()
+{
+    local string="${1}"
+    local string_lower=""
+    unset RETVAL
+
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    if [[ ! -z "${BASH_VERSION// /}" ]]
+    then
+        if [[ "${BASH_VERSION:0:1}" -gt 3 ]]
+        then
+            string_lower="${string,,}"
+        else
+            string_lower="$(tr '[:upper:]' '[:lower:]' <<< "${string}")"
+        fi
+    elif [[ ! -z "${ZSH_VERSION// /}" ]]
+    then
+        string_lower="${string:l}"
+    fi
+
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    RETVAL="${string_lower}"
+
+    echo "${RETVAL}"; return 0
+}
+
+# __gvm_str_upper()
+# /*!
+# @abstract Convert a string to uppercase
+# @param string String to convert
+# @return Returns converted string on success (status 0), otherwise an empty
+#   string on failure (status 1).
+# @note Also sets global variable RETVAL to the same return value.
+# */
+__gvm_str_upper()
+{
+    local string="${1}"
+    local string_upper=""
+    unset RETVAL
+
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    if [[ ! -z "${BASH_VERSION// /}" ]]
+    then
+        if [[ "${BASH_VERSION:0:1}" -gt 3 ]]
+        then
+            string_upper="${string^^}"
+        else
+            string_upper="$(tr '[:lower:]' '[:upper:]' <<< "${string}")"
+        fi
+    elif [[ ! -z "${ZSH_VERSION// /}" ]]
+    then
+        string_upper="${string:u}"
+    fi
+
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    RETVAL="${string_upper}"
+
+    echo "${RETVAL}"; return 0
 }
