@@ -217,7 +217,7 @@ __gvm_str_lower()
 
     [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
-    if [[ ! -z "${BASH_VERSION// /}" ]]
+    if [[ -n "${BASH_VERSION// /}" ]]
     then
         if [[ "${BASH_VERSION:0:1}" -gt 3 ]]
         then
@@ -225,7 +225,7 @@ __gvm_str_lower()
         else
             string_lower="$(tr '[:upper:]' '[:lower:]' <<< "${string}")"
         fi
-    elif [[ ! -z "${ZSH_VERSION// /}" ]]
+    elif [[ -n "${ZSH_VERSION// /}" ]]
     then
         string_lower="${string:l}"
     fi
@@ -253,7 +253,7 @@ __gvm_str_upper()
 
     [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
-    if [[ ! -z "${BASH_VERSION// /}" ]]
+    if [[ -n "${BASH_VERSION// /}" ]]
     then
         if [[ "${BASH_VERSION:0:1}" -gt 3 ]]
         then
@@ -261,7 +261,7 @@ __gvm_str_upper()
         else
             string_upper="$(tr '[:lower:]' '[:upper:]' <<< "${string}")"
         fi
-    elif [[ ! -z "${ZSH_VERSION// /}" ]]
+    elif [[ -n "${ZSH_VERSION// /}" ]]
     then
         string_upper="${string:u}"
     fi
