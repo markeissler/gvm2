@@ -1,0 +1,11 @@
+Usage: gvm alias <command> [option]
+
+GVM2 command to manage Go version aliases
+
+Commands:
+    create      Create a new alias
+    delete      Delete an alias
+    list        List aliases
+    help        Display this usage text
+
+Run 'gvm alias <command> --help' for more information on a command.

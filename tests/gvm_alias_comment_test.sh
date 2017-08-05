@@ -5,7 +5,10 @@ gvm alias delete foo
 gvm alias delete bar
 #######################
 
-gvm alias # status=0
+## Test output messages
+gvm alias # status=1; match=/Unrecognized command: empty/
+gvm alias --help # status=0; match=/Usage: gvm alias <command> \[option\]/
+
 gvm alias create foo go1.3.3 # status=0
 gvm alias create bar go1.2.2 # status=0
 gvm alias list # status=0; match=/gvm go aliases/; match=/foo \(go1\.3\.3\)/; match=/bar \(go1\.2\.2\)/
