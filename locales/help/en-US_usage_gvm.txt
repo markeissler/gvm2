@@ -1,4 +1,4 @@
-Usage: gvm <command> [<args>]
+Usage: gvm <command> [option]
 
 GVM2 is the Go enVironment Manager
 
