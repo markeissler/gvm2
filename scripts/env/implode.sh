@@ -8,7 +8,8 @@
 [[ ${GVM_IMPLODE:-} -eq 1 ]] && return || readonly GVM_IMPLODE=1
 
 # load dependencies
-dep_load() {
+dep_load()
+{
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
         "../function/_shell_compat.sh"
@@ -45,26 +46,32 @@ __gvm_implode()
     local opt_force=false
     local opt_quiet=false
 
-    for option in "$@"
+    while true
     do
-        case "${option}" in
-            -f|--force)
+        case "${1}" in
+            "")
+                ;;
+            -f | --force)
                 opt_force=true
                 ;;
-            -q|--quiet)
+            -q | --quiet)
                 opt_quiet=true
                 ;;
-            -h|--help|*)
+            -h | ? | help | --help )
                 __gvm_locale_text_for_key "help/usage_implode" > /dev/null
                 printf "%s\n" "${RETVAL}"
                 return 0
                 ;;
             *)
                 __gvm_locale_text_for_key "unrecognized_option" > /dev/null
-                printf "%s: %s\n" "${RETVAL}" "${option}"
+                printf "%s: %s\n" "${RETVAL}" "${1}"
+                __gvm_locale_text_for_key "help/usage_implode" > /dev/null
+                printf "%s\n" "${RETVAL}"
                 return 1
                 ;;
         esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
     done
 
     if [[ "${opt_force}" == false ]]
