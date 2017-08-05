@@ -9,7 +9,8 @@
 #
 
 # load dependencies
-dep_load() {
+dep_load()
+{
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
         "../functions"
@@ -20,7 +21,7 @@ dep_load() {
     do
         source "${base}/${file}"
     done
-}; dep_load
+}; dep_load; unset -f dep_load
 
 # user could be reloading this file, restore preserved functions if we've been
 # through here already.

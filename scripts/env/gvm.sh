@@ -4,8 +4,12 @@
 # vi: set ft=bash
 #
 
+# source once and only once!
+[[ ${GVM_ENV:-} -eq 1 ]] && return || readonly GVM_ENV=1
+
 # load dependencies
-dep_load() {
+dep_load()
+{
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
         "../functions"
@@ -18,7 +22,7 @@ dep_load() {
     do
         source "${base}/${file}"
     done
-}; dep_load
+}; dep_load; unset -f dep_load
 
 # gvm2()
 # /*!
