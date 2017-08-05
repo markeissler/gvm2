@@ -1,6 +1,6 @@
-usage: gvm implode [options]
+Usage: gvm implode [options]
 
-OPTIONS:
+Options:
     -f, --force                 Attempt to uninstall GVM2 without prompting for confirmation
     -q, --quiet                 Suppress progress messages
     -h, --help                  Show this message
