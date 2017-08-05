@@ -5,10 +5,11 @@
 #
 
 # source once and only once!
-[[ ${GVM_USE:-} -eq 1 ]] && return || readonly GVM_USE=1
+[[ ${GVM_ENV_USE:-} -eq 1 ]] && return || readonly GVM_ENV_USE=1
 
 # load dependencies
-dep_load() {
+dep_load()
+{
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
         "../function/_bash_pseudo_hash.sh"
@@ -18,7 +19,7 @@ dep_load() {
     do
         source "${base}/${file}"
     done
-}; dep_load
+}; dep_load; unset -f dep_load
 
 # __gvm_use()
 # /*!
