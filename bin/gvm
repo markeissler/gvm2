@@ -1,63 +1,111 @@
 #!/usr/bin/env bash
+# bin/gvm
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-[[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]] && {
-  set -x
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/env/implode.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
+
+sanity_check()
+{
+    if [ -z "${GVM_ROOT// /}" ]
+    then
+        if [ -n "${ZSH_NAME// /}" ]; then
+            __gvm_locale_text_for_key "gvmroot_not_set_long_zsh" > /dev/null
+        else
+            __gvm_locale_text_for_key "gvmroot_not_set_long_bash" > /dev/null
+        fi
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # check for all required utility dependencies
+    "${GVM_ROOT}/scripts/gvm-check"
+    if [[ "$?" != "0" ]]
+    then
+        __gvm_locale_text_for_key "missing_requirements" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    return $?
 }
 
-if [ -z "$GVM_ROOT" ]; then
-	tput sgr0
-	tput setaf 1
-	echo 'ERROR: GVM_ROOT is not set! Please add the following line to your .bashrc or .profile
+_exit()
+{
+  stty sane; echo; display_fatal "caught signal, shutting down"
 
-	[[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
-' >&2
-	tput sgr0
-	exit 1
-fi
+  # @TODO: additional cleanup?
 
-source "$GVM_ROOT/scripts/functions" || exit 1
+  wait; stty sane; exit 1
+}
 
-command=$1
-if [[ $command == "implode" ]]; then
-  gvm_implode
-	exit 0
-fi
+trap '_exit' SIGINT SIGQUIT SIGTERM
 
-"$GVM_ROOT/scripts/gvm-check"
-if [[ "$?" != "0" ]]; then
-	__gvm_display_fatal "Missing requirements."
-fi
+main()
+{
+    local rslt=0
 
-if [[ $command == "version" ]]; then
-	__gvm_display_message "Go enVironment Manager v$GVM_VERSION installed at $GVM_ROOT"
-else
-	if [ -f "$GVM_ROOT/scripts/$command" ]; then
-		shift
-		"$GVM_ROOT/scripts/$command" "$@"
-	elif [[ -z $command || $command = help ]]; then
-		echo "Usage: gvm [command]
+    sanity_check || return 1
 
-Description:
-  GVM is the Go enVironment Manager
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
 
-Commands:
-  version    - print the gvm version number
-  get        - gets the latest code (for debugging)
-  use        - select a go version to use (--default to set permanently)
-  diff       - view changes to Go root
-  help       - display this usage text
-  implode    - completely remove gvm
-  install    - install go versions
-  uninstall  - uninstall go versions
-  cross      - install go cross compilers
-  linkthis   - link this directory into GOPATH
-  list       - list installed go versions
-  listall    - list available versions
-  alias      - manage go version aliases
-  pkgset     - manage go packages sets
-  pkgenv     - edit the environment for a package set
-"
-	else
-		__gvm_display_fatal "Unrecognized command line argument: '$command'"
-	fi
-fi
+    while true
+    do
+        case "${1}" in
+            alias | cross | diff | get | install | linkthis | list | listall | pkgenv | pkgset | uninstall | use )
+                local command="${1}"
+                shift
+                "${GVM_ROOT}/scripts/${command}" "$@"
+                rslt=$?; unset command; break
+                ;;
+            implode )
+                shift
+                __gvm_implode "$@"
+                rslt=$?; break
+                ;;
+            version )
+                __gvm_display_message "GVM2 v$GVM_VERSION installed at ${GVM_ROOT}"
+                rslt=0; break
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_gvm" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                rslt=0; break
+                ;;
+            *)
+                __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                __gvm_locale_text_for_key "help/usage_gvm" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                rslt=1; break
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

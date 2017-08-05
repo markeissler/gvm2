@@ -1,0 +1,7 @@
+GVM_ROOT not set. Please add the following line to your .bashrc or .profile file:
+
+    [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
+
+Then restart your terminal session or run:
+
+    prompt> source {.bashrc,.profile}

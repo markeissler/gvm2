@@ -1,0 +1,8 @@
+GVM_ROOT not set. Please add the following line to your .zshenv, .zprofile or
+.zshrc file:
+
+    [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
+
+Then restart your terminal session or run:
+
+    prompt> source {.zshenv,.zprofile,.zshrc}

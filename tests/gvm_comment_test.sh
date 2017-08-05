@@ -1,1 +1,1 @@
-gvm # status=0; match=/GVM is the Go enVironment Manager/
+gvm # status=1; match=/Unrecognized command: empty/

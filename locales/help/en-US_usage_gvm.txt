@@ -1,0 +1,22 @@
+Usage: gvm <command> [<args>]
+
+GVM2 is the Go enVironment Manager
+
+Commands:
+    version     Print the gvm version number
+    get         Gets the latest code (for debugging)
+    use         Select a go version to use (--default to set permanently)
+    diff        View changes to Go root
+    help        Display this usage text
+    implode     Completely remove gvm
+    install     Install go versions
+    uninstall   Uninstall go versions
+    cross       Install go cross compilers
+    linkthis    Link this directory into GOPATH
+    list        List installed go versions
+    listall     List available versions
+    alias       Manage go version aliases
+    pkgset      Manage go packages sets
+    pkgenv      Edit the environment for a package set
+
+Run 'gvm <command> --help' for more information on a command.
