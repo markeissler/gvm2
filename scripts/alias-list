@@ -6,8 +6,7 @@ __gvm_display_message "gvm go aliases"
 echo
 
 for a in $(builtin cd "$GVM_ROOT/environments" ; \grep -l "gvm_alias_name" ./*); do
-  t=$(sh -c "source $GVM_ROOT/environments/$a ; echo \$gvm_go_name")
+  t=$(bash -c "source $GVM_ROOT/environments/$a ; echo \$gvm_go_name")
   echo "  $a ($t)"
 done
 echo
-
