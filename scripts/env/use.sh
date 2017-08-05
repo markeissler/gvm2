@@ -14,6 +14,7 @@ dep_load()
     local deps; deps=(
         "../function/_bash_pseudo_hash.sh"
         "../function/_shell_compat.sh"
+        "../function/locale_text.sh"
     )
     for file in "${deps[@]}"
     do
@@ -154,18 +155,8 @@ __gvm_use()
             accumulator+=( "--quiet" "true" )
         elif [[ "${_option}" == "-h" || "${_option}" == "--help" ]]
         then
-            echo "Usage: gvm use [--version] <value> [--pkgset <value>] [--default]"
-            echo "       gvm use <version-name>@<pkgset-name> [--default]"
-            echo
-            echo "Options:"
-            echo "  --version value       go version name or alias"
-            echo "  --pkgset value        standard pkgset name"
-            echo "  --default             make selected pkgset default"
-            echo "  --quiet               suppress 'now using' acknowledgements"
-            echo "  -h, --help            show this message"
-            echo
-            echo "When using --pkgset, you must also specify a go version name."
-            echo
+            __gvm_locale_text_for_key "help/usage_use" > /dev/null
+            printf "%s\n" "${RETVAL}"
             return 0
         else
             __gvm_display_warning "Unrecognized command line argument: '${_option}'"
