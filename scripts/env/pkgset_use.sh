@@ -14,6 +14,7 @@ dep_load()
     local deps; deps=(
         "../function/_bash_pseudo_hash.sh"
         "../function/_shell_compat.sh"
+        "../function/locale_text.sh"
     )
     for file in "${deps[@]}"
     do
@@ -135,18 +136,8 @@ __gvm_pkgset_use()
             accumulator+=( "--quiet" "true" )
         elif [[ "${_option}" == "-h" || "${_option}" == "--help" ]]
         then
-            echo "Usage: gvm pkgset use [--pkgset ] <value> [--default]"
-            echo "       gvm pkgset use --local [<value>]"
-            echo
-            echo "Options:"
-            echo "  --pkgset value        standard pkgset name"
-            echo "  --local value         local pkgset name (follows file path pattern)"
-            echo "  --default             make selected pkgset default"
-            echo "  --quiet               suppress 'now using' acknowledgements"
-            echo "  -h, --help            show this message"
-            echo
-            echo "The --pkgset and --local options are exclusive (only one can be specified)."
-            echo
+            __gvm_locale_text_for_key "help/usage_pkgset_use" > /dev/null
+            printf "%s\n" "${RETVAL}"
             return 0
         else
             __gvm_display_warning "Unrecognized command line argument: '${_option}'"
