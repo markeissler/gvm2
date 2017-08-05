@@ -34,7 +34,7 @@ dep_load() {
 # <pre>@textblock
 #   en-US_go_install_prompt.txt
 # @/textblock</pre>
-#   Files are limited to 10 lines of text maximum, text beyond this point will
+#   Files are limited to 100 lines of text maximum, text beyond this point will
 #   be truncated and an error status will be returned. Files that consist of
 #   only blank lines will be truncated and an error status will be returned so
 #   that the caller can use an alternate translation.
@@ -60,6 +60,18 @@ __gvm_locale_text_for_key() {
     local key="${key_raw}"
     unset RETVAL
 
+    # fixup locales_dir if default value was used but GVM_ROOT is empty
+    #
+    # NOTE: This should not happen but if the install is broken we still need to
+    # be able to provide localized messages.
+    #
+    if [[ -z "${3// /}" && "${locales_dir}" =~ ^/ ]]
+    then
+        local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+        locales_dir="${base}/../../locales/"
+        unset base
+    fi
+
     # parse key_raw into subdir path and key components
     if [[ "${key_raw}" =~ / ]]
     then
@@ -74,7 +86,7 @@ __gvm_locale_text_for_key() {
     local text=""
     while IFS= read -r _line; do
         (( line_count++ ))
-        [[ "${line_count}" -gt 10 ]] && break
+        [[ "${line_count}" -gt 100 ]] && break
         text+="${_line}"$'\n'
     done <<< "$(cat "${key_path}")"
 
@@ -82,7 +94,7 @@ __gvm_locale_text_for_key() {
 
     RETVAL="${text%$'\n'}" # output text minus last newline
 
-    if [[ "${line_count}" -gt 10 || -z "${RETVAL// /}" ]]
+    if [[ "${line_count}" -gt 100 || -z "${RETVAL// /}" ]]
     then
         RETVAL="" && echo "${RETVAL}" && return 1
     fi
