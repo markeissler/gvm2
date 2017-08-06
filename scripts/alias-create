@@ -1,23 +1,156 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/functions"
+# scripts/alias-create
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-[[ $1 != "" ]] ||
-	__gvm_display_fatal "Please specify the alias name"
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/display_notices.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-[[ $2 != "" ]] ||
-	__gvm_display_fatal "Please specify the go version name"
+create()
+{
+    local opt_quiet=false
+    local args; args=()
 
-[[ ! -f "$GVM_ROOT/environments/$1" ]] ||
-	__gvm_display_fatal "Alias already exists!"
-[[ -f "$GVM_ROOT/environments/$2" ]] ||
-	__gvm_display_fatal "Target doesn't exist!"
+    while true
+    do
+        case "${1}" in
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            *)
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
 
-mkdir -p "$GVM_ROOT/environments" ||
-	__gvm_display_fatal "Could not create folder"
-mkdir -p "$GVM_ROOT/gos/$1" ||
-	__gvm_display_fatal "Could not create folder"
-cp "$GVM_ROOT/environments/$2" "$GVM_ROOT/environments/$1" ||
-	__gvm_display_fatal "Could copy environment"
-echo "export gvm_alias_name=\"$1\"" >> "$GVM_ROOT/environments/$1" ||
-	__gvm_display_fatal "Could not extend environment"
+    local alias_name="${args[0]}"
+    local go_version="${args[1]}"
 
+    if [[ -z "${alias_name// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_go_alias_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ -z "${go_version// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_go_version_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # Alias exists?
+    if [[ -f "${GVM_ROOT}/environments/${alias_name}" ]]
+    then
+        __gvm_locale_text_for_key "alias_exists" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # Go version not exist?
+    if [[ ! -f "${GVM_ROOT}/environments/${go_version}" ]]
+    then
+        __gvm_locale_text_for_key "go_version_not_exist" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    #
+    # Finally, do it
+    #
+    mkdir -p "${GVM_ROOT}/environments" "${GVM_ROOT}/gos/${alias_name}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "alias_create_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    cp "${GVM_ROOT}/environments/${go_version}" "${GVM_ROOT}/environments/${alias_name}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "environment_copy_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    echo "export gvm_alias_name=\"${alias_name}\"" >> "${GVM_ROOT}/environments/${alias_name}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "environment_extend_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "alias_create_succeeded" > /dev/null
+        __gvm_display_message "${RETVAL}"
+    fi
+
+    return $?
+}
+
+_exit()
+{
+  stty sane; echo; display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            "")
+                __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                __gvm_locale_text_for_key "help/usage_alias_create" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                rslt=1; break
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_alias_create" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                rslt=0; break
+                ;;
+            *)
+                create "$@"
+                rslt=$?; break
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"
