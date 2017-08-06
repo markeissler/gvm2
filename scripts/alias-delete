@@ -1,18 +1,136 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/functions"
+# scripts/alias-delete
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-[[ $1 != "" ]] ||
-	__gvm_display_fatal "Please specify the name"
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/display_notices.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-[[ -f $GVM_ROOT/environments/$1 ]] ||
-	__gvm_display_fatal "Alias doesn't exist!"
+delete()
+{
+    local opt_quiet=false
+    local args; args=()
 
-\grep "gvm_alias_name" "$GVM_ROOT/environments/$1" > /dev/null ||
-	__gvm_display_fatal "$1 is not an alias!"
+    while true
+    do
+        case "${1}" in
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            *)
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
 
-rm -rf "$GVM_ROOT/environments/$1" ||
-	__gvm_display_fatal "Could not delete alias"
+    local alias_name="${args[0]}"
 
-rm -rf "$GVM_ROOT/gos/$1" ||
-	__gvm_display_fatal "Could not delete alias"
+    if [[ -z "${alias_name// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_go_alias_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
 
+    # Environment not exist?
+    if [[ ! -f "${GVM_ROOT}/environments/${alias_name}" ]]
+    then
+        __gvm_locale_text_for_key "alias_not_exist" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # Environment is not actually an alias?
+    \grep "gvm_alias_name" "${GVM_ROOT}/environments/${alias_name}" > /dev/null
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "alias_name_invalid" > /dev/null
+        __gvm_display_fatal "${RETVAL}: ${alias_name}"
+    fi
+
+    #
+    # Finally, do it
+    #
+    rm -rf "${GVM_ROOT}/environments/${alias_name}" "${GVM_ROOT}/gos/${alias_name}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "alias_delete_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "alias_delete_succeeded" > /dev/null
+        __gvm_display_message "${RETVAL}"
+    fi
+
+    return $?
+}
+
+_exit()
+{
+  stty sane; echo; display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            "")
+                __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                __gvm_locale_text_for_key "help/usage_alias_delete" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                rslt=1; break
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_alias_delete" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                rslt=0; break
+                ;;
+            *)
+                delete "$@"
+                rslt=$?; break
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

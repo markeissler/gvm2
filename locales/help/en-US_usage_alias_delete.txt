@@ -1,6 +1,6 @@
-Usage: gvm alias create [options] <alias-name> <go-version>
+Usage: gvm alias delete [options] <alias-name>
 
-Create a Go version alias
+Delete a Go version alias
 
 Options:
     -q, --quiet                 Suppress progress messages
