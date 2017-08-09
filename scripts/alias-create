@@ -22,25 +22,10 @@ dep_load()
 
 create()
 {
-    local opt_quiet=false
-    local args; args=()
-
-    while true
-    do
-        case "${1}" in
-            -q | --quiet )
-                opt_quiet=true
-                ;;
-            *)
-                args+=( "${1}" )
-                ;;
-        esac
-        # guard against accidents...
-        shift; [[ "$#" -eq 0 ]] && break
-    done
-
-    local alias_name="${args[0]}"
-    local go_version="${args[1]}"
+    local alias_name="${1}"; shift
+    local go_version="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
 
     if [[ -z "${alias_name// /}" ]]
     then
@@ -114,6 +99,8 @@ trap '_exit' SIGINT SIGQUIT SIGTERM
 
 main()
 {
+    local opt_porcelain=false
+    local opt_quiet=false
     local rslt
 
     if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
@@ -124,26 +111,34 @@ main()
     while true
     do
         case "${1}" in
-            "")
-                __gvm_locale_text_for_key "unrecognized_command" > /dev/null
-                printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
-                __gvm_locale_text_for_key "help/usage_alias_create" > /dev/null
-                printf "%s\n" "${RETVAL}"
-                rslt=1; break
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
                 ;;
             -h | ? | help | --help )
                 __gvm_locale_text_for_key "help/usage_alias_create" > /dev/null
                 printf "%s\n" "${RETVAL}"
-                rslt=0; break
+                return 0
                 ;;
             *)
-                create "$@"
-                rslt=$?; break
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_alias_create" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
                 ;;
         esac
         # guard against accidents...
         shift; [[ "$#" -eq 0 ]] && break
     done
+
+    create "${args[0]}" "${args[1]}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
 
     if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
     then
