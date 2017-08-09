@@ -1,12 +1,130 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/functions"
+# scripts/alias-list
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-echo
-__gvm_display_message "gvm go aliases"
-echo
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/display_notices.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-for a in $(builtin cd "$GVM_ROOT/environments" ; \grep -l "gvm_alias_name" ./*); do
-  t=$(bash -c "source $GVM_ROOT/environments/$a ; echo \$gvm_go_name")
-  echo "  $a ($t)"
-done
-echo
+list()
+{
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+
+    if [[ "${opt_porcelain}" == false ]]
+    then
+        __gvm_locale_text_for_key "title/gvm_go_aliases" > /dev/null
+        printf "\n%s\n\n" "${RETVAL}"
+    fi
+
+    local file_list=( $(\grep -l "gvm_alias_name" "${GVM_ROOT}/environments/"*) )
+
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "title/alias_list_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+        return 1
+    fi
+
+    local _version
+    for _version in "${file_list[@]}"
+    do
+        local __alias="$(\grep "gvm_go_name=" "${_version}" | sed -e 's/^.*=//g' -e 's/"//g')"
+        _version="${_version##*/}"
+        if [[ "${opt_porcelain}" == false ]]
+        then
+            echo "   ${_version} (${__alias})"
+        else
+            echo "${_version} (${__alias})"
+        fi
+        unset __alias
+    done
+    unset _version
+
+    if [[ "${opt_porcelain}" == false ]]
+    then
+        echo
+    fi
+
+    return $?
+}
+
+_exit()
+{
+  stty sane; echo; display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_porcelain=false
+    local opt_quiet=false
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    # list "$@"; rslt=$?
+
+    while true
+    do
+        case "${1}" in
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_alias_list" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_alias_list" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    list "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

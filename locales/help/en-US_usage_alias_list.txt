@@ -1,0 +1,8 @@
+Usage: gvm alias list [option]
+
+List all Go version aliases
+
+Options:
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
