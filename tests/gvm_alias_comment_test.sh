@@ -8,10 +8,10 @@ gvm alias delete bar
 ## Test output messages
 gvm alias # status=1; match=/Unrecognized command: empty/
 gvm alias --help # status=0; match=/Usage: gvm alias <command> \[option\]/
-gvm alias create # status=1; match=/Unrecognized command: empty/
-gvm alias create --help # status=0; match=/Usage: gvm alias create \[options\] <alias-name>/
-gvm alias delete # status=1; match=/Unrecognized command: empty/
-gvm alias delete --help # status=0; match=/Usage: gvm alias delete \[options\] <alias-name>/
+gvm alias create # status=1; match=/ERROR: Please specify the alias name/
+gvm alias create --help # status=0; match=/Usage: gvm alias create \[option\] <alias-name>/
+gvm alias delete # status=1; match=/ERROR: Please specify the alias name/
+gvm alias delete --help # status=0; match=/Usage: gvm alias delete \[option\] <alias-name>/
 gvm alias list --help # status=0; match=/Usage: gvm alias list \[option\]/
 
 gvm alias create foo go1.3.3 # status=0

@@ -1,4 +1,4 @@
-Usage: gvm alias delete [options] <alias-name>
+Usage: gvm alias delete [option] <alias-name>
 
 Delete a Go version alias
 

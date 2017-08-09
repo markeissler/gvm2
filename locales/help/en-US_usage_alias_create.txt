@@ -1,4 +1,4 @@
-Usage: gvm alias create [options] <alias-name> <go-version>
+Usage: gvm alias create [option] <alias-name> <go-version>
 
 Create a Go version alias
 
