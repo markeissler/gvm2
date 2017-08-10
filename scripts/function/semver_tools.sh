@@ -40,6 +40,8 @@ dep_load() {
 # @param version_A Version string to compare on left
 # @param version_B Version string to compare on right
 # @return Returns comparison value between 0 and 2.
+# @return Returns a string containing the comparisoin value between 0 and 2 and
+#   also sets the return status to the same value.
 # @note Also sets global variable RETVAL to the same exit value.
 # */
 __gvm_compare_versions()
@@ -52,7 +54,7 @@ __gvm_compare_versions()
     local IFS="$defaultIFS"
     unset RETVAL
 
-	[[ "${version_A}" == "${version_B}" ]] && RETVAL=0 && return 0
+	[[ "${version_A}" == "${version_B}" ]] && RETVAL=0 && echo "${RETVAL}" && return 0
 
     # convert version strings into arrays of elements (Major, Minor, bug)
 	IFS=.
@@ -78,18 +80,18 @@ __gvm_compare_versions()
         fi
         if (( 10#${version_A_ary[_i]} > 10#${version_B_ary[_i]} ))
         then
-            RETVAL=1
+            RETVAL=1; echo "${RETVAL}"
             return 1
         fi
         if (( 10#${version_A_ary[_i]} < 10#${version_B_ary[_i]} ))
         then
-            RETVAL=2
+            RETVAL=2; echo "${RETVAL}"
             return 2
         fi
 	done
     unset _i
 
-	RETVAL=0 && return 0
+	RETVAL=0 && echo "${RETVAL}" && return 0
 }
 
 # __gvm_extract_version()
