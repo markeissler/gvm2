@@ -375,13 +375,6 @@ main()
         shift; [[ "$#" -eq 0 ]] && break
     done
 
-    # args sanity check
-    if [[ "${args[*]}" =~ [\;\.\$\(\)] ]]
-    then
-        __gvm_locale_text_for_key "unsafe_arguments" > /dev/null
-        __gvm_display_fatal "${RETVAL}"
-    fi
-
     # option sanity check
     if [[ "${opt_compact}" == true && "${opt_list}" == false ]]
     then

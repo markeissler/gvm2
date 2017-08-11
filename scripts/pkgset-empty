@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/functions"
+source "$GVM_ROOT/scripts/function/_load_common.sh"
 
 [[ $gvm_pkgset_name != "" ]] ||
 	__gvm_display_fatal "No Package set selected"

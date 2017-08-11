@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/functions"
 
 # load dependencies
-dep_load() {
+dep_load()
+{
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
     local deps; deps=(
-        "functions"
+        "function/_load_common.sh"
         "env/use.sh"
         "function/_shell_compat.sh"
         "function/display_notices.sh"
@@ -16,7 +16,7 @@ dep_load() {
     do
         source "${base}/${file}"
     done
-}; dep_load
+}; dep_load; unset -f dep_load
 
 # const
 GO_BOOTSTRAP_BRANCH="release-branch.go1.4"

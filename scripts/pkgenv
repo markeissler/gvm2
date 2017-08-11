@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source "$GVM_ROOT/scripts/functions"
+source "$GVM_ROOT/scripts/function/_load_common.sh"
 
 function show_usage() {
   echo "Usage: gvm pkgenv [packageset-name]"

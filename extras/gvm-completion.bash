@@ -2,7 +2,7 @@
 #
 # @TODO: Add shell gvm-completion installation instructions here!
 #
-source "${GVM_ROOT}/scripts/functions"
+source "${GVM_ROOT}/scripts/function/_load_common.sh"
 
 _gvm()
 {

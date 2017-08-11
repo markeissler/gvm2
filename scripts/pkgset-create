@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/functions"
+source "$GVM_ROOT/scripts/function/_load_common.sh"
 
 [[ $1 != "" ]] ||
 	display_fatal "Please specify the name"

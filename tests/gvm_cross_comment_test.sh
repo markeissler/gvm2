@@ -22,7 +22,7 @@ mkdir -p "${SANDBOX}/cross-test"
 cp "${SANDBOX}/gvm2/tests/gvm_cross_test_input_hello.go" "${SANDBOX}/cross-test"
 
 ## Execute command
-result_1="$(builtin cd "${SANDBOX}/cross-test"; __gvm_use "go1.8.2" > /dev/null; "${SANDBOX}/gvm2/scripts/cross" "linux" "386" "gvm_cross_test_input.go" > /dev/null; echo $?)"
+result_1="$(builtin cd "${SANDBOX}/cross-test"; __gvm_use "go1.8.2" > /dev/null; "${SANDBOX}/gvm2/scripts/cross" "linux" "386" "gvm_cross_test_input_hello.go" > /dev/null; echo $?)"
 
 ## Evaluate result
 [[ "${result_1}" -eq "0" ]] # status=0
