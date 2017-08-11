@@ -1,0 +1,1 @@
+Specifying an ARM version is only valid for ARM arch

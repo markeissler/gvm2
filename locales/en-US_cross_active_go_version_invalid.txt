@@ -1,0 +1,1 @@
+Active Go version does not support cross compilation
