@@ -81,6 +81,7 @@ main()
 {
     local opt_porcelain=false
     local opt_quiet=false
+    local args; args=()
     local rslt
 
     if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
