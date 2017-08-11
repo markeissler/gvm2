@@ -130,7 +130,7 @@ list_all() {
         echo "" && return 1
     fi
 
-    local available_hash_keys=( "$(keysForFakeAssocArray "${available_hash[*]}")" )
+    local available_hash_keys; available_hash_keys=( "$(keysForFakeAssocArray "${available_hash[*]}")" )
     local _version
     for _version in $available_hash_keys
     do
