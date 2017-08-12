@@ -6,7 +6,7 @@ Commands:
     version     Print the gvm version number
     get         Gets the latest code (for debugging)
     use         Select a go version to use (--default to set permanently)
-    diff        View changes to Go root
+    diff        View changes to an installed Go directory contents
     help        Display this usage text
     implode     Completely remove gvm
     install     Install go versions
