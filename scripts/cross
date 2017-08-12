@@ -300,13 +300,14 @@ cross()
     # eval ${command[@]}
     # unset command
 
-    if [[ $? -ne 0 ]]
+    local rslt=$?
+    if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "cross_build_failed" > /dev/null
         __gvm_display_fatal "${RETVAL}"
     fi
 
-    return $?
+    return $rslt
 }
 
 _exit()
