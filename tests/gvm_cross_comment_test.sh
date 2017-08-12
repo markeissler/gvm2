@@ -1,3 +1,4 @@
+source "${SANDBOX}/gvm2/scripts/gvm"
 source "${SANDBOX}/gvm2/scripts/env/use.sh" || return 1
 
 ##
