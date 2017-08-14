@@ -14,7 +14,7 @@ gvm cross --list --porcelain # status=0; match!=/Go cross compile platforms/
 
 ## Setup expectation
 
-## 1.8.1
+## 1.8.2
 gvm uninstall go1.8.2 > /dev/null 2>&1
 gvm install go1.8.2 --binary
 
