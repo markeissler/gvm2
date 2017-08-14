@@ -10,6 +10,7 @@ expectedVersion_2=( "go1.3beta1"        "1.3"    "0" )
 expectedVersion_3=( "go1.6rc1"          "1.6"    "0" )
 expectedVersion_4=( "release.r57.1"     ""       "1" )
 expectedVersion_5=( "weekly.2011-12-01" ""       "1" )
+expectedVersion_6=( "v0.9.2"            "0.9.2"  "0" )
 
 ##
 ## extract SemVer string (return status)
@@ -21,6 +22,7 @@ extractedStatus_2="$(__gvm_extract_version "${expectedVersion_2[0]}" >/dev/null;
 extractedStatus_3="$(__gvm_extract_version "${expectedVersion_3[0]}" >/dev/null; echo $?)"
 extractedStatus_4="$(__gvm_extract_version "${expectedVersion_4[0]}" >/dev/null; echo $?)"
 extractedStatus_5="$(__gvm_extract_version "${expectedVersion_5[0]}" >/dev/null; echo $?)"
+extractedStatus_6="$(__gvm_extract_version "${expectedVersion_6[0]}" >/dev/null; echo $?)"
 
 ## Evaluate result
 [[ "${extractedStatus_1}" -eq "${expectedVersion_2[2]}" ]] # status=0
@@ -28,6 +30,7 @@ extractedStatus_5="$(__gvm_extract_version "${expectedVersion_5[0]}" >/dev/null;
 [[ "${extractedStatus_3}" -eq "${expectedVersion_3[2]}" ]] # status=0
 [[ "${extractedStatus_4}" -eq "${expectedVersion_4[2]}" ]] # status=0
 [[ "${extractedStatus_5}" -eq "${expectedVersion_5[2]}" ]] # status=0
+[[ "${extractedStatus_6}" -eq "${expectedVersion_6[2]}" ]] # status=0
 
 ##
 ## extract SemVer string (return value)
@@ -39,6 +42,7 @@ extractedStatus_2="$(__gvm_extract_version "${expectedVersion_2[0]}")"
 extractedStatus_3="$(__gvm_extract_version "${expectedVersion_3[0]}")"
 extractedStatus_4="$(__gvm_extract_version "${expectedVersion_4[0]}")"
 extractedStatus_5="$(__gvm_extract_version "${expectedVersion_5[0]}")"
+extractedStatus_6="$(__gvm_extract_version "${expectedVersion_6[0]}")"
 
 ## Evaluate result
 
@@ -47,6 +51,7 @@ extractedStatus_5="$(__gvm_extract_version "${expectedVersion_5[0]}")"
 [[ "${extractedStatus_3}" == "${expectedVersion_3[1]}" ]] # status=0
 [[ "${extractedStatus_4}" == "${expectedVersion_4[1]}" ]] # status=0
 [[ "${extractedStatus_5}" == "${expectedVersion_5[1]}" ]] # status=0
+[[ "${extractedStatus_6}" == "${expectedVersion_6[1]}" ]] # status=0
 
 ##
 ## extract SemVer string (RETVAL value)
@@ -58,6 +63,7 @@ extractedStatus_2="$(__gvm_extract_version "${expectedVersion_2[0]}" >/dev/null;
 extractedStatus_3="$(__gvm_extract_version "${expectedVersion_3[0]}" >/dev/null; echo "${RETVAL}")"
 extractedStatus_4="$(__gvm_extract_version "${expectedVersion_4[0]}" >/dev/null; echo "${RETVAL}")"
 extractedStatus_5="$(__gvm_extract_version "${expectedVersion_5[0]}" >/dev/null; echo "${RETVAL}")"
+extractedStatus_6="$(__gvm_extract_version "${expectedVersion_6[0]}" >/dev/null; echo "${RETVAL}")"
 
 ## Evaluate result
 [[ "${extractedStatus_1}" == "${expectedVersion_1[1]}" ]] # status=0
@@ -65,3 +71,4 @@ extractedStatus_5="$(__gvm_extract_version "${expectedVersion_5[0]}" >/dev/null;
 [[ "${extractedStatus_3}" == "${expectedVersion_3[1]}" ]] # status=0
 [[ "${extractedStatus_4}" == "${expectedVersion_4[1]}" ]] # status=0
 [[ "${extractedStatus_5}" == "${expectedVersion_5[1]}" ]] # status=0
+[[ "${extractedStatus_6}" == "${expectedVersion_6[1]}" ]] # status=0

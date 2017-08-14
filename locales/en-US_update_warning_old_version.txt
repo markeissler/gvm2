@@ -1,0 +1,5 @@
+You have requested to install a GVM2 version that does not support the
+_update_ command. If you switch to the requested version, you will have to
+perform a manual update to switch back to a newer version of GVM2.
+
+GVM2 has support for the _gvm update_ command starting with v0.10.0.

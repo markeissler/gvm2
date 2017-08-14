@@ -1,0 +1,26 @@
+Usage: gvm update [option] [<version>]
+       gvm update --list [option]
+
+Update GVM to latest release
+
+Options:
+    -l, --list                  List available versions
+    -f, --force                 Update GVM2 without prompting
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+If the <version> is not specified, the latest GVM version will be used.
+
+Old versions
+------------
+It is possible to switch to an older version of GVM2; however, if you switch to
+a version that does not support the update command you will need to manually
+intervene to update to newer versions. A prompt will be presented to confirm any
+attempt to switch to a version that does not support updates but this prompt can
+be disabled by specifying the -f|--force option.
+
+Unless the <version> specified does not support update functionality there
+will be no further prompting.

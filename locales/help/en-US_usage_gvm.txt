@@ -4,7 +4,7 @@ GVM2 is the Go enVironment Manager
 
 Commands:
     version     Print the gvm version number
-    get         Gets the latest code (for debugging)
+    update      Update GVM to latest release
     use         Select a go version to use (--default to set permanently)
     diff        View changes to an installed Go directory contents
     help        Display this usage text

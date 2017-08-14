@@ -68,7 +68,7 @@ main()
     while true
     do
         case "${1}" in
-            alias | cross | diff | get | install | linkthis | list | listall | pkgenv | pkgset | uninstall | use )
+            alias | cross | diff | install | linkthis | list | listall | pkgenv | pkgset | uninstall | update | use )
                 local command="${1}"
                 shift
                 "${GVM_ROOT}/scripts/${command}" "$@"

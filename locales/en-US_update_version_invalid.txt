@@ -1,0 +1,4 @@
+The version of GVM2 you have requested does not exist.
+
+- List available versions -
+    prompt> gvm update --list
