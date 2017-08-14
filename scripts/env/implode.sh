@@ -34,7 +34,7 @@ dep_load()
 #   usage: gvm implode [options]
 #
 #   OPTIONS:
-#     -f, --force                 Attempt to uninstall GVM2 without prompting for confirmation
+#     -f, --force                 Uninstall GVM2 without prompting for confirmation
 #     -q, --quiet                 Suppress progress messages
 #     -h, --help                  Show this message
 # @/textblock</pre>
