@@ -316,13 +316,13 @@ download_binary() {
     fi
 
     if [ ! -f $GO_BINARY_PATH ]; then
-        curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
+        curl -s -f -L --retry 3 "${GO_BINARY_URL}" > "${GO_BINARY_PATH}"
 
         if [[ $? -ne 0 ]]; then
             __gvm_display_error "Failed to download binary go from http://golang.org. Trying https://go.googlecode.com"
             GO_BINARY_URL="https://go.googlecode.com/files/${GO_BINARY_FILE}"
 
-            curl -s -f -L $GO_BINARY_URL > ${GO_BINARY_PATH}
+            curl -s -f -L --retry 3 "${GO_BINARY_URL}" > "${GO_BINARY_PATH}"
 
             if [[ $? -ne 0 ]]; then
                 __gvm_display_error "Failed to download binary go"
@@ -333,7 +333,7 @@ download_binary() {
         fi
     fi
 
-    tar zxf ${GO_BINARY_PATH} -C $GO_INSTALL_ROOT --strip-components 1 >> "${GVM_ROOT}/logs/go-${GO_NAME}-download-binary" 2>&1
+    tar xvf "${GO_BINARY_PATH}" -C "${GO_INSTALL_ROOT}" --strip-components 1 >> "${GVM_ROOT}/logs/go-${GO_NAME}-download-binary" 2>&1
 
     if [[ $? -ne 0 ]]; then
         __gvm_display_error "Failed to extract binary go"
