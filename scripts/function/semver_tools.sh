@@ -98,14 +98,20 @@ __gvm_compare_versions()
 # /*!
 # @abstract Strip extraneous SemVer string information.
 # @discussion
-# Removes extra SemVer information from a Go version string including the
-#   following substrings:
+# Removes extra SemVer information from a GVM or Go version string including the
+#   following leading substrings:
+# <pre>@textblock
+#   + go
+#   + v
+# @/textblock</pre>
+#   the following trailing substrings:
 # <pre>@textblock
 #   + beta
 #   + rc
 # @/textblock</pre>
-# Old pre-release versions will be return an error  to a SemVer value of 0.0.1 as they are
-#   irrelevant at this point. These versions include tags that begin with:
+# Old pre-release GO versions will be return an error  to a SemVer value of
+#   0.0.1 as they are irrelevant at this point. These versions include tags that
+#   begin with:
 # <pre>@textblock
 #   + release
 #   + weekly
@@ -126,7 +132,7 @@ __gvm_extract_version()
     # will just return an error for these.
     [[ "${version}" =~ release* || "${version}" =~ weekly* ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
-    RETVAL="$(echo "${version}" | sed 's/^go\(.*\)/\1/g; s/beta.*//g; s/rc.*//g')"
+    RETVAL="$(echo "${version}" | sed 's/^v\(.*\)/\1/g; s/^go\(.*\)/\1/g; s/beta.*//g; s/rc.*//g')"
 
     echo "${RETVAL}" && return 0
 }
