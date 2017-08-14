@@ -62,6 +62,32 @@ __gvm_callstack()
     return 0
 }
 
+# __gvm_progress()
+# /*!
+# @abstract Returns a progress message
+# @discussion The progress message will be localized if a localization exists.
+# @param string Progress message
+# @return Returns string containing progress message on success (status 0),
+#   otherwise an empty string on failure (status 1).
+# @note Also sets global variable RETVAL to the same return value.
+# */
+__gvm_progress()
+{
+    local message="${1}"
+    local l_message="${message}"
+    unset RETVAL
+
+    [[ -z "${message// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    # localize if possible
+    __gvm_locale_text_for_key "${message}" > /dev/null
+    [[ -n "${RETVAL}" ]] && l_message="${RETVAL}"
+
+    RETVAL="${l_message}"
+
+    echo "${RETVAL}"; return 0
+}
+
 # __gvm_prompt_confirm()
 # /*!
 # @abstract Confirm a user action. Input case insensitive
