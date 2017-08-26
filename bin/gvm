@@ -33,7 +33,7 @@ sanity_check()
     fi
 
     # check for all required utility dependencies
-    "${GVM_ROOT}/scripts/gvm-check"
+    "${GVM_ROOT}/scripts/check" "--skip hg"
     if [[ "$?" != "0" ]]
     then
         __gvm_locale_text_for_key "missing_requirements" > /dev/null
@@ -58,8 +58,6 @@ main()
 {
     local rslt=0
 
-    sanity_check || return 1
-
     if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
     then
         set -x
@@ -69,6 +67,13 @@ main()
     do
         case "${1}" in
             alias | cross | diff | install | linkthis | list | listall | pkgenv | pkgset | uninstall | update | use )
+                local command="${1}"
+                shift
+                sanity_check # @TODO: run a more lightweight, possibly cached, check here
+                "${GVM_ROOT}/scripts/${command}" "$@"
+                rslt=$?; unset command; break
+                ;;
+            check )
                 local command="${1}"
                 shift
                 "${GVM_ROOT}/scripts/${command}" "$@"

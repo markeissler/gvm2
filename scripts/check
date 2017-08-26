@@ -1,0 +1,482 @@
+#!/usr/bin/env bash
+# scripts/check
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
+
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_bash_pseudo_hash.sh"
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/detect_runos.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/semver_tools.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_ar()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v ar &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: ar\n\n"
+        case "${os}" in
+            linux )
+                error_message+="  linux: sudo apt-get install binutils"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_bison()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v bison &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: bison\n\n"
+        case "${os}" in
+            linux )
+                error_message+="  linux: sudo apt-get install bison"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_curl()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v curl &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: curl\n\n"
+        case "${os}" in
+            linux )
+                error_message+="  linux: sudo apt-get install curl"
+                ;;
+            darwin )
+                error_message+="  macos: brew install curl"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_gcc()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v gcc &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: gcc\n\n"
+        case "${os}" in
+            linux )
+                error_message+="  linux: sudo apt-get install build-essential"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_git()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v git &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: git\n\n"
+        case "${os}" in
+            linux )
+                error_message+="  linux: sudo apt-get install git"
+                ;;
+            darwin )
+                error_message+="  macos: brew install git"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_hexdump()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v check_hexdump &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: check_hexdump\n\n"
+        case "${os}" in
+            linux )
+                error_message+="  linux: sudo apt-get install bsdmainutils"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_hg()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v hg &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: hg\n\n"
+        case "${os}" in
+            linux )
+                error_message+="  linux: sudo apt-get install mercurial"
+                ;;
+            darwin )
+                error_message+="  macos: brew install mercurial"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_make()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v make &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: make\n\n"
+        case "${os}" in
+            linux )
+                error_message+="  linux: sudo apt-get install build-essential"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+check_all()
+{
+    local os="${1}"; shift
+    local opt_skip="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"; shift
+    local args; args=( "$@" )
+    local fail_hash; fail_hash=()
+    local rslt_status=0
+
+    local check_list; check_list=(
+        check_ar
+        check_bison
+        check_curl
+        check_gcc
+        check_git
+        check_hg
+        check_make
+        check_hexdump
+    )
+
+    local check_list_filtered; check_list_filtered=()
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    # validate skip options
+    if [[ "${opt_skip}" == true && "${#args}" -eq 0 ]]
+    then
+        __gvm_locale_text_for_key "specify_skip_commands" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # filter args (skip commands) from check_list
+    local _command _skip
+    for _command in "${check_list[@]}"
+    do
+        _skip=false
+
+        local __filter
+        for __filter in "${args[@]}"
+        do
+            [[ "check_${__filter}" == "${_command}" ]] && _skip=true && break
+        done
+        unset __filter
+
+        [[ "${_skip}" == true ]] && continue
+
+        check_list_filtered+=( "${_command}" )
+    done
+    unset _command _skip
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::check_all() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  GOOS           -> ${os}"
+        echo "  _check_list    -> ${check_list[@]//check_}"
+        echo "  _skip_list     -> ${args[@]}"
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "title/gvm_check_all" > /dev/null
+        printf "%s\n\n" "${RETVAL}"
+    fi
+
+    local _func
+    for _func in "${check_list_filtered[@]}"
+    do
+        ${_func} "${os}" > /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            local __key __val
+            __key="${_func#*_}"
+            __val="${RETVAL}"
+            fail_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${fail_hash[*]}") )
+            unset __key __val
+
+            rslt_status=1
+        fi
+    done
+    unset _func
+
+    # output entire fail list unless quiet
+    if [[ "${opt_quiet}" == false && ${#fail_hash[@]} -gt 0 ]]
+    then
+        local fail_hash_keys; fail_hash_keys=( "$(keysForFakeAssocArray "${fail_hash[*]}")" )
+        local _command
+        for _command in "${fail_hash_keys[@]}"
+        do
+            local __message="$(valueForKeyFakeAssocArray "${_command}" "${fail_hash[*]}")"
+            if [[ "${opt_porcelain}" == false ]]
+            then
+                printf "%s\n" "[!!] ${__message}"
+            else
+                printf "%s\n" "[!!] ${_command}"
+            fi
+            unset __message
+        done
+        unset _command
+        unset fail_hash_keys
+    fi
+
+    if [[ $rslt_status -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "check_all_fail" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "check_all_pass" > /dev/null
+        printf "%s.\n" "${RETVAL}"
+    fi
+
+    return 0
+}
+
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_skip=false
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    local _run_os
+    local _os _os_version _os_arch
+    __gvm_detect_runos > /dev/null
+    _run_os="${RETVAL}"
+    _os="${_run_os%%,*}"
+    _os_version="${_run_os#*,}"; _os_version="${_os_version%,*}"
+    _os_arch="${_run_os##*,}"
+
+    while true
+    do
+        case "${1}" in
+            -s | --skip )
+                opt_skip=true
+                ;;
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_check" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_check" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                # only save arg if it contains more than spaces
+                [[ -n "${1// /}" ]] && args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    # option sanity check
+    if [[ "${opt_skip}" == false && "${#args[@]}" -gt 0 ]]
+    then
+        __gvm_locale_text_for_key "invalid_arguments" > /dev/null
+        printf "%s!\n\n" "${RETVAL}"
+        __gvm_locale_text_for_key "help/usage_check" > /dev/null
+        printf "%s\n" "${RETVAL}"
+        return 1
+    fi
+
+    check_all "${_os}" "${opt_skip}" "${opt_porcelain}" "${opt_quiet}" "${args[@]}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"
