@@ -298,3 +298,30 @@ __gvm_str_upper()
 
     echo "${RETVAL}"; return 0
 }
+
+# __gvm_str_trim()
+# /*!
+# @abstract Trim leading and trailing whitespace from a string
+# @param string String to trim
+# @return Returns converted string on success (status 0), otherwise an empty
+#   string on failure (status 1).
+# @note Also sets global variable RETVAL to the same return value.
+# */
+__gvm_str_trim()
+{
+    local string="${1}"
+    local string_trim=""
+    local defaultIFS="$IFS"
+    local IFS="$defaultIFS"
+    unset RETVAL
+
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    IFS=$' '
+    read -r string_trim <<< "${string}"
+    IFS="${defaultIFS}"
+
+    RETVAL="${string_trim}"
+
+    echo "${RETVAL}"; return 0
+}
