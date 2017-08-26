@@ -90,7 +90,7 @@ diff()
 
 _exit()
 {
-  stty sane; echo; display_fatal "caught signal, shutting down"
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
 
   # @TODO: additional cleanup?
   [[ -f "/tmp/manifest.test" ]] && rm /tmp/manifest.test > /dev/null
