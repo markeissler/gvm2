@@ -37,7 +37,7 @@ __gvm_find_installed()
 {
     local target="${1}"; shift
     local installed_path="${1:-$GVM_ROOT/gos}"
-    local installed_hash; installed_hash=()
+    local installed_list; installed_list=()
     local versions_hash; versions_hash=()
     unset RETVAL
 
@@ -45,11 +45,11 @@ __gvm_find_installed()
 
     if [[ -z "${target// /}" ]]
     then
-        installed_hash=( $(\ls -1 "${installed_path}") )
-        for (( i=0; i<${#installed_hash[@]}; i++ ))
+        installed_list=( $(\ls -1 "${installed_path}") )
+        for (( i=0; i<${#installed_list[@]}; i++ ))
         do
             local __key __val
-            __key="${installed_hash[i]}"
+            __key="${installed_list[i]}"
             __val="${installed_path}/${__key}"
 
             # system is a special case
