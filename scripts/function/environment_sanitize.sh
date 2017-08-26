@@ -17,7 +17,7 @@ dep_load() {
     do
         source "${base}/${file}"
     done
-}; dep_load
+}; dep_load; unset -f dep_load
 
 # __gvm_environment_sanitize()
 # /*!
