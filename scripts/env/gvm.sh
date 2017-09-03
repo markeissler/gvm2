@@ -53,7 +53,11 @@ gvm() {
     case "${command}" in
         pkgset)
             sub_command="${2}"
-            shift; shift
+            # all pkgset commands are passed on with args except for "use"
+            if [[ "${sub_command}" == "use" ]]
+            then
+                shift; shift
+            fi
             ;;
         use)
             shift
