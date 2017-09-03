@@ -132,6 +132,33 @@ __gvm_prompt_confirm()
     done
 }
 
+# __gvm_pwd()
+# /*!
+# @abstract Get the present working directory
+# @return Returns directory string on success (status 0), otherwise an empty
+#   string on failure (status 1).
+# @note Also sets global variable RETVAL to the same return value.
+# */
+__gvm_pwd()
+{
+    local pwd=""
+    unset RETVAL
+
+    if [[ "x${BASH_VERSION}" != "x" ]]
+    then
+        printf -v pwd "%s" "$(builtin pwd)"
+    elif [[ "x${ZSH_VERSION}" != "x" ]]
+    then
+        printf -v pwd "%s" "$(builtin pwd)"
+    fi
+
+    [[ -z "${pwd// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    RETVAL="${pwd}"
+
+    echo "${RETVAL}"; return 0
+}
+
 # __gvm_rematch()
 # /*!
 # @abstract Provide a cross-platform regex rematcher.
