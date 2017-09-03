@@ -1,44 +1,145 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/function/_load_common.sh"
+# scripts/linkthis
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-function show_usage() {
-	echo "Usage: gvm linkthis [package-name] [options]"
-	echo "    -h, --help     Display this message."
-	echo
-	echo "If the [package-name] is provided, it will be used in the path based"
-	echo "at \${GOPATH%%:*}/src, e.g.:"
-	echo
-	echo "    gvm linkthis github.com/user/package"
-	echo
-	echo "If omitted, the [package-name] will be the basename of the current"
-	echo "directory, e.g. '$package_name_basename'."
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_bash_pseudo_hash.sh"
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/locale_text.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
+
+link_this()
+{
+    local package="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+
+    __gvm_pwd > /dev/null
+    local pwd="${RETVAL}"
+
+    if [[ -z "${package// /}" ]]
+    then
+        package="${pwd##*/}"
+    fi
+
+    if [[ -z "${package// /}" || "${package}" =~ ^[~/.] ]]
+    then
+        __gvm_locale_text_for_key "linkthis_invalid_package_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    local target="${GOPATH%%:*}/src/${package}"
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::link_this() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  GOOS           -> ${os}"
+        echo "  _package       -> ${package}"
+        echo "  _target        -> ${target%/*}"
+    fi
+
+    mkdir -p "${target%/*}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "linkthis_makedir_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    ln -sv "${pwd}" "${target}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "linkthis_symlink_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "linkthis_succeeded" > /dev/null
+        __gvm_display_message "${RETVAL}"
+    fi
+
+    return $?
 }
 
-function read_command_line() {
-	for i in "$@"; do
-		case $i in
-			-h|--help*)
-				show_usage
-				exit 0
-			;;
-			-*|--*)
-				echo "Invalid option $i"
-				show_usage
-				exit 65 # Bad arguments
-			;;
-			*)
-				package_name="$i"
-			;;
-		esac
-	done
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
 }
 
-package_name="$(basename "$PWD")"
-package_name_basename="$package_name"
+trap '_exit' SIGINT SIGQUIT SIGTERM
 
-read_command_line "$@"
+main()
+{
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
 
-target="${GOPATH%%:*}/src/$package_name"
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
 
-mkdir -p "$(dirname "$target")"
-ln -sv "$PWD" "$target"
+    while true
+    do
+        case "${1}" in
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_linkthis" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_linkthis" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                # only save arg if it contains more than spaces
+                [[ -n "${1// /}" ]] && args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    link_this "${args[0]}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

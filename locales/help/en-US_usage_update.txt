@@ -1,7 +1,7 @@
 Usage: gvm update [option] [<version>]
        gvm update --list [option]
 
-Update GVM to latest release
+Update GVM2 to latest release
 
 Options:
     -l, --list                  List available versions
