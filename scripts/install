@@ -80,7 +80,7 @@ download_source() {
     [[ -d $GO_CACHE_PATH ]] && return
     __gvm_display_message "Downloading Go source..."
     git clone "$GO_SOURCE_URL" "$GO_CACHE_PATH" >> "$GVM_ROOT/logs/go-download.log" 2>&1 ||
-        display_fatal "Couldn't download Go source. Check the logs $GVM_ROOT/logs/go-download.log"
+        __gvm_display_fatal "Couldn't download Go source. Check the logs $GVM_ROOT/logs/go-download.log"
     # clone the bootstrap branch, switch to the branch to create it locally,
     # then switch back to master branch.
     _pwd="${PWD}"
@@ -90,7 +90,7 @@ download_source() {
         git checkout "${GO_BOOTSTRAP_BRANCH}" >> "$GVM_ROOT/logs/go-bootstrap.log" 2>&1 &&
         git checkout master &&
         builtin cd "${_pwd}"; } ||
-            display_fatal "Couldn't download Go bootstrap branch. Check the logs $GVM_ROOT/logs/go-bootstrap.log"
+            __gvm_display_fatal "Couldn't download Go bootstrap branch. Check the logs $GVM_ROOT/logs/go-bootstrap.log"
     unset _pwd
 }
 
@@ -101,7 +101,7 @@ check_tag() {
 update_source() {
     __gvm_display_message "Updating Go source..."
     (builtin cd "$GO_CACHE_PATH" && git pull >> "$GVM_ROOT/logs/go-download.log" 2>&1 ||
-        display_fatal "Couldn't get latest Go version info. Check the logs $GVM_ROOT/logs/go-download.log")
+        __gvm_display_fatal "Couldn't get latest Go version info. Check the logs $GVM_ROOT/logs/go-download.log")
 }
 
 copy_source() {
@@ -118,7 +118,7 @@ copy_source() {
     [[ "$_version" == "go1.4" ]] && _version="${GO_BOOTSTRAP_BRANCH}"
     __gvm_display_message "Copying Go source... (version: ${_version})"
     git clone -b "${_version}" "$GO_CACHE_PATH" "$GO_INSTALL_ROOT" >> "$GVM_ROOT/logs/go-$GO_NAME-install.log" 2>&1 ||
-        display_fatal "Couldn't copy source to target folder. Check the logs $GVM_ROOT/logs/go-$GO_NAME-install.log"
+        __gvm_display_fatal "Couldn't copy source to target folder. Check the logs $GVM_ROOT/logs/go-$GO_NAME-install.log"
     unset _version
 }
 
@@ -152,7 +152,7 @@ compile_go() {
     export GOROOT="${GO_INSTALL_ROOT}" &&
     if [ ! -f "$GO_INSTALL_ROOT/VERSION" ]; then echo "$GO_NAME" > "$GO_INSTALL_ROOT/VERSION"; fi &&
     builtin cd "$GO_INSTALL_ROOT/src" && PATH="${_path}" ./make.bash &> "$GVM_ROOT/logs/go-$GO_NAME-compile.log" ||
-        { rm -rf "$GO_INSTALL_ROOT" && display_fatal "Failed to compile. Check the logs at $GVM_ROOT/logs/go-$GO_NAME-compile.log"; }
+        { rm -rf "$GO_INSTALL_ROOT" && __gvm_display_fatal "Failed to compile. Check the logs at $GVM_ROOT/logs/go-$GO_NAME-compile.log"; }
 }
 
 # patch old go versions to build on MacOS Sierra (10.12)
@@ -171,7 +171,7 @@ patch_go() {
         echo "  _src_directory -> ${_src_directory}"
     fi
 
-    [[ "x${_version}" == "x" ]] && display_fatal "Couldn't patch source, invalid version specified:  \"${1}\""
+    [[ "x${_version}" == "x" ]] && __gvm_display_fatal "Couldn't patch source, invalid version specified:  \"${1}\""
 
     _run_os="$(__gvm_detect_runos)"
 
@@ -182,7 +182,7 @@ patch_go() {
     _version_minor="${_version_minor%%beta*}"   # handle 1beta2
     _version_minor="${_version_minor%%rc*}"     # handle 1rc3
     if [[ "${_run_os%%,*}" == "darwin" && "${_version_major%%.*}" == "go1" && ${_version_minor} -lt 5 ]]; then
-        [[ -z "${_src_directory}" || ! -d "${_src_directory}" ]] && display_fatal "Couldn't patch source, invalid directory specified: \"${2}\""
+        [[ -z "${_src_directory}" || ! -d "${_src_directory}" ]] && __gvm_display_fatal "Couldn't patch source, invalid directory specified: \"${2}\""
         # patch src/cmd/dist/build.c
         if [[ -f "${_src_directory}/cmd/dist/build.c" ]]
         then
@@ -217,7 +217,7 @@ export PKG_CONFIG_PATH; PKG_CONFIG_PATH="\${GVM_OVERLAY_PREFIX}/lib/pkgconfig:\$
 EOF
 
     __gvm_use "${GO_NAME}" &> /dev/null ||
-        display_fatal "Failed to use installed version"
+        __gvm_display_fatal "Failed to use installed version"
     gvm pkgset create global
     unset GOPATH
 
@@ -227,17 +227,17 @@ EOF
 create_global_package_set() {
     # Create the global package set folder
     mkdir -p "$GVM_ROOT/pkgsets/$GO_NAME" >> "$GVM_ROOT/logs/go-$GO_NAME-install.log" 2>&1 ||
-        display_fatal "Couldn't create global package set folder. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
+        __gvm_display_fatal "Couldn't create global package set folder. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
     GVM_OVERLAY_ROOT="${GVM_ROOT}/pkgsets/${GO_NAME}/global/overlay"
     mkdir -p "${GVM_OVERLAY_ROOT}/lib/pkgconfig" >> "${GVM_ROOT}/logs/go-${GO_NAME}-install.log" 2>&1 ||
-        display_fatal "Couldn't create global overlay library directory. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
+        __gvm_display_fatal "Couldn't create global overlay library directory. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
     mkdir -p "${GVM_OVERLAY_ROOT}/bin" >> "${GVM_ROOT}/logs/go-${GO_NAME}-install.log" 2>&1 ||
-        display_fatal "Couldn't create global overlay bin directory. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
+        __gvm_display_fatal "Couldn't create global overlay bin directory. Check the logs at ${GVM_ROOT}/logs/go-${GO_NAME}-install.log"
 }
 
 install_go() {
     GO_INSTALL_ROOT=$GVM_ROOT/gos/$GO_NAME
-    trap 'rm -rf $GO_INSTALL_ROOT; display_fatal "Cancelled!"' INT
+    trap 'rm -rf $GO_INSTALL_ROOT; __gvm_display_fatal "Cancelled!"' INT
 
     # Check for existing install
     if [[ -d "$GO_INSTALL_ROOT" ]]; then
@@ -348,7 +348,7 @@ download_binary() {
 
 install_go_binary() {
     GO_INSTALL_ROOT=$GVM_ROOT/gos/$GO_NAME
-    trap 'rm -rf $GO_INSTALL_ROOT; display_fatal "Cancelled!"' INT
+    trap 'rm -rf $GO_INSTALL_ROOT; __gvm_display_fatal "Cancelled!"' INT
 
     # Check for existing install
     if [[ -d "$GO_INSTALL_ROOT" ]]; then
@@ -415,7 +415,7 @@ install_from_source() {
     check_tag
     if [[ "$?" == "1" ]]; then
         update_source
-        check_tag || display_fatal "Unrecognized Go version"
+        check_tag || __gvm_display_fatal "Unrecognized Go version"
     fi
     if [[ "$GO_NAME" == "" ]]; then
         GO_NAME=$version
@@ -441,9 +441,9 @@ install_from_source() {
 }
 
 main() {
-    trap 'display_fatal "Canceled!"' INT
+    trap '__gvm_display_fatal "Canceled!"' INT
     read_command_line "$@"
-    [[ "$VERSION" == "" ]] && display_fatal "No version specified"
+    [[ "$VERSION" == "" ]] && __gvm_display_fatal "No version specified"
 
     if [[ "$GO_NAME" == "" ]]; then
         GO_NAME=$VERSION
