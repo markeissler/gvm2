@@ -46,3 +46,7 @@ gvm list #status=0; match=/go1.6.4/
 ## 1.5.4
 gvm install go1.5.4 --binary #status=0
 gvm list #status=0; match=/go1.5.4/
+
+## Cleanup test objects
+gvm uninstall go1.6.4 > /dev/null 2>&1
+gvm uninstall go1.5.4 > /dev/null 2>&1

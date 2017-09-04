@@ -38,8 +38,24 @@ gvm list #status=0; match=/go1.5.4/
 CGO_ENABLED=0 gvm install go1.6.4 #status=0
 gvm list #status=0; match=/go1.6.4/
 
+## Cleanup test objects
+gvm uninstall go1.1.2 > /dev/null 2>&1
+gvm uninstall go1.2.2 > /dev/null 2>&1
+gvm uninstall go1.3.3 > /dev/null 2>&1
+gvm uninstall go1.4.1 > /dev/null 2>&1
+gvm uninstall go1.5.4 > /dev/null 2>&1
+gvm uninstall go1.6.4 > /dev/null 2>&1
+
 ##
 ## Install binary go
 ##
 
-## No further binary tests needed for linux.
+## Re-install 1.2.2, 1.3.3 binaries as they are our base installs for further tests.
+
+## 1.3.3
+gvm install go1.3.3 --binary #status=0
+gvm list #status=0; match=/go1.3.3/
+
+## 1.2.2
+gvm install go1.2.2 --binary #status=0
+gvm list #status=0; match=/go1.2.2/
