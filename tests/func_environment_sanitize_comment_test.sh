@@ -58,7 +58,8 @@ sanitizedConfig="$(grep "GOROOT=" "${SANDBOX}/gvm2/environments/system@global")"
 [[ "${sanitizedGOROOT}" == ${expectedSanitizedGOROOT} ]] # status=0
 [[ "${sanitizedConfig}" == ${expectedSanitizedConfig} ]] # status=0
 
-## Cleanup
+## Cleanup test objects
+gvm uninstall go1.1.2 > /dev/null 2>&1
 rmdir "${SANDBOX}/gvm2/gos/system"
 rm "${SANDBOX}/gvm2/environments/system@global"
 rm "${SANDBOX}/gvm2/environments/system"

@@ -7,7 +7,7 @@ source "${SANDBOX}/gvm2/scripts/env/use.sh"
 
 ## Setup expectation (version, retval, retstatus)
 expect_1=( "go1.3.3"    "go1.3.3"     "0" )
-expect_2=( "go1.9beta2" "go1.9beta2"  "0" )
+expect_2=( "go1.8.2"    "go1.8.2"     "0" )
 
 ##
 ## resolve current version (return status)
