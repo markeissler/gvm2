@@ -335,7 +335,7 @@ check_all()
         echo "  _skip_list     -> ${args[@]}"
     fi
 
-    if [[ "${opt_quiet}" == false ]]
+    if [[ "${opt_porcelain}" == false && "${opt_quiet}" == false ]]
     then
         __gvm_locale_text_for_key "title/gvm_check_all" > /dev/null
         printf "%s\n\n" "${RETVAL}"
@@ -361,7 +361,7 @@ check_all()
     # output entire fail list unless quiet
     if [[ "${opt_quiet}" == false && ${#fail_hash[@]} -gt 0 ]]
     then
-        local fail_hash_keys; fail_hash_keys=( "$(keysForFakeAssocArray "${fail_hash[*]}")" )
+        local fail_hash_keys; fail_hash_keys=( $(keysForFakeAssocArray "${fail_hash[*]}") )
         local _command
         for _command in "${fail_hash_keys[@]}"
         do
@@ -418,12 +418,13 @@ main()
     fi
 
     local _run_os
-    local _os _os_version _os_arch
+    local os os_version os_arch
     __gvm_detect_runos > /dev/null
     _run_os="${RETVAL}"
-    _os="${_run_os%%,*}"
-    _os_version="${_run_os#*,}"; _os_version="${_os_version%,*}"
-    _os_arch="${_run_os##*,}"
+    os="${_run_os%%,*}"
+    os_version="${_run_os#*,}"; os_version="${os_version%,*}"
+    os_arch="${_run_os##*,}"
+    unset _run_os
 
     while true
     do
@@ -469,7 +470,7 @@ main()
         return 1
     fi
 
-    check_all "${_os}" "${opt_skip}" "${opt_porcelain}" "${opt_quiet}" "${args[@]}"; rslt=$?
+    check_all "${os}" "${opt_skip}" "${opt_porcelain}" "${opt_quiet}" "${args[@]}"; rslt=$?
 
     if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
     then
