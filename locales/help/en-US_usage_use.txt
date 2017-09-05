@@ -1,6 +1,8 @@
 Usage: gvm use [option] <value>
        gvm use [option] <version-value>@<pkgset-value> [sub-option]
 
+Select which installed Go version to use
+
 Options:
     --version value             Go version name or alias
     --pkgset value              Standard pkgset name

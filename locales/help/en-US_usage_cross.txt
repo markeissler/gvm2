@@ -1,7 +1,7 @@
 Usage: gvm cross [option] <os> <arch> [sub-option] <file ...>
        gvm cross --list [option]
 
-Cross compiles Go program
+Cross compile a Go program
 
 Options:
     -l, --list                  List available platforms

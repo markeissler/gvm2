@@ -1,5 +1,7 @@
 Usage: gvm implode [option]
 
+Uninstall GVM2 (You probably don't want to do this)
+
 Options:
     -f, --force                 Uninstall GVM2 without prompting
     -q, --quiet                 Suppress progress messages

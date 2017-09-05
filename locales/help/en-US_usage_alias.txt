@@ -1,6 +1,6 @@
 Usage: gvm alias <command> [option]
 
-GVM2 command to manage Go version aliases
+Manage Go version aliases
 
 Commands:
     create      Create a new alias
