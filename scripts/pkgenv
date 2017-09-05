@@ -1,45 +1,188 @@
 #!/usr/bin/env bash
+# scripts/pkgenv
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-source "$GVM_ROOT/scripts/function/_load_common.sh"
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_bash_pseudo_hash.sh"
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/locale_text.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-function show_usage() {
-  echo "Usage: gvm pkgenv [packageset-name]"
-  echo
-  echo "       -h, --help   Display this message."
-  echo "       -o, --output Write content to stdout"
-  echo
-  echo "The [packageset-name] is optional."
-  echo
+pkgenv()
+{
+    local go_version="${1}"; shift
+    local go_pkgset="${1}"; shift
+    local opt_stdout="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+    local gvm_env_file="${GVM_ROOT}/environments/${go_version}@${go_pkgset}"
+
+    if [ -z "${go_version// /}" ]; then
+        __gvm_locale_text_for_key "specify_go_version_name"
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ -z "${go_pkgset// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_pkgenv_pkgset_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # Package not exist?
+    if [[ ! -f "${gvm_env_file}" ]]
+    then
+        __gvm_locale_text_for_key "pkgenv_pkgset_not_exist" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::list_all() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  GVM_ROOT       -> ${GVM_ROOT}"
+        echo "  _gvm_env_file  -> ${gvm_env_file}"
+    fi
+
+    if [[ "${opt_stdout}" == true ]]
+    then
+        \cat "${gvm_env_file}"
+    else
+        "${EDITOR:-vi}" "$env_file"
+    fi
+
+    return $?
 }
 
-for i in "$@"; do
-  case $i in
-    -h|--help*)
-      show_usage
-      exit 0
-    ;;
-    -o|--output*)
-      output=true
-    ;;
-    *)
-      gvm_env="$i"
-    ;;
-  esac
-done
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
 
-if [ -z "$gvm_go_name" ]; then
-  __gvm_display_fatal "current go version not managed by gvm"
-fi
+  # @TODO: additional cleanup?
 
-if [ ! -z "$gvm_env" ]; then
-  gvm_env="@$gvm_env"
-fi
+  wait; stty sane; exit 1
+}
 
-env_file=$GVM_ROOT/environments/$gvm_go_name$gvm_env
+trap '_exit' SIGINT SIGQUIT SIGTERM
 
-if [ $output ]; then
-    cat "$env_file"
-    exit 0
-fi
+main()
+{
+    local go_version="${gvm_go_name}"
+    local go_pkgset="global"
+    local opt_stdout=false
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
 
-${EDITOR:-vi} "$env_file"
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            -x | --stdout )
+                opt_stdout=true
+                ;;
+            --version )
+                shift
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "invalid_go_version_name"
+                    __gvm_display_fatal "${RETVAL}"
+                fi
+                 go_version="${1}"
+                ;;
+            --pkgset )
+                shift
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "invalid_pkgset_name"
+                    __gvm_display_fatal "${RETVAL}"
+                fi
+                go_pkgset="${1}"
+                ;;
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_pkgenv" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_pkgenv" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                # only save arg if it contains more than spaces
+                [[ -n "${1// /}" ]] && args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    #
+    # sanitize version@pkgset args
+    #
+
+    local goversion_regex='^(go([0-9]+(\.[0-9]+[a-z0-9]*)*))$'
+    # append pkgset_regex to the end of each pattern
+    local pkgset_regex='([A-Za-z0-9]+[A-Za-z0-9._#:%\/\+\-]+)'
+    local at_pkgset_regex="(@${pkgset_regex})?"
+    goversion_regex="${goversion_regex/%\$/$at_pkgset_regex}\$"
+
+    if [[ "${#args[@]}" -gt 0 ]]
+    then
+        if __gvm_rematch "${args[0]}" "${goversion_regex}"
+        then
+            go_version="${GVM_REMATCH[1]}"
+            go_pkgset="${GVM_REMATCH[5]}"
+        elif __gvm_rematch "${args[0]}" "${pkgset_regex}"
+        then
+            go_pkgset="${GVM_REMATCH[1]}"
+        else
+            __gvm_locale_text_for_key "invalid_arguments" > /dev/null
+            printf "%s: %s\n\n" "${RETVAL}" "${#args[@]}"
+            __gvm_locale_text_for_key "help/usage_pkgenv" > /dev/null
+            printf "%s\n" "${RETVAL}"
+            return 1
+        fi
+    fi
+
+    pkgenv "${go_version}" "${go_pkgset}" "${opt_stdout}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"
