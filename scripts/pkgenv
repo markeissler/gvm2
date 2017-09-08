@@ -53,7 +53,7 @@ pkgenv()
     #
     if [[ "${GVM_DEBUG}" -eq 1 ]]
     then
-        printf "%s:\n" "${BASH_SOURCE[0]##*/}::list_all() running with"
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::pkgenv() running with"
         echo "  GOROOT         -> ${GOROOT}"
         echo "  GVM_ROOT       -> ${GVM_ROOT}"
         echo "  _gvm_env_file  -> ${gvm_env_file}"
