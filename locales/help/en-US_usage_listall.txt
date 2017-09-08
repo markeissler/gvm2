@@ -12,7 +12,7 @@ Options:
 
 Command line arguments
 ----------------------
-Without any arguments source (-s|--source) is selected by default. Only bonafide
+Without any options source (-s|--source) is selected by default. Only bonafide
 releases are listed: legacy "weekly" and "release" tags are omitted. The source
 list is filtered to only include versions that can be built on the running
 platform. The binary list is filtered to only include versions that should have
