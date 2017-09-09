@@ -52,7 +52,9 @@ __gvm_find_path_upwards()
         RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    __gvmp_find_path_for_target "${target}" "${start_dir}" "${final_dir}" > /dev/null
+    # NOTE: This call has to be made in a forked shell, otherwise the current
+    # PWD will become corrupted.
+    RETVAL="$(__gvmp_find_path_for_target "${target}" "${start_dir}" "${final_dir}")"
 
     if [[ -z "${RETVAL// /}" ]]
     then
