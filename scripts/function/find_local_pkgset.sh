@@ -5,7 +5,7 @@
 #
 
 # source once and only once!
-[[ ${GVM_FIND_AVAILABLE:-} -eq 1 ]] && return || readonly GVM_FIND_AVAILABLE=1
+[[ ${GVM_FIND_LOCAL_PKGSET:-} -eq 1 ]] && return || readonly GVM_FIND_LOCAL_PKGSET=1
 
 # load dependencies
 dep_load() {
