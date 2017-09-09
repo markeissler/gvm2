@@ -1,73 +1,164 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/function/_load_common.sh"
+# scripts/pkgset-create
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-usage() {
-cat <<EOF
-Usage: gvm pkgset list [option]
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/find_local_pkgset.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-Options:
-  --porcelain    - machine-readable output
-  -h, --help     - show this message
+list()
+{
+    local go_version="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
 
-EOF
+    if [[ -z "${go_version// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_go_version_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
 
-    return 0
-}
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::list_all() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  GVM_ROOT       -> ${GVM_ROOT}"
+        echo "  _go_version    -> ${go_version}"
+    fi
 
-list() {
-    local porcelain="${1:-false}"
+    if [[ "${opt_porcelain}" == false && "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "title/gvm_pkgset_list" > /dev/null
+        printf "\n%s\n\n" "${RETVAL} (${go_version})"
+    elif [[ "${opt_procelain}" == true ]]
+    then
+        printf "  G %s\n" "${go_version}"
+    fi
 
-    if [[ "${porcelain}" == false ]]
+    ## LOCAL - beg
+    __gvm_find_local_pkgset > /dev/null
+    local rslt=$?
+    local gvm_root_local="${RETVAL}"
+    if [[ $rslt -eq 0 ]]
+    then
+        if [[ "${gvm_pkgset_name}" == "local" ]]
+        then
+            echo "=>L ${gvm_root_local%/.*}"
+        else
+            echo "  L ${gvm_root_local%/.*}"
+        fi
+    fi
+    unset gvm_root_local
+    unset rslt
+    ## LOCAL - end
+
+    if [[ -d "${GVM_ROOT}/pkgsets/${go_version}" ]]
+    then
+        local _dir
+        for _dir in "${GVM_ROOT}/pkgsets/${go_version}/"*
+        do
+            local __pkgset="${_dir##*/}"
+            if [[ "${gvm_pkgset_name}" == "${__pkgset}" ]]
+            then
+                echo "=>  ${__pkgset}"
+            else
+                echo "    ${__pkgset}"
+            fi
+            unset __pkgset
+        done
+        unset _dir
+    fi
+
+    if [[ "${opt_porcelain}" == false ]]
     then
         echo
-        __gvm_display_message "gvm go package sets ($gvm_go_name)"
-        echo
-    else
-        echo "  G ${gvm_go_name}"
     fi
-    if [[ -d "${GVM_ROOT}/pkgsets/${gvm_go_name}" ]]; then
-        __gvm_find_local_pkgset > /dev/null
-        local pkgset_local="${RETVAL}"
-        if [[ -d "${pkgset_local}" ]]; then
-            if [[ "${gvm_pkgset_name}" == "__local__" ]]; then
-                echo "=>L ${pkgset_local%/.*}"
-            else
-                echo "  L ${pkgset_local%/.*}"
-            fi
-        fi
-        unset pkgset_local
-
-        for cur_dir in "${GVM_ROOT}/pkgsets/${gvm_go_name}/"*; do
-            [[ "${cur_dir}" == "${GVM_ROOT}/pkgsets/${gvm_go_name}/*" ]] && exit
-            local pkgset=$(basename "${cur_dir}")
-            if [[ "${gvm_pkgset_name}" == "${pkgset}" ]]; then
-                echo "=>  ${pkgset}"
-            else
-                echo "    ${pkgset}"
-            fi
-            unset pkgset
-        done
-    fi
-    [[ "${porcelain}" == false ]] && echo
 
     return 0
 }
 
-option="${1}"
-if [[ "x${option}" != "x" ]]
-then
-    case "${option}" in
-        --help|-h)
-            usage; exit 0
-            ;;
-        --porcelain)
-            list true; exit $?
-            ;;
-        *)
-            __gvm_display_warning "Unrecognized command line argument: '$option'"
-            usage; exit 1
-            ;;
-    esac
-else
-    list
-fi
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_pkgset_list" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_pkgset_list" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    local go_version="${args[0]:-$gvm_go_name}"
+
+    # @TODO: Officially support passing the go_version as an arg
+    list "${go_version}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

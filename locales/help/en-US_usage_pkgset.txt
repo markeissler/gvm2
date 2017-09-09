@@ -1,0 +1,13 @@
+Usage: gvm pkgset <command> [option]
+
+Manage GVM2 package sets for the currently selected Go version
+
+Commands:
+    create      Create a new package set
+    delete      Delete a package set
+    empty       Flush the contents of a package set
+    list        List package sets
+    use         Switch to a different package set
+    help        Display this usage text
+
+Run 'gvm pkgset <command> --help' for more information on a command.

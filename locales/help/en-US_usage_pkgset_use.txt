@@ -10,4 +10,6 @@ Options:
 Sub-Options:
     --default                   Make selected pkgset default
 
+Command line arguments
+----------------------
 The --pkgset and --local options are exclusive (only one can be specified).

@@ -1,0 +1,8 @@
+Usage: gvm pkgset list [option]
+
+List package sets for the currently selected Go version
+
+Options:
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message

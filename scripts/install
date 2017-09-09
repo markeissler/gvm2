@@ -218,7 +218,7 @@ EOF
 
     __gvm_use "${GO_NAME}" &> /dev/null ||
         __gvm_display_fatal "Failed to use installed version"
-    gvm pkgset create global
+    gvm pkgset create --force global
     unset GOPATH
 
     unset new_env_file
