@@ -14,6 +14,7 @@ dep_load()
     local deps; deps=(
         "../function/_bash_pseudo_hash.sh"
         "../function/_shell_compat.sh"
+        "../function/find_local_pkgset.sh"
         "../function/locale_text.sh"
     )
     for file in "${deps[@]}"
