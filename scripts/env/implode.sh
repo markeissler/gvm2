@@ -91,11 +91,11 @@ __gvm_implode()
     #
     # collect some messages ahead of time as locales are about to be deleted!
     #
-    __gvm_locale_text_for_key "uninstall_failed" > /dev/null
-    local uninstall_failed_msg="${RETVAL}"
+    __gvm_locale_text_for_key "implode_failed" > /dev/null
+    local implode_failed_msg="${RETVAL}"
 
-    __gvm_locale_text_for_key "uninstall_succeeded" > /dev/null
-    local uninstall_success_msg="${RETVAL}"
+    __gvm_locale_text_for_key "implode_succeeded" > /dev/null
+    local implode_success_msg="${RETVAL}"
 
     # do it!
     rm -rf "${GVM_ROOT}"
@@ -104,13 +104,13 @@ __gvm_implode()
     then
         if [[ "${opt_quiet}" == false ]]
         then
-            __gvm_display_error "${uninstall_failed_msg}"
+            __gvm_display_error "${implode_failed_msg}"
         fi
 
         return 1
     fi
 
-    __gvm_display_message "${uninstall_success_msg}"
+    __gvm_display_message "${implode_success_msg}"
 
     return 0
 }
