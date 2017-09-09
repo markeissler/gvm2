@@ -11,6 +11,7 @@ git:
 # addons:
 #   artifacts: true
 before_install:
+  - sudo apt-get -y remove mercurial
   - binscripts/gvm-installer $TRAVIS_COMMIT $TRAVIS_BUILD_DIR/tmp
 install: gem install tf -v '>=0.4.1'
 script:
