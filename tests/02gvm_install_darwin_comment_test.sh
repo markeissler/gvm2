@@ -7,8 +7,8 @@
 ##
 
 ## Cleanup test objects
-gvm uninstall go1.7.1 > /dev/null 2>&1
-gvm uninstall go1.8.1 > /dev/null 2>&1
+gvm uninstall --force go1.7.1 > /dev/null 2>&1
+gvm uninstall --force go1.8.1 > /dev/null 2>&1
 
 ## 1.7.1
 CGO_ENABLED=0 gvm install go1.7.1 #status=0
@@ -19,8 +19,8 @@ CGO_ENABLED=0 gvm install go1.8.1 #status=0
 gvm list #status=0; match=/go1.8.1/
 
 ## Cleanup test objects
-gvm uninstall go1.7.1 > /dev/null 2>&1
-gvm uninstall go1.8.1 > /dev/null 2>&1
+gvm uninstall --force go1.7.1 > /dev/null 2>&1
+gvm uninstall --force go1.8.1 > /dev/null 2>&1
 
 ##
 ## Install binary go

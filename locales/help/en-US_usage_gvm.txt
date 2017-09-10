@@ -9,8 +9,8 @@ Commands:
     diff        View changes to an installed Go directory contents
     help        Show this message
     implode     Uninstall GVM2 (You probably don't want to do this)
-    install     Install Go versions
-    uninstall   Uninstall Go versions
+    install     Install a Go version
+    uninstall   Uninstall a Go version
     cross       Cross compile a Go program
     linkthis    Create a link from the GVM2 pkgset src directory to a working directory
     list        List currently installed versions of Go

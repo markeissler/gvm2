@@ -1,22 +1,274 @@
 #!/usr/bin/env bash
-source "$GVM_ROOT/scripts/function/_load_common.sh"
+# scripts/pkgset-create
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-[[ "$1" == "" ]] &&
-	__gvm_display_fatal "Please specify the version"
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_bash_pseudo_hash.sh"
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/find_installed.sh"
+        "../scripts/function/locale_text.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-fuzzy_match=$(\ls -1 "$GVM_ROOT/gos" | \sort | \grep "$1" | \head -n 1 | \grep "$1") ||
-	__gvm_display_fatal "Invalid version $1"
+uninstall_version()
+{
+    local go_version="${1}"; shift
+    local gvm_root="${1:-$GVM_ROOT}"
+    local error_message=""
+    local rslt=0
+    unset RETVAL
 
-if [[ -d $GVM_ROOT/gos/$fuzzy_match ]]; then
-	rm -rf "$GVM_ROOT/pkgsets/$fuzzy_match" &> /dev/null ||
-		__gvm_display_fatal "Couldn't remove pkgsets"
-	rm -f "$GVM_ROOT/environments/$fuzzy_match" &> /dev/null ||
-		__gvm_display_fatal "Couldn't remove environment files"
-	rm -f "$GVM_ROOT/environments/$fuzzy_match@"* &> /dev/null ||
-		__gvm_display_fatal "Couldn't remove pkgset environment files"
-	rm -rf "$GVM_ROOT/gos/$fuzzy_match" &> /dev/null ||
-		__gvm_display_fatal "Couldn't remove Go folder"
-	__gvm_display_message "Uninstalled version $fuzzy_match"
-else
-	__gvm_display_fatal "Invalid version"
-fi
+    [[ -z "${go_version// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    while true
+    do
+        rm -rf "${gvm_root}/pkgsets/${go_version}" &> /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            __gvm_locale_text_for_key "pkgset_delete_failed"
+            error_message="${RETVAL}: ${go_version}"
+            rslt=1; break
+        fi
+
+        rm -rf "${gvm_root}/environments/${go_version}" &> /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            __gvm_locale_text_for_key "environment_delete_failed"
+            error_message="${RETVAL}: ${go_version}"
+            rslt=1; break
+        fi
+
+        rm -rf "${gvm_root}/environments/${go_version}@"* &> /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            __gvm_locale_text_for_key "environment_delete_failed"
+            error_message="${RETVAL}: ${go_version}@*"
+            rslt=1; break
+        fi
+
+        rm -rf "${gvm_root}/gos/${go_version}" &> /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            __gvm_locale_text_for_key "uninstall_failed"
+            error_message="${RETVAL}: ${go_version}"
+            rslt=1; break
+        fi
+
+        break
+    done
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+uninstall()
+{
+    local opt_force="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"; shift
+    local args; args=( "$@" )
+    local fail_hash; fail_hash=()
+    local rslt_status=0
+
+    if [[ "${#args}" -eq 0 ]]
+    then
+        __gvm_locale_text_for_key "specify_go_version_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    __gvm_find_installed "" "${GVM_ROOT}/gos" > /dev/null
+    local installed_hash; installed_hash=( ${RETVAL} )
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "Command (%s) installed versions dump:\n" "${BASH_SOURCE[0]##*/}"
+        prettyDumpFakeAssocArray "${installed_hash[*]}"
+    fi
+
+    # validate specified versions are installed
+    for version in "${args[@]}"
+    do
+        if [[ -z "$(valueForKeyFakeAssocArray "${version}" "${installed_hash[*]}")" ]]
+        then
+            __gvm_locale_text_for_key "go_version_not_installed"
+            __gvm_display_fatal "${RETVAL}: ${version}"
+        fi
+    done
+
+    local gvm_root="${GVM_ROOT}"
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::uninstall() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  GVM_ROOT       -> ${gvm_root}"
+        echo "  _versions      -> ${args[@]}"
+    fi
+
+    if [[ "${opt_force}" == false ]]
+    then
+        __gvm_locale_text_for_key "uninstall_warning"
+        __gvm_display_message "${RETVAL}: ${args[*]}"
+        __gvm_prompt_confirm > /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            if [[ "${opt_quiet}" == false ]]
+            then
+                __gvm_locale_text_for_key "action_cancelled" > /dev/null
+                __gvm_display_message "${RETVAL}"
+            fi
+            return 0
+        fi
+    fi
+
+    if [[ "${opt_porcelain}" == false && "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "title/gvm_uninstall" > /dev/null
+        printf "%s\n\n" "${RETVAL}"
+    fi
+
+    local _version
+    for _version in "${args[@]}"
+    do
+        uninstall_version "${_version}" "${gvm_root}" > /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            local __key __val
+            __key="${_version}"
+            __val="${RETVAL}"
+            fail_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${fail_hash[*]}") )
+            unset __key __val
+
+            rslt_status=1
+        fi
+    done
+    unset _version
+
+    # output entire fail list unless quiet
+    if [[ "${opt_quiet}" == false && ${#fail_hash[@]} -gt 0 ]]
+    then
+        local fail_hash_keys; fail_hash_keys=( $(keysForFakeAssocArray "${fail_hash[*]}") )
+        local _version
+        for _version in "${fail_hash_keys[@]}"
+        do
+            local __message="$(valueForKeyFakeAssocArray "${_version}" "${fail_hash[*]}")"
+            if [[ "${opt_porcelain}" == false ]]
+            then
+                printf "%s\n" "[!!] ${__message}"
+            else
+                printf "%s\n" "[!!] ${_version}"
+            fi
+            unset __message
+        done
+        unset _version
+        unset fail_hash_keys
+    fi
+
+    if [[ $rslt_status -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "uninstall_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "uninstall_succeeded" > /dev/null
+        __gvm_display_message "${RETVAL}"
+    fi
+
+    return 0
+}
+
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_force=false
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            -f | --force )
+                opt_force=true
+                ;;
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_uninstall" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_uninstall" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    # option sanity check
+    if [[ "${opt_local}" == true && "${#args[@]}" -gt 0 ]]
+    then
+        __gvm_locale_text_for_key "invalid_arguments" > /dev/null
+        printf "%s!\n\n" "${RETVAL}"
+        __gvm_locale_text_for_key "help/usage_uninstall" > /dev/null
+        printf "%s\n" "${RETVAL}"
+        return 1
+    fi
+
+    uninstall "${opt_force}" "${opt_porcelain}" "${opt_quiet}" "${args[@]}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

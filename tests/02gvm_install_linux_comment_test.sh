@@ -7,12 +7,12 @@
 ##
 
 ## Cleanup test objects
-gvm uninstall go1.1.2 > /dev/null 2>&1
-gvm uninstall go1.2.2 > /dev/null 2>&1
-gvm uninstall go1.3.3 > /dev/null 2>&1
-gvm uninstall go1.4.1 > /dev/null 2>&1
-gvm uninstall go1.5.4 > /dev/null 2>&1
-gvm uninstall go1.6.4 > /dev/null 2>&1
+gvm uninstall --force go1.1.2 > /dev/null 2>&1
+gvm uninstall --force go1.2.2 > /dev/null 2>&1
+gvm uninstall --force go1.3.3 > /dev/null 2>&1
+gvm uninstall --force go1.4.1 > /dev/null 2>&1
+gvm uninstall --force go1.5.4 > /dev/null 2>&1
+gvm uninstall --force go1.6.4 > /dev/null 2>&1
 
 ## 1.1.2
 CGO_ENABLED=0 gvm install go1.1.2 #status=0
@@ -39,12 +39,12 @@ CGO_ENABLED=0 gvm install go1.6.4 #status=0
 gvm list #status=0; match=/go1.6.4/
 
 ## Cleanup test objects
-gvm uninstall go1.1.2 > /dev/null 2>&1
-gvm uninstall go1.2.2 > /dev/null 2>&1
-gvm uninstall go1.3.3 > /dev/null 2>&1
-gvm uninstall go1.4.1 > /dev/null 2>&1
-gvm uninstall go1.5.4 > /dev/null 2>&1
-gvm uninstall go1.6.4 > /dev/null 2>&1
+gvm uninstall --force go1.1.2 > /dev/null 2>&1
+gvm uninstall --force go1.2.2 > /dev/null 2>&1
+gvm uninstall --force go1.3.3 > /dev/null 2>&1
+gvm uninstall --force go1.4.1 > /dev/null 2>&1
+gvm uninstall --force go1.5.4 > /dev/null 2>&1
+gvm uninstall --force go1.6.4 > /dev/null 2>&1
 
 ##
 ## Install binary go

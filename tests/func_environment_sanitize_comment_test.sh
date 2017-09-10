@@ -7,7 +7,7 @@ source "${SANDBOX}/gvm2/scripts/function/environment_sanitize.sh" || return 1
 ## Setup expectation
 
 ## 1.8.1
-gvm uninstall go1.8.1 > /dev/null 2>&1
+gvm uninstall --force go1.8.1 > /dev/null 2>&1
 gvm install go1.8.1 --binary
 source "${SANDBOX}/gvm2/scripts/gvm"
 gvm use go1.8.1
@@ -59,7 +59,7 @@ sanitizedConfig="$(grep "GOROOT=" "${SANDBOX}/gvm2/environments/system@global")"
 [[ "${sanitizedConfig}" == ${expectedSanitizedConfig} ]] # status=0
 
 ## Cleanup test objects
-gvm uninstall go1.1.2 > /dev/null 2>&1
+gvm uninstall --force go1.1.2 > /dev/null 2>&1
 rmdir "${SANDBOX}/gvm2/gos/system"
 rm "${SANDBOX}/gvm2/environments/system@global"
 rm "${SANDBOX}/gvm2/environments/system"

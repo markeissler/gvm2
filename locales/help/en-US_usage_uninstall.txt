@@ -1,0 +1,13 @@
+Usage: gvm uninstall [option] <version ...>
+
+Uninstall a Go version
+
+Options:
+    -f, --force                 Uninstall without prompting
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+The "system" version, if one is available, cannot be uninstalled.

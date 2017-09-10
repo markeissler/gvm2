@@ -246,7 +246,7 @@ install_go() {
             exit 0
         fi
         display_warning "Removing corrupt install..."
-        gvm uninstall "$GO_NAME"
+        gvm uninstall --force "$GO_NAME"
     fi
 
     if [[ "$version" != "$GO_NAME" ]]; then
@@ -357,7 +357,7 @@ install_go_binary() {
             exit 0
         fi
         display_warning "Removing corrupt install..."
-        gvm uninstall "$GO_NAME"
+        gvm uninstall --force "$GO_NAME"
     fi
 
     __gvm_display_message "Installing $GO_NAME from binary source"

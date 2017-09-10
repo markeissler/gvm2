@@ -10,7 +10,7 @@ gvm diff --help # status=0; match=/Usage: gvm diff \[option\] \[<version>\]/
 ## Setup expectation
 
 ## 1.8.2
-gvm uninstall go1.8.2 > /dev/null 2>&1
+gvm uninstall --force go1.8.2 > /dev/null 2>&1
 gvm install go1.8.2 --binary
 
 ## Test without any changes

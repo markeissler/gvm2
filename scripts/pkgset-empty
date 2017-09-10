@@ -98,7 +98,7 @@ empty()
         __gvm_display_fatal "${RETVAL}"
     fi
 
-    rm -rf "${gvm_root}/pkgsets/${go_version}/${pkgset_name}/"*
+    rm -rf "${gvm_root}/pkgsets/${go_version}/${pkgset_name}/"* &> /dev/null
     if [[ $? -ne 0 ]]
     then
         __gvm_locale_text_for_key "pkgset_empty_failed"

@@ -22,7 +22,7 @@
 ##
 
 ## Cleanup test objects
-gvm uninstall go1.4 > /dev/null 2>&1
+gvm uninstall --force go1.4 > /dev/null 2>&1
 
 ## 1.4
 gvm install go1.4 #status=0
@@ -33,8 +33,8 @@ gvm list #status=0; match=/go1.4/
 ##
 
 ## Cleanup test objects1
-gvm uninstall go1.3.3 > /dev/null 2>&1
-gvm uninstall go1.2.2 > /dev/null 2>&1
+gvm uninstall --force go1.3.3 > /dev/null 2>&1
+gvm uninstall --force go1.2.2 > /dev/null 2>&1
 
 ## 1.3.3
 gvm install go1.3.3 --binary #status=0
