@@ -47,7 +47,10 @@ __gvm_find_available()
             # GVM_REMATCH[2]: isolated version (e.g. 1.7.1)
             __key="${GVM_REMATCH[1]}"
             __val="${url}"
-            versions_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}" > /dev/null
+                versions_hash=( ${RETVAL} )
+            }
             unset __key __val
         fi
     done <<< "$(\git ls-remote -t "${url}" | awk -F/ '{ print $NF }' | \sort)"

@@ -84,7 +84,11 @@ list_platforms()
     for _os in "${platform_hash_keys[@]}"
     do
         local __archs; __archs=()
-        local __archs_raw="$(valueForKeyFakeAssocArray "${_os}" "${platforms_hash[*]}")"
+        local __archs_raw=""
+        {
+            valueForKeyFakeAssocArray "${_os}" "${platforms_hash[*]}" > /dev/null
+            __archs_raw="${RETVAL}"
+        }
         local __archs_ary; __archs_ary=( )
         IFS=',' __archs_ary=( ${__archs_raw//[\[\]]/} ) IFS="$defaultIFS"
         local __arch
@@ -163,7 +167,11 @@ check_platform()
         retstat=2 # set to no arch found
 
         local __archs; __archs=()
-        local __archs_raw="$(valueForKeyFakeAssocArray "${_os}" "${platforms_hash[*]}")"
+        local __archs_raw=""
+        {
+            valueForKeyFakeAssocArray "${_os}" "${platforms_hash[*]}" > /dev/null
+            __archs_raw="${RETVAL}"
+        }
         local __archs_ary; __archs_ary=( )
         IFS=',' __archs_ary=( ${__archs_raw//[\[\]]/} ) IFS="$defaultIFS"
         local __arch

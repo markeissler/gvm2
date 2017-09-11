@@ -350,7 +350,10 @@ check_all()
             local __key __val
             __key="${_func#*_}"
             __val="${RETVAL}"
-            fail_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${fail_hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${fail_hash[*]}" > /dev/null
+                fail_hash=( ${RETVAL} )
+            }
             unset __key __val
 
             rslt_status=1
@@ -365,7 +368,11 @@ check_all()
         local _command
         for _command in "${fail_hash_keys[@]}"
         do
-            local __message="$(valueForKeyFakeAssocArray "${_command}" "${fail_hash[*]}")"
+            local __message=""
+            {
+                valueForKeyFakeAssocArray "${_command}" "${fail_hash[*]}" > /dev/null
+                __message="${RETVAL}"
+            }
             if [[ "${opt_porcelain}" == false ]]
             then
                 printf "%s\n" "[!!] ${__message}"

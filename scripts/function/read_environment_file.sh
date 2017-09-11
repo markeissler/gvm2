@@ -66,7 +66,10 @@ __gvm_read_environment_file() {
             # strip leading and trailing quotes
             __val=${__val#\"}; __val=${__val%\"}
             # add to pseudo-hash
-            hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${hash[*]}" > /dev/null
+                hash=( ${RETVAL} )
+            }
         fi
         unset __key __val
     done <<< "$(cat "${filepath}")"

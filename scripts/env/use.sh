@@ -175,7 +175,10 @@ __gvm_use()
                 local __key __val
                 __key="${accumulator[i]}"
                 __val="${accumulator[i+1]}"
-                options_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${options_hash[*]}") )
+                {
+                    setValueForKeyFakeAssocArray "${__key}" "${__val}" "${options_hash[*]}" > /dev/null
+                    options_hash=( ${RETVAL} )
+                }
                 unset __key __val
             done
             accumulator=()
@@ -190,14 +193,22 @@ __gvm_use()
         for _item in "${options_hash[@]}"
         do
             local __key="${_item%%:*}"
-            local __val="$(valueForKeyFakeAssocArray "${__key}" "${options_hash[*]}")"
+            local __val=""
+            {
+                valueForKeyFakeAssocArray "${__key}" "${options_hash[*]}" > /dev/null
+                __val="${RETVAL}"
+            }
             printf "  [%s]: %s\n" "${__key}" "${__val}"
             unset __key __val
         done
         unset _item
     fi
 
-    local version="$(valueForKeyFakeAssocArray "--version" "${options_hash[*]}")"
+    local version=""
+    {
+        valueForKeyFakeAssocArray "--version" "${options_hash[*]}" > /dev/null
+        version="${RETVAL}"
+    }
 
     if [[ -z "${version// /}" ]]
     then
@@ -219,7 +230,7 @@ __gvm_use()
         printf "Command (%s) installed versions dump:\n" "${BASH_SOURCE[0]##*/}"
         prettyDumpFakeAssocArray "${installed_hash[*]}"
     fi
-    if [[ -z "$(valueForKeyFakeAssocArray "${version}" "${installed_hash[*]}")" ]]
+    if ! valueForKeyFakeAssocArray "${version}" "${installed_hash[*]}" > /dev/null
     then
         local go_archive_path="$GVM_ROOT/archive/go"
 
@@ -242,7 +253,7 @@ __gvm_use()
 
         # does version exist remotely? version can be downloaded as binary or source, otherwise bail.
         local available_hash; available_hash=( "$(__gvm_find_available "https://go.googlesource.com/go")" )
-        if [[ -n "$(valueForKeyFakeAssocArray "${version}" "${available_hash[*]}")" ]]
+        if valueForKeyFakeAssocArray "${version}" "${available_hash[*]}" > /dev/null
         then
             __gvm_locale_text_for_key "go_install_version_upstream" > /dev/null
             __gvm_display_error "${RETVAL}"
@@ -267,17 +278,25 @@ __gvm_use()
     export PATH="${fixed_path}"
     unset fixed_path
 
-    if [[ -n "$(valueForKeyFakeAssocArray "--default" "${options_hash[*]}")" ]]
+    if valueForKeyFakeAssocArray "--default" "${options_hash[*]}" > /dev/null
     then
         cp "$GVM_ROOT/environments/$version" "$GVM_ROOT/environments/default"
         [[ $? -ne 0 ]] && __gvm_display_error "Couldn't make ${version} default"
     fi
 
-    local pkgset="$(valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}")"
+    local pkgset=""
+    {
+        valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}" > /dev/null
+        pkgset="${RETVAL}"
+    }
     if [[ -n "${pkgset}" ]]
     then
-        local pkgset_args=( "$(valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}")" )
-        if [[ -n "$(valueForKeyFakeAssocArray "--default" "${options_hash[*]}")" ]]
+        local pkgset_args=""
+        {
+            valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}"
+            pkgset_args="${RETVAL}"
+        }
+        if valueForKeyFakeAssocArray "--default" "${options_hash[*]}" > /dev/null
         then
             pkgset_args+=( "--default" )
         fi
@@ -287,7 +306,7 @@ __gvm_use()
     fi
     unset pkgset
 
-    if [[ -z "$(valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}")" ]]
+    if ! valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}" > /dev/null
     then
         __gvm_display_message "Now using version ${version}"
     fi

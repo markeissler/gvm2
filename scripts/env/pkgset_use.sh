@@ -116,7 +116,7 @@ __gvm_pkgset_use()
         then
             accumulator+=( "--local" "${GVM_REMATCH[1]}")
         elif [[ "${local_pkgset_rematch}" == true ]] &&
-            [[ -n "$(valueForKeyFakeAssocArray "--local" "${options_hash[*]}")" ]]
+            valueForKeyFakeAssocArray "--local" "${options_hash[*]}" > /dev/null
         then
             # --local is a special case: for legacy compatibility we need to
             # support the option without an argument (we do that later by always
@@ -152,7 +152,10 @@ __gvm_pkgset_use()
                 local __key __val
                 __key="${accumulator[i]}"
                 __val="${accumulator[i+1]}"
-                options_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${options_hash[*]}") )
+                {
+                    setValueForKeyFakeAssocArray "${__key}" "${__val}" "${options_hash[*]}" > /dev/null
+                    options_hash=( ${RETVAL} )
+                }
                 unset __key __val
             done
             accumulator=()
@@ -180,7 +183,11 @@ __gvm_pkgset_use()
         for _item in "${options_hash[@]}"
         do
             local __key="${_item%%:*}"
-            local __val="$(valueForKeyFakeAssocArray "${__key}" "${options_hash[*]}")"
+            local __val=""
+            {
+                valueForKeyFakeAssocArray "${__key}" "${options_hash[*]}" > /dev/null
+                __val="${RETVAL}"
+            }
             printf "  [%s]: %s\n" "${__key}" "${__val}"
             unset __key __val
         done
@@ -189,9 +196,13 @@ __gvm_pkgset_use()
 
     [[ -n "$gvm_go_name" ]] || __gvm_display_error "No Go version selected" || return 1
 
-    if [[ -n "$(valueForKeyFakeAssocArray "--local" "${options_hash[*]}")" ]]
+    if valueForKeyFakeAssocArray "--local" "${options_hash[*]}" > /dev/null
     then
-        local local_pkgset="$(valueForKeyFakeAssocArray "--local" "${options_hash[*]}")"
+        local local_pkgset=""
+        {
+            valueForKeyFakeAssocArray "--local" "${options_hash[*]}" > /dev/null
+            local_pkgset="${RETVAL}"
+        }
 
         if [[ -z "${local_pkgset// /}" || "${local_pkgset}" == "nil" ]]
         then
@@ -207,7 +218,7 @@ __gvm_pkgset_use()
         fuzzy_match=$(\ls -1 "$local_pkgset/environments" | \sort | \grep "$gvm_go_name@" | \grep "local" | \head -n 1)
         [[ -n "${fuzzy_match}" ]] || __gvm_display_error "Cannot find local package set" || return 1
 
-        if [[ -n "$(valueForKeyFakeAssocArray "--default" "${options_hash[*]}")" ]]
+        if valueForKeyFakeAssocArray "--default" "${options_hash[*]}" > /dev/null
         then
             __gvm_display_error "Cannot set local pkgset as default"
             return 1
@@ -224,16 +235,20 @@ __gvm_pkgset_use()
         export PATH="${fixed_path}"
         unset fixed_path
 
-        if [[ -z "$(valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}")" ]]
+        if ! valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}" > /dev/null
         then
             echo "Now using version $gvm_go_name in local package set"
             echo "Local GOPATH is now $local_pkgset"
         fi
 
         unset local_pkgset
-    elif [[ -n "$(valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}")" ]]
+    elif valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}" > /dev/null
     then
-        local pkgset="$(valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}")"
+        local pkgset=""
+        {
+            valueForKeyFakeAssocArray "--pkgset" "${options_hash[*]}" > /dev/null
+            pkgset="${RETVAL}"
+        }
 
         fuzzy_match=$(\ls -1 "$GVM_ROOT/environments" | \sort | \grep "$gvm_go_name@" | \grep "${pkgset}" | \head -n 1)
         [[ -n "${fuzzy_match}" ]] || __gvm_display_error "Invalid package set: ${pkgset}" || return 1
@@ -249,13 +264,13 @@ __gvm_pkgset_use()
         export PATH="${fixed_path}"
         unset fixed_path
 
-        if [[ -n "$(valueForKeyFakeAssocArray "--default" "${options_hash[*]}")" ]]
+        if valueForKeyFakeAssocArray "--default" "${options_hash[*]}" > /dev/null
         then
             cp "$GVM_ROOT/environments/$fuzzy_match" "$GVM_ROOT/environments/default"
             [[ $? -ne 0 ]] && __gvm_display_error "Couldn't make $fuzzy_match default"
         fi
 
-        if [[ -z "$(valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}")" ]]
+        if ! valueForKeyFakeAssocArray "--quiet" "${options_hash[*]}" > /dev/null
         then
             echo "Now using version $fuzzy_match"
         fi

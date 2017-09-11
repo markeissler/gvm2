@@ -58,11 +58,19 @@ __gvm_find_installed()
                 # resolve path from environment!
                 __gvm_read_environment_file "${GVM_ROOT}/environments/system" > /dev/null
                 local system_env="${RETVAL}"
-                __val="$(valueForKeyFakeAssocArray "GOROOT" "${system_env[*]}")"
+                __val=""
+                {
+                    valueForKeyFakeAssocArray "GOROOT" "${system_env[*]}" > /dev/null
+                    __val="${RETVAL}"
+                }
                 unset system_env
             fi
 
-            versions_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}" > /dev/null
+                versions_hash=( ${RETVAL} )
+            }
+
             unset __key __val
         done
     else
@@ -71,7 +79,10 @@ __gvm_find_installed()
             local __key __val
             __key="${target}"
             __val="${installed_path}/${__key}"
-            versions_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}" > /dev/null
+                versions_hash=( ${RETVAL} )
+            }
             unset __key __val
         fi
     fi

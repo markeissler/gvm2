@@ -117,8 +117,12 @@ cd() {
         __gvm_resolve_fallback_pkgset "${fallback_go_version}" > /dev/null
         fallback_go_pkgset="${RETVAL}"
 
-        defaults_hash=( $(setValueForKeyFakeAssocArray "gvm_go_name" "${fallback_go_version}" "${defaults_hash[*]}") )
-        defaults_hash=( $(setValueForKeyFakeAssocArray "gvm_pkgset_name" "${fallback_go_pkgset}" "${defaults_hash[*]}") )
+        {
+            setValueForKeyFakeAssocArray "gvm_go_name" "${fallback_go_version}" "${defaults_hash[*]}" > /dev/null
+            defaults_hash=( ${RETVAL} )
+            setValueForKeyFakeAssocArray "gvm_pkgset_name" "${fallback_go_pkgset}" "${defaults_hash[*]}" > /dev/null
+            defaults_hash=( ${RETVAL} )
+        }
 
         unset fallback_go_version
         unset fallback_go_pkgset
@@ -126,8 +130,15 @@ cd() {
         defaults_resolved=true
     fi
 
-    defaults_go_name="$(valueForKeyFakeAssocArray "gvm_go_name" "${defaults_hash[*]}")"
-    defaults_go_pkgset="$(valueForKeyFakeAssocArray "gvm_pkgset_name" "${defaults_hash[*]}")"
+    defaults_go_name=""
+    defaults_go_pkgset=""
+    {
+        valueForKeyFakeAssocArray "gvm_go_name" "${defaults_hash[*]}" > /dev/null
+        defaults_go_name="${RETVAL}"
+
+        valueForKeyFakeAssocArray "gvm_pkgset_name" "${defaults_hash[*]}" > /dev/null
+        defaults_go_pkgset="${RETVAL}"
+    }
     if [[ "${GVM_DEBUG}" -eq 1 ]]
     then
         echo "Resolved default go: ${defaults_go_name:-[EMPTY]}"

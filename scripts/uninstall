@@ -100,7 +100,7 @@ uninstall()
     # validate specified versions are installed
     for version in "${args[@]}"
     do
-        if [[ -z "$(valueForKeyFakeAssocArray "${version}" "${installed_hash[*]}")" ]]
+        if ! valueForKeyFakeAssocArray "${version}" "${installed_hash[*]}" > /dev/null
         then
             __gvm_locale_text_for_key "go_version_not_installed"
             __gvm_display_fatal "${RETVAL}: ${version}"
@@ -151,7 +151,10 @@ uninstall()
             local __key __val
             __key="${_version}"
             __val="${RETVAL}"
-            fail_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${fail_hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${fail_hash[*]}" > /dev/null
+                fail_hash=( ${RETVAL} )
+            }
             unset __key __val
 
             rslt_status=1
@@ -162,11 +165,19 @@ uninstall()
     # output entire fail list unless quiet
     if [[ "${opt_quiet}" == false && ${#fail_hash[@]} -gt 0 ]]
     then
-        local fail_hash_keys; fail_hash_keys=( $(keysForFakeAssocArray "${fail_hash[*]}") )
+        local fail_hash_keys
+        {
+            keysForFakeAssocArray "${fail_hash[*]}" > /dev/null
+            fail_hash_keys=( ${RETVAL} )
+        }
         local _version
         for _version in "${fail_hash_keys[@]}"
         do
-            local __message="$(valueForKeyFakeAssocArray "${_version}" "${fail_hash[*]}")"
+            local __message=""
+            {
+                valueForKeyFakeAssocArray "${_version}" "${fail_hash[*]}" > /dev/null
+                __message="${RETVAL}"
+            }
             if [[ "${opt_porcelain}" == false ]]
             then
                 printf "%s\n" "[!!] ${__message}"
