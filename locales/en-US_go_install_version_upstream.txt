@@ -1,5 +1,5 @@
-Version is not installed but can be built from upstream sources or downloaded as
-a pre-built binary from upstream sources:
+Version is not installed but can be built from upstream sources or
+downloaded as a pre-built binary from upstream sources:
 
 - Build source -
     prompt> gvm install <version>
