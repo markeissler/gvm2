@@ -37,7 +37,7 @@ read_command_line() {
     if [[ "${VERSION:0:1}" != "-" ]]; then
         shift
     else
-        display_warning "Invalid version: $1"
+        __gvm_display_warning "Invalid version: $1"
         show_usage
         exit 1
     fi
@@ -67,7 +67,7 @@ read_command_line() {
                 exit 0
             ;;
             *)
-                display_warning "Invalid option $i"
+                __gvm_display_warning "Invalid option $i"
                 show_usage
                 exit 65 # Bad arguments
             ;;
@@ -245,7 +245,7 @@ install_go() {
             __gvm_display_message "Already installed!"
             exit 0
         fi
-        display_warning "Removing corrupt install..."
+        __gvm_display_warning "Removing corrupt install..."
         gvm uninstall --force "$GO_NAME"
     fi
 
@@ -356,7 +356,7 @@ install_go_binary() {
             __gvm_display_message "Already installed!"
             exit 0
         fi
-        display_warning "Removing corrupt install..."
+        __gvm_display_warning "Removing corrupt install..."
         gvm uninstall --force "$GO_NAME"
     fi
 
@@ -378,7 +378,7 @@ install_gb() {
 }
 
 install_goprotobuf() {
-    command -v protoc &> /dev/null || display_warning "Could not find protocol buffer compiler
+    command -v protoc &> /dev/null || __gvm_display_warning "Could not find protocol buffer compiler
 
   linux: apt-get install protobuf-compiler
   mac:   brew install protobuf
@@ -387,24 +387,24 @@ install_goprotobuf() {
     if [[ "$GVM_GOINSTALL" == "goinstall" ]]; then
         $GVM_GOINSTALL goprotobuf.googlecode.com/hg/proto > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
         if [[ $? -ne 0 ]]; then
-            display_warning "Failed to install goprotobuf. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
+            __gvm_display_warning "Failed to install goprotobuf. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
             return 1
         fi
         builtin cd "$GVM_ROOT/gos/$GO_NAME/src/pkg/goprotobuf.googlecode.com/hg/compiler"
         make install >> "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
         if [[ $? -ne 0 ]]; then
-            display_warning "Failed to install goprotobuf compiler. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
+            __gvm_display_warning "Failed to install goprotobuf compiler. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
             return 1
         fi
     else
         $GVM_GOINSTALL code.google.com/p/goprotobuf/proto > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
         if [[ $? -ne 0 ]]; then
-            display_warning "Failed to install goprotobuf. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
+            __gvm_display_warning "Failed to install goprotobuf. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
             return 1
         fi
         $GVM_GOINSTALL code.google.com/p/goprotobuf/protoc-gen-go > "$GVM_ROOT/logs/$GO_NAME-pb-compiler.log" 2>&1
         if [[ $? -ne 0 ]]; then
-            display_warning "Failed to install goprotobuf compiler. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
+            __gvm_display_warning "Failed to install goprotobuf compiler. Check the logs at $GVM_ROOT/logs/$GO_NAME-pb-compiler.log"
             return 1
         fi
     fi
@@ -429,8 +429,8 @@ install_from_source() {
     x="$(builtin cd "$GO_CACHE_PATH" && git tag)"; echo "${x#*b0819469a6df}" | \grep "$version " &> /dev/null
     if [[ "$?" == "1" ]]; then
         if [[ "$INSTALL_BUILD_TOOLS" == "true" ]]; then
-            install_gb || display_warning "Failed to install gb"
-            install_gpkg || display_warning "Failed to install gpkg"
+            install_gb || __gvm_display_warning "Failed to install gb"
+            install_gpkg || __gvm_display_warning "Failed to install gpkg"
         fi
         if [[ "$INSTALL_PB" == "true" ]]; then
             install_goprotobuf
