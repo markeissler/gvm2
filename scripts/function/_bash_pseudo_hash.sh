@@ -151,8 +151,8 @@ setValueForKeyFakeAssocArray()
 # @/textblock</pre>
 # @param target_key Key to retrieve
 # @param target_ary Indexed array to scan
-# @return Returns string containing value (status 0) or an empty string
-#   (status 1) on failure.
+# @return Returns string containing value (status 0 if non-empty, status 1 if
+#   empty) or an empty string (status 2) on key not found or target_key is empty.
 # @note Also sets global variable RETVAL to the same return value.
 # */
 valueForKeyFakeAssocArray()
@@ -167,7 +167,7 @@ valueForKeyFakeAssocArray()
 
     IFS=$' ' target_ary=( ${2} ) IFS="$defaultIFS"
 
-    [[ -z "${target_key// /}" || ${#target_ary[@]} -eq 0 ]] && RETVAL="" && echo "${RETVAL}" && return 1
+    [[ -z "${target_key// /}" || ${#target_ary[@]} -eq 0 ]] && RETVAL="" && echo "${RETVAL}" && return 2
 
     local _item
     for _item in "${target_ary[@]}"
@@ -183,6 +183,10 @@ valueForKeyFakeAssocArray()
     unset _item
 
     if [[ "${found_key}" == false ]]
+    then
+        RETVAL="" && echo "${RETVAL}"
+        return 2
+    elif [[ -z "${value// /}" ]]
     then
         RETVAL="" && echo "${RETVAL}"
         return 1
@@ -334,7 +338,7 @@ __bphp_decode()
 
 __bph_version()
 {
-    local version="1.2.0"
+    local version="1.2.2"
 
     echo "${version}" && return 0
 }
