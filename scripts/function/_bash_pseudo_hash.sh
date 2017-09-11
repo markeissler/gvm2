@@ -11,7 +11,7 @@
 #
 # The MIT License (MIT)
 #
-# Copyright (C) 2015-2016 Mark Eissler. All rights reserved.
+# Copyright (C) 2015-2017 Mark Eissler. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -59,11 +59,23 @@
 #   hash=( $(setValueForKeyFakeAssocArray "${key1}" "${val1}" "${hash[*]}") )
 #   hash=( $(setValueForKeyFakeAssocArray "${key2}" "${val2}" "${hash[*]}") )
 # @/textblock</pre>
+#
+#   Best practice is to use RETVAL for variable assignment:
+# <pre>@textblock
+#   hash=()
+#   key1="Phrase1"
+#   val1="1000 pounds of spaghetti"
+#   key2="Phrase2"
+#   val2="And a bottle of beer."
+#   setValueForKeyFakeAssocArray "${key1}" "${val1}" "${hash[*]}" > /dev/null; hash=( ${RETVAL} )
+#   setValueForKeyFakeAssocArray "${key2}" "${val2}" "${hash[*]}" > /dev/null; hash=( ${RETVAL} )
+# @/textblock</pre>
 # @param target_key Key to retrieve
 # @param new_value New or updated value
 # @param target_ary Indexed array to scan
 # @return Returns new array with updated key (status 0) or an empty array
 #   (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 setValueForKeyFakeAssocArray()
 {
@@ -74,13 +86,15 @@ setValueForKeyFakeAssocArray()
     local defaultIFS="$IFS"
     local IFS="$defaultIFS"
     local found=false
+    unset RETVAL
 
-    IFS=$' ' target_ary=( $(printf "%s" "${1}") ) IFS="$defaultIFS"
+    IFS=$' ' target_ary=( ${1} ) IFS="$defaultIFS"
 
-    [[ -z "${target_key}" ]] && echo "" && return 1
+    [[ -z "${target_key// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     local _target_ary_length=${#target_ary[@]}
-    local _encoded_new_value="$(_encode "${new_value}")"
+    local _encoded_new_value=""
+    __bphp_encode "${new_value}" > /dev/null; _encoded_new_value="${RETVAL}"
     local i
     for (( i=0; i<${_target_ary_length}; i++ ))
     do
@@ -100,9 +114,9 @@ setValueForKeyFakeAssocArray()
     # key not found, append
     [[ "${found}" == false ]] && target_ary+=( "${target_key}:${_encoded_new_value}" )
 
-    printf "%s" "${target_ary[*]}"
+    RETVAL="${target_ary[*]}"
 
-    return 0
+    echo "${RETVAL}" && return 0
 }
 
 # valueForKeyFakeAssocArray()
@@ -125,10 +139,21 @@ setValueForKeyFakeAssocArray()
 #   val1="$(valueForKeyFakeAssocArray "${key1}" "${hash[*]}")"
 #   val2="$(valueForKeyFakeAssocArray "${key2}" "${hash[*]}")"
 # @/textblock</pre>
+#
+#   Best practice is to use RETVAL for variable assignment:
+# <pre>@textblock
+#   hash=() # hash returned previously by setValueForKeyFakeAssocArray()
+#   key1="Phrase1"
+#   key2="Phrase2"
+#   local val1="" val2=""
+#   valueForKeyFakeAssocArray "${key1}" "${hash[*]}" > /dev/null; val1="${RETVAL}"
+#   valueForKeyFakeAssocArray "${key1}" "${hash[*]}" > /dev/null; val2="${RETVAL}"
+# @/textblock</pre>
 # @param target_key Key to retrieve
 # @param target_ary Indexed array to scan
 # @return Returns string containing value (status 0) or an empty string
 #   (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 valueForKeyFakeAssocArray()
 {
@@ -137,25 +162,33 @@ valueForKeyFakeAssocArray()
     local defaultIFS="$IFS"
     local IFS="$defaultIFS"
     local value=""
+    local found_key=false
+    unset RETVAL
 
-    IFS=$' ' target_ary=( $(printf "%s" "${2}") ) IFS="$defaultIFS"
+    IFS=$' ' target_ary=( ${2} ) IFS="$defaultIFS"
 
-    [[ -z "${target_key}" || ${#target_ary[@]} -eq 0 ]] && echo "" && return 1
+    [[ -z "${target_key// /}" || ${#target_ary[@]} -eq 0 ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     local _item
     for _item in "${target_ary[@]}"
     do
         if [[ "${_item%%:*}" == "${target_key}" ]]
         then
-          value="$(_decode "${_item#*:}")" # @todo: need to support returning nil values!
-          break
+            found_key=true
+            # @todo: need to support returning nil values!
+            __bphp_decode "${_item#*:}" > /dev/null; value="${RETVAL}"
+            break
         fi
     done
     unset _item
 
-    printf "%b" "${value}"
+    if [[ "${found_key}" == false ]]
+    then
+        RETVAL="" && echo "${RETVAL}"
+        return 1
+    fi
 
-    return 0
+    echo "${RETVAL}" && return 0
 }
 
 # keysForFakeAssocArray()
@@ -167,33 +200,36 @@ valueForKeyFakeAssocArray()
 # @param target_ary Indexed array to scan
 # @return Returns string of space separated keys (status 0) or an empty string
 #   (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 keysForFakeAssocArray() {
     local target_ary; target_ary=()
     local target_ary_keys; target_ary_keys=()
     local defaultIFS="$IFS"
     local IFS="$defaultIFS"
+    unset RETVAL
 
-    IFS=$' ' target_ary=( $(printf "%s" "${1}") ) IFS="$defaultIFS"
+    IFS=$' ' target_ary=( ${1} ) IFS="$defaultIFS"
 
-    [[ ${#target_ary[@]} -eq 0 ]] && echo "" && return 1
+    [[ ${#target_ary[@]} -eq 0 ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     local _item
     for _item in "${target_ary[@]}"
     do
-        _item=$_item
+        _item="${_item}"
         target_ary_keys+=( "${_item%%:*}" )
     done
     unset _item
 
-    printf "%s" "${target_ary_keys[*]}"
-
     if [[ "${#target_ary_keys[@]}" -eq 0 ]]
     then
+        RETVAL="" && echo "${RETVAL}"
         return 1
     fi
 
-    return 0
+    RETVAL="${target_ary_keys[*]}"
+
+    echo "${RETVAL}" && return 0
 }
 
 # prettyDumpFakeAssocArray()
@@ -214,7 +250,7 @@ prettyDumpFakeAssocArray() {
     local defaultIFS="$IFS"
     local IFS="$defaultIFS"
 
-    IFS=$' ' target_ary=( $(printf "%s" "${1}") ) IFS="$defaultIFS"
+    IFS=$' ' target_ary=( ${1} ) IFS="$defaultIFS"
 
     [[ ${#target_ary[@]} -eq 0 ]] && echo "" && return 1
 
@@ -222,24 +258,26 @@ prettyDumpFakeAssocArray() {
     for _item in "${target_ary[@]}"
     do
         local __key="${_item%%:*}"
-        local __val="$(valueForKeyFakeAssocArray "${__key}" "${target_ary[*]}")"
+        local __val=""
+        valueForKeyFakeAssocArray "${__key}" "${target_ary[*]}" > /dev/null; __val="${RETVAL}"
         printf "  [%s]: %s\n" "${__key}" "${__val}"
         unset __key __val
     done
     unset _item
 }
 
-# _encode()
+# __bphp_encode()
 # /*!
 # @internal
 # */
-_encode()
+__bphp_encode()
 {
-    local string="$1"
+    local string="${1}"
     local new_string=""
     local LC_COLLATE=C
+    unset RETVAL
 
-    [[ -z "${string}" ]] && echo "" && return 1
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     local _string_len=${#string}
     local i
@@ -258,34 +296,45 @@ _encode()
     done
     unset i _string_len
 
-    printf "%s" "${new_string}"
-
-    if [[ -z "${new_string}" ]]
+    if [[ -z "${new_string// /}" ]]
     then
+        RETVAL="" && echo "${RETVAL}"
         return 1
     fi
 
-    return 0
+    RETVAL="${new_string}"
+
+    echo "${RETVAL}" && return 0
 }
 
-# _decode()
+# __bphp_decode()
 # /*!
 # @internal
 # */
-_decode()
+__bphp_decode()
 {
-    local string="$1"
+    local string="${1}"
     local new_string
+    unset RETVAL
 
-    [[ -z "${string}" ]] && echo "" && return 1
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
-    new_string="$(printf '%b' "${string//%/\\x}")"
-    printf "%b" "${new_string}"
+    printf -v new_string "%b" "${string//%/\\x}"
 
-    if [[ -z "${new_string}" ]]
+    if [[ -z "${new_string// /}" ]]
     then
+        RETVAL="" && echo "${RETVAL}"
         return 1
     fi
 
-    return 0
+    RETVAL="${new_string}"
+
+    echo "${RETVAL}" && return 0
+}
+
+__bph_version()
+{
+    local version="1.2.0"
+
+    echo "${version}" && return 0
 }
