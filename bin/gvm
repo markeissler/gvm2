@@ -33,7 +33,7 @@ sanity_check()
     fi
 
     # check for all required utility dependencies
-    "${GVM_ROOT}/scripts/check" "--skip" "hg"
+    "${GVM_ROOT}/scripts/check" "--skip" "hg" > /dev/null
     if [[ "$?" != "0" ]]
     then
         __gvm_locale_text_for_key "missing_requirements" > /dev/null
