@@ -20,7 +20,7 @@ git:
 #   artifacts: true
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -y remove mercurial; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo rm -f "$(which hg)"; fi
   - binscripts/gvm-installer $TRAVIS_COMMIT $TRAVIS_BUILD_DIR/tmp
 
 install: gem install tf -v '>=0.4.1'
