@@ -6,7 +6,7 @@ matrix:
       sudo: required
       dist: trusty
     - os: osx
-      osx_image: xcode8.3
+      osx_image: xcode7.3
 
 env:
   global:
@@ -21,6 +21,7 @@ git:
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo rm -f "$(which hg)"; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew uninstall --force mercurial; fi
   - binscripts/gvm-installer $TRAVIS_COMMIT $TRAVIS_BUILD_DIR/tmp
 
 install: gem install tf -v '>=0.4.1'
