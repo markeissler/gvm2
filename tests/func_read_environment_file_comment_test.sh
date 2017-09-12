@@ -5,7 +5,7 @@ source "${SANDBOX}/gvm2/scripts/function/read_environment_file.sh" || return 1
 ##
 
 ## Setup expectation
-expectedHashStr="GVM_ROOT:%2fUsers%2fme%2f.gvm gvm_go_name:go1.7.1 gvm_pkgset_name:global GOROOT:%24GVM_ROOT%2fgos%2fgo1.7.1"
+expectedHashStr="GVM_ROOT:%2FUsers%2Fme%2F.gvm gvm_go_name:go1.7.1 gvm_pkgset_name:global GOROOT:%24GVM_ROOT%2Fgos%2Fgo1.7.1"
 
 ##
 ## read an environment file (return status)

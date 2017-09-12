@@ -278,7 +278,7 @@ __bphp_encode()
 {
     local string="${1}"
     local new_string=""
-    local LC_COLLATE=C
+    local LANG=C
     unset RETVAL
 
     [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -289,12 +289,12 @@ __bphp_encode()
     do
         local __char="${string:$i:1}"
         case $__char in
-            [A-Za-z0-9.~_-])
+            [A-Za-z0-9.~_-] )
                 new_string+="$__char"
                 ;;
-            *)
-                hex="$(echo -n "$__char" | hexdump -e '1 1 "!%02x"')"
-                new_string+="${hex//!/%}"
+            * )
+                printf -v __char '\\x%02X' "'$__char"
+                new_string+="${__char//\\x/%}"
                 ;;
         esac
     done
@@ -338,7 +338,7 @@ __bphp_decode()
 
 __bph_version()
 {
-    local version="1.2.2"
+    local version="1.3.0"
 
     echo "${version}" && return 0
 }
