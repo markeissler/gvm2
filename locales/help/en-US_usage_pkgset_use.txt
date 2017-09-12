@@ -1,0 +1,15 @@
+Usage: gvm pkgset use [option] <value>
+       gvm pkgset use [option] <value> [sub-option]
+
+Options:
+    --pkgset value              Standard pkgset name
+    --local value               Local pkgset name (follows file path pattern)
+    --quiet                     Suppress 'now using' acknowledgements
+    -h, --help                  Show this message
+
+Sub-Options:
+    --default                   Make selected pkgset default
+
+Command line arguments
+----------------------
+The --pkgset and --local options are exclusive (only one can be specified).

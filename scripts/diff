@@ -1,30 +1,155 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+# scripts/diff
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-version=$1
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/locale_text.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-if [ "$version" != "" ]; then
-  fuzzy_match=$($LS_PATH -1 "$GVM_ROOT/gos" | $SORT_PATH | $GREP_PATH "$version" | $HEAD_PATH -n 1 | $GREP_PATH "$version") ||
-		display_fatal "Invalid version $version"
+diff()
+{
+    local version="${1:-$gvm_go_name}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+    local diff_directory=""
 
-	foldername=$GVM_ROOT/gos/$fuzzy_match
-else
-	if [[ "$gvm_go_name" != "" ]]; then
-		foldername=$GVM_ROOT/gos/$gvm_go_name
+    if [[ -z "${version// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_go_version" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    local fuzzy_match=""
+    fuzzy_match="$(\ls -1 "${GVM_ROOT}/gos" | \sort | \grep "${version}" | \head -n 1 | \grep "${version}")"
+
+    if [[ -z "${fuzzy_match// /}" ]]
+    then
+        __gvm_locale_text_for_key "diff_go_version_invalid" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    diff_directory="${GVM_ROOT}/gos/${fuzzy_match}"
+    unset fuzzy_match
+
+    if [[ ! -d "${diff_directory}" ]]
+    then
+        __gvm_locale_text_for_key "diff_go_version_invalid" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # validate that our go version target has a manifest (system will not)
+    if [[ ! -f "${diff_directory}/manifest" ]]
+    then
+        __gvm_locale_text_for_key "diff_go_version_no_manifest" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::diff() comparing with"
+        echo "  GVM_ROOT       -> ${GVM_ROOT}"
+        echo "  _version       -> ${version}"
+        echo "  _directory     -> ${diff_directory}"
+    fi
+
+	builtin cd "${diff_directory}" && \
+        find . > /tmp/manifest.test && \
+	    command -p diff manifest /tmp/manifest.test
+
+    local rslt=$?
+	if [[ $rslt -eq 0 ]]; then
+        __gvm_locale_text_for_key "clean" > /dev/null
+		__gvm_display_message "${RETVAL}: ${diff_directory}"
 	else
-		display_fatal "No version selected"
+        __gvm_locale_text_for_key "dirty" > /dev/null
+		__gvm_display_message "*${RETVAL}*: ${diff_directory}"
 	fi
-fi
 
-if [[ -d $foldername ]]; then
-	builtin cd "$foldername"
-	find . > /tmp/manifest.test
-	diff manifest /tmp/manifest.test
-	if [[ "$?" == "0" ]]; then
-		display_message "Clean $foldername"
-	else
-		display_message "*Dirty* $foldername"
-	fi
-else
-	display_fatal "Invalid version"
-fi
+    # cleanup
+    [[ -f "/tmp/manifest.test" ]] && rm /tmp/manifest.test > /dev/null
+
+    return $rslt
+}
+
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+  [[ -f "/tmp/manifest.test" ]] && rm /tmp/manifest.test > /dev/null
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_diff" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_diff" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    diff "${args[0]}" "${opt_porcelain}" "${opt_quiet}" ; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

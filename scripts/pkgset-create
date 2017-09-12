@@ -1,55 +1,244 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+# scripts/pkgset-create
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-[[ $1 != "" ]] ||
-	display_fatal "Please specify the name"
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/find_local_pkgset.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-target_top=$GVM_ROOT
-target_set_name=$1
-target_set_name_str=$1
-add_gopath="$GVM_ROOT/pkgsets/$gvm_go_name/$1"
-add_path="$GVM_ROOT/pkgsets/$gvm_go_name/$1/bin"
+create()
+{
+    local pkgset_name="${1}"; shift
+    local go_version="${1}"; shift
+    local opt_local="${1}"; shift
+    local opt_force="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
 
-if [[ $1 == "--local" ]]; then
-	LOCAL_TOP=$(find_local_pkgset)
-	if [[ ! -d LOCAL_TOP ]]; then
-		LOCAL_TOP=$PWD
-	fi
-	target_top=$LOCAL_TOP/.gvm_local
-	target_set_name="local"
-	target_set_name_str="__local__"
-	add_gopath="$target_top/pkgsets/$gvm_go_name/$target_set_name"
-	add_gopath="$LOCAL_TOP:$add_gopath"
-	add_path="$target_top/pkgsets/$gvm_go_name/$target_set_name/bin"
-	add_path="$LOCAL_TOP/bin:$add_path"
-fi
+    if [[ -z "${pkgset_name// /}" && "${opt_local}" == false ]]
+    then
+        __gvm_locale_text_for_key "specify_pkgset_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
 
-[[ ! -f "$target_top/environments/$gvm_go_name@$target_set_name" ]] ||
-	display_fatal "Packageset already exists!"
+    # Pkgset name cannot be a reserved name! unless you force it
+    if [[ "${opt_force}" == false ]]
+    then
+        case "${pkgset_name}" in
+            global | local | system )
+                __gvm_locale_text_for_key "invalid_pkgset_name_reserved" > /dev/null
+                __gvm_display_fatal "${RETVAL}: ${pkgset_name}"
+                ;;
+            * )
+                ;;
+        esac
+    fi
 
-mkdir -p "$target_top/environments" ||
-	display_fatal "Could not create environments folder"
-mkdir -p "$target_top/pkgsets/$gvm_go_name/$target_set_name" ||
-	display_fatal "Could not create packageset folder"
-cp "$GVM_ROOT/environments/$gvm_go_name" "$target_top/environments/$gvm_go_name@$target_set_name" ||
-	display_fatal "Could copy environment"
-echo "export gvm_pkgset_name=\"$target_set_name_str\"" >> "$target_top/environments/$gvm_go_name@$target_set_name" ||
-	display_fatal "Could not extend environment"
-echo "export GOPATH; GOPATH=\"$add_gopath:\$GOPATH\"" >> "$target_top/environments/$gvm_go_name@$target_set_name" ||
-	display_fatal "Could not extend environment"
-echo "export PATH; PATH=\"$add_path:\$PATH\"" >> "$target_top/environments/$gvm_go_name@$target_set_name" ||
-	display_fatal "Could not extend environment"
+    if [[ -z "${go_version// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_go_version_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
 
-if [ "${target_set_name}" != "global" ]; then
-  echo "# Package Set-Specific Overrides" >> "${GVM_ROOT}/environments/${gvm_go_name}@${target_set_name}"
-	echo "export GVM_OVERLAY_PREFIX; GVM_OVERLAY_PREFIX=\"\${GVM_ROOT}/pkgsets/${gvm_go_name}/${target_set_name}/overlay\"" >> "${GVM_ROOT}/environments/${gvm_go_name}@${target_set_name}"
-  mkdir -p "${GVM_ROOT}/pkgsets/${gvm_go_name}/${target_set_name}/overlay/"{bin,lib/pkgconfig}
-  echo "export PATH; PATH=\"${GVM_ROOT}/pkgsets/${gvm_go_name}/${target_set_name}/bin:\${GVM_OVERLAY_PREFIX}/bin:\${PATH}\"" >> "$GVM_ROOT/environments/${gvm_go_name}@${target_set_name}" ||
-	  display_fatal "Could not extend environment"
-  echo "export LD_LIBRARY_PATH; LD_LIBRARY_PATH=\"\${GVM_OVERLAY_PREFIX}/lib:\${LD_LIBRARY_PATH}\"" >> "${GVM_ROOT}/environments/${gvm_go_name}@${target_set_name}" ||
-	  display_fatal "Could not extend environment"
-  echo "export DYLD_LIBRARY_PATH; DYLD_LIBRARY_PATH=\"\${GVM_OVERLAY_PREFIX}/lib:\${DYLD_LIBRARY_PATH}\"" >> "${GVM_ROOT}/environments/${gvm_go_name}@${target_set_name}" ||
-	  display_fatal "Could not extend environment"
-  echo "export PKG_CONFIG_PATH; PKG_CONFIG_PATH=\"\${GVM_OVERLAY_PREFIX}/lib/pkgconfig:\${PKG_CONFIG_PATH}\"" >> "${GVM_ROOT}/environments/${gvm_go_name}@${target_set_name}" ||
-	  display_fatal "Could not extend environment"
-fi
+    local gvm_root="${GVM_ROOT}"
+    local gvm_root_str="\${GVM_ROOT}"
+
+    ## LOCAL - beg
+    ##
+    ## pkgset local path overrides (everything is written to $PWD/.gvm_local)
+    ##
+    if [[ "${opt_local}" == true ]]
+    then
+        __gvm_find_local_pkgset > /dev/null
+        local gvm_root_local="${RETVAL}"
+        if [[ ! -d "${gvm_root_local}" ]]
+        then
+            __gvm_pwd > /dev/null
+            local pwd="${RETVAL}"
+            gvm_root_local="${pwd}/.gvm_local"
+        fi
+
+        [[ -z "${pkgset_name// /}" ]] && pkgset_name="local"
+        gvm_root="${gvm_root_local}"
+        gvm_root_str="${gvm_root_local}"   ## GVM_ROOT_LOCAL?
+        unset gvm_root_local
+    fi
+    ## LOCAL - end
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::create() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  _package       -> ${pkgset_name}"
+        echo "  _package_dir   -> ${gvm_root}/pkgsets/${go_version}/${pkgset_name}"
+    fi
+
+    local pkgset_gopath_additions="${gvm_root_str}/pkgsets/${go_version}/${pkgset_name}"
+    local pkgset_path_additions="${gvm_root_str}/pkgsets/${go_version}/${pkgset_name}/bin"
+
+    # Pkgset exists?
+    if [[ -f "${gvm_root}/environments/${go_version}@${pkgset_name}" ]]
+    then
+        __gvm_locale_text_for_key "pkgset_exists" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    mkdir -p "${gvm_root}/environments" "${gvm_root}/pkgsets/${go_version}/${pkgset_name}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "pkgset_create_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    cp "${GVM_ROOT}/environments/${go_version}" "${gvm_root}/environments/${go_version}@${pkgset_name}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "environment_copy_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    ## NON-GLOBAL - beg
+    ##
+    ## pkgset additions are only added to non-global package sets
+    ##
+    if [ "${pkgset_name}" != "global" ]; then
+        mkdir -p "${gvm_root}/pkgsets/${go_version}/${pkgset_name}/overlay/"{bin,lib/pkgconfig}
+        if [[ $? -ne 0 ]]
+        then
+            __gvm_locale_text_for_key "environment_extend_failed" > /dev/null
+            __gvm_display_fatal "${RETVAL}"
+        fi
+
+        cat << EOF > "${gvm_root}/environments/${go_version}@${pkgset_name}"
+# Package Set-Specific Overrides
+export gvm_pkgset_name="${pkgset_name}"
+export GOPATH; GOPATH="${pkgset_gopath_additions}:\${GOPATH}"
+export PATH; PATH="${pkgset_path_additions}:\${PATH}"
+export GVM_OVERLAY_PREFIX; GVM_OVERLAY_PREFIX="${gvm_root_str}/pkgsets/${go_version}/${target_set_name}/overlay"
+export PATH; PATH="\${GVM_ROOT}/pkgsets/${go_version}/${target_set_name}/bin:\${GVM_OVERLAY_PREFIX}/bin:\${PATH}"
+export LD_LIBRARY_PATH; LD_LIBRARY_PATH="\${GVM_OVERLAY_PREFIX}/lib:\${LD_LIBRARY_PATH}"
+export DYLD_LIBRARY_PATH; DYLD_LIBRARY_PATH="\${GVM_OVERLAY_PREFIX}/lib:\${DYLD_LIBRARY_PATH}"
+export PKG_CONFIG_PATH; PKG_CONFIG_PATH="\${GVM_OVERLAY_PREFIX}/lib/pkgconfig:\${PKG_CONFIG_PATH}"
+EOF
+
+        if [[ $? -ne 0 ]]
+        then
+            __gvm_locale_text_for_key "environment_extend_failed" > /dev/null
+            __gvm_display_fatal "${RETVAL}"
+        fi
+    fi
+    ## NON-GLOBAL - end
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "pkgset_create_succeeded" > /dev/null
+        __gvm_display_message "${RETVAL}"
+    fi
+
+    return $?
+}
+
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_local=false
+    local opt_force=false
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            -l | --local )
+                opt_local=true
+                ;;
+            -f | --force )
+                opt_force=true
+                ;;
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_pkgset_create" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_pkgset_create" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    # option sanity check
+    if [[ "${opt_local}" == true && "${#args[@]}" -gt 0 ]]
+    then
+        __gvm_locale_text_for_key "invalid_arguments" > /dev/null
+        printf "%s!\n\n" "${RETVAL}"
+        __gvm_locale_text_for_key "help/usage_pkgset_create" > /dev/null
+        printf "%s\n" "${RETVAL}"
+        return 1
+    fi
+
+    local pkgset_name="${args[0]:-}"
+    local go_version="${args[1]:-$gvm_go_name}"
+
+    # @TODO: Officially support a second arg passing the go_version and <version>@<pkgset> syntax.
+    create "${pkgset_name}" "${go_version}" "${opt_local}" "${opt_force}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

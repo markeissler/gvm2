@@ -1,0 +1,19 @@
+Usage: gvm pkgset create [option] <pkgset>
+
+Create a new package set for the currently selected Go version
+
+Options:
+    -l, --local                 Create in current directory
+    -f, --force                 Skip prompts and bypass sanity checks
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+When the -l | --local option is specified, the new package set will be created
+in the current working directory, however, the package set will still depend on
+a Go version installed under the standard GVM_ROOT directory.
+
+The -f | --force option should not generally be used as it will skip some sanity
+checks including a check for the use of reserved names.

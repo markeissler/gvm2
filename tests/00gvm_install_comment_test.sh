@@ -1,10 +1,20 @@
 ##
-## All platforms should be able to build these versions of GO:
-##  * 1.4 (will resolve to current 1.4 bootstrap)
-##  * 1.7.1+
+## Install test dependencies.
 ##
-## All platforms should be able to install these binary versions:
-##  * 1.2+
+## The following versions of Go are buildable across all platforms and will be
+## installed as local builds:
+##  * 1.4 (will resolve to current 1.4 bootstrap)
+##
+## The following versions of Go are not buildable across all platforms and will
+## be installed as binaries:
+##  * 1.3.3.
+##  * 1.2.2
+##
+## Additional build and binary install tests for All platforms are located in:
+##  01gvm_install_all_comment_test.sh
+##
+## Beta (pre-release) versions of Go are updated regularly and are located in:
+##  03gvm_install_beta_comment_test.sh
 ##
 
 ##
@@ -12,46 +22,19 @@
 ##
 
 ## Cleanup test objects
-gvm uninstall go1.4 > /dev/null 2>&1
-gvm uninstall master > /dev/null 2>&1
-gvm uninstall go1.7.5 > /dev/null 2>&1
+gvm uninstall --force go1.4 > /dev/null 2>&1
 
 ## 1.4
 gvm install go1.4 #status=0
 gvm list #status=0; match=/go1.4/
 
-## master
-##GOROOT_BOOTSTRAP=$GVM_ROOT/gos/go1.4 gvm install master #status=0
-CGO_ENABLED=0 gvm install master #status=0
-gvm list #status=0; match=/master/
-
-## 1.7.5
-CGO_ENABLED=0 gvm install go1.7.5 #status=0
-gvm list #status=0; match=/go1.7.5/
-
-## 1.8.2
-CGO_ENABLED=0 gvm install go1.8.2 #status=0
-gvm list #status=0; match=/go1.8.2/
-
-## Beta releases are in 02gvm_install_beta_comment_test.sh!
-
 ##
-## Install binary go
+## Install binary go (test dependencies)
 ##
 
-## Cleanup test objects
-gvm uninstall go1.6.4 > /dev/null 2>&1
-gvm uninstall go1.5.4 > /dev/null 2>&1
-gvm uninstall go1.3.3 > /dev/null 2>&1
-gvm uninstall go1.2.2 > /dev/null 2>&1
-
-## 1.6.4
-gvm install go1.6.4 --binary #status=0
-gvm list #status=0; match=/go1.6.4/
-
-## 1.5.4
-gvm install go1.5.4 --binary #status=0
-gvm list #status=0; match=/go1.5.4/
+## Cleanup test objects1
+gvm uninstall --force go1.3.3 > /dev/null 2>&1
+gvm uninstall --force go1.2.2 > /dev/null 2>&1
 
 ## 1.3.3
 gvm install go1.3.3 --binary #status=0

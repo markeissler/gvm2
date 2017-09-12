@@ -1,0 +1,1 @@
+The --compact option must be used with the --list option

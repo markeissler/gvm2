@@ -1,0 +1,46 @@
+Usage: gvm linkthis [option] [<package>]
+
+Create a link from the GVM2 pkgset src directory to a working source directory
+
+Options:
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+The working source directory is typically the project directory in which you are
+writing your code.
+
+Linking from your pkgset src directory allows the Go build process to properly
+resolve the packages you are building among other package dependencies while
+isolating the installation of all third-party packages within the pkgset itself.
+
+Command line arguments
+----------------------
+If the <package> is not specified, a link will be created from the pkgset src
+directory to the current base directory:
+
+    prompt> gvm linkthis
+
+Usually, you will want to specify a longer package name that includes the git
+repo path:
+
+    prompt> gvm linkthis bithumb.com/user/package
+
+For instance, the first invocation style will work if your pkgset includes a
+dependent package named "gotest":
+
+    import (
+            "fmt"
+
+            "gotest"
+    )
+
+Usually, packages are contained within repo paths:
+
+    import (
+            "fmt"
+
+            "bitbucket.org/markeissler/gotest"
+    )
+
+Therefore, the second invocation style is the one that most developers will use.

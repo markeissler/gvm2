@@ -1,0 +1,85 @@
+Usage: gvm cross [option] <os> <arch> [sub-option] <file ...>
+       gvm cross --list [option]
+
+Cross compile a Go program
+
+Options:
+    -l, --list                  List available platforms
+    -c, --compact               Output platform list in compact format
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Sub-Options:
+    --arm-v5                    ARM version 5 hardware
+    --arm-v6                    ARM version 6 hardware
+    --arm-v7                    ARM version 7 hardware
+    --arm-v8                    ARM version 8 hardware
+
+Command line arguments
+----------------------
+Both the target platform operating system <os> and architecture <arch> must be
+supplied.
+
+The following platform values are valid:
+
+    os:
+            darwin      Apple OSX/macOS, potentially PureDarwin
+
+            freebsd     FreeBSD (experimental support)
+
+            linux       All Linux distributions
+
+            netbsd      NetBSD (experimental support)
+
+            openbsd     OpenBSD (experimental support)
+
+            windows     Microsoft Windows systems
+
+    arch:
+            amd64       64-bit AMD and Intel architectures
+
+            386         32-bit architectures
+
+            arm         32-bit ARM architectures (ARMv5, ARMv6, ARMv7)
+
+            arm64       64-bit ARM architectures (ARMv8)
+
+Not all os and arch combinations are valid. To view a comprehensive list of sets
+that are valid use the --list option.
+
+When specifying an arm build you must also specify an ARM version hardware sub-
+option.
+
+Minimum requirements
+--------------------
+Cross compilation support requires at least a Go 1.5 revision. An error will be
+produced if this minimum requirement has not been met.
+
+OS/arch combinations
+--------------------
+Not all combinations of os and arch values are valid. Specifying an invalid
+combination will likely result in a build failure. Refer to the Go documentation
+at the following URL:
+
+    https://golang.org/doc/install/source#environmentAdditional
+
+ARM on Linux
+------------
+When cross-compiling for ARM on Linux you must run an EABI (Embedded ABI)
+kernel, generally known as either _armel_ (software floating point compatible;
+requires --arm-v5) or _armhf_ (hardware floating point compatible; requires
+--arm-v6).
+
+ARM on Darwin
+-------------
+When cross-compiling for ARM on Darwin, specify the --arm-v7 option.
+
+ARM on FreeBSD, OpenBSD, and NetBSD
+-----------------------------------
+For non-Darwin BSD operating systems specify the --arm-v7 option or above.
+
+The above list is meant to provide a guideline and is based on the documentation
+from the GoArm page (https://github.com/golang/go/wiki/GoArm). The build process
+will attempt to build your program with the options you provided but that does
+not mean the resulting binary is guaranteed to run on the target machine.

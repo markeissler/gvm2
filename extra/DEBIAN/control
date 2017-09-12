@@ -1,5 +1,0 @@
-Package: gvm2
-Version: 0.9.0
-Architecture: all
-Maintainer: Mark Eissler <moe@markeissler.org>
-Description: Go enVironment Manager

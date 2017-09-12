@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/detect_runos.sh" || return 1
+source "${SANDBOX}/gvm2/scripts/function/detect_runos.sh" || return 1
 
 ##
 ## detect system runtime

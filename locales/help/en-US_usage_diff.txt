@@ -1,0 +1,12 @@
+Usage: gvm diff [option] [<version>]
+
+View changes to an installed Go directory contents
+
+Options:
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+If the <version> is not specified, the currently active Go version will be used.

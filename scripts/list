@@ -1,55 +1,115 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+# scripts/list
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-usage() {
-cat <<EOF
-Usage: gvm list [option]
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_bash_pseudo_hash.sh"
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/locale_text.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-Options:
-  --porcelain    - machine-readable output
-  -h, --help     - show this message
+list()
+{
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
 
-EOF
-
-    return 0
-}
-
-list() {
-    local porcelain="${1:-false}"
-
-    if [[ "${porcelain}" == false ]]
+    if [[ "${opt_porcelain}" == false ]]
     then
-        echo
-        display_message "gvm gos (installed)"
-        echo
+        __gvm_locale_text_for_key "title/gvm_go_list" > /dev/null
+        printf "\n%s\n\n" "${RETVAL}"
     fi
-    if [[ -d $GVM_ROOT/gos ]]; then
-        if [[ "${gvm_go_name}" != "" ]]; then
-            $LS_PATH -1 "${GVM_ROOT}/gos" | sed 's/^/   /g' | sed 's/^   '$gvm_go_name\$'/=> '$gvm_go_name'/g'
+
+    if [[ -d "${GVM_ROOT}/gos" ]]; then
+        if [[ -n "${gvm_go_name// /}" ]]; then
+            \ls -1 "${GVM_ROOT}/gos" | sed 's/^/   /g' | sed 's/^   '$gvm_go_name\$'/=> '$gvm_go_name'/g'
         else
-            $LS_PATH -1 "${GVM_ROOT}/gos" | sed 's/^/   /g'
+            \ls -1 "${GVM_ROOT}/gos" | sed 's/^/   /g'
         fi
     fi
-    [[ "${porcelain}" == false ]] && echo
+
+    if [[ "${opt_porcelain}" == false ]]
+    then
+        echo
+    fi
 
     return 0
 }
 
-option="${1}"
-if [[ "x${option}" != "x" ]]
-then
-    case "${option}" in
-        --help|-h)
-            usage; exit 0
-            ;;
-        --porcelain)
-            list true; exit $?
-            ;;
-        *)
-            display_warning "Unrecognized command line argument: '$option'"
-            usage; exit 1
-            ;;
-    esac
-else
-    list
-fi
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_list" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_list" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                # only save arg if it contains more than spaces
+                [[ -n "${1// /}" ]] && args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    list "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

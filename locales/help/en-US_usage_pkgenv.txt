@@ -1,0 +1,23 @@
+Usage: gvm pkgenv [option] [<pkgset>]
+       gvm pkgenv [option] [<version>@<pkgset>]
+
+Edit the environment for a GVM2 package set
+
+Options:
+    -x, --stdout                Write contents to stdout
+        --version value         Go version
+        --pkgset value          GVM2 pkgset name
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+If no arguments are specfiied, then the target will be the environment file for
+the currently active Go version and the associated global pkgset. If the
+<pkgset> is specified without further specifying a Go version (either with the
+--version option or the <version>@<pkgset> syntax), then the target will be the
+environment file for the pkgset associated with the currently active Go version.
+
+The Go version and pkgset can be specified by combining both with the standard
+<version>@<pkgset> syntax.

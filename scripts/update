@@ -1,8 +1,387 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+# scripts/update
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-builtin cd "$GVM_ROOT/archive/go" &> /dev/null ||
-	display_fatal "Failed to find local Go source"
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_bash_pseudo_hash.sh"
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/semver_tools.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-git pull || display_fatal "Failed to update"
+# __gvm_find_updates()
+# /*!
+# @abstract Find available GVM updates.
+# @discussion
+# Retrieves list of available GVM updates from a download source.
+# @param source Url of download source.
+# @return Returns a pseudo hash where keys are GVM versions and values are
+#   download urls (status 0) or an empty string (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
+# */
+__gvm_find_updates()
+{
+    local url="${1}"; shift
+    local versions_hash; versions_hash=()
+    local regex='^(v([0-9]+(\.[0-9]+[a-z0-9]*)*))$'
+    unset RETVAL
 
+    # # cache
+    # if [[ -n "${__CACHE_GVM_FIND_UPDATES// /}" ]]
+    # then
+    #     RETVAL="${__CACHE_GVM_FIND_UPDATES}"
+    #     printf "%s" "${__CACHE_GVM_FIND_UPDATES}"
+    #     return 0
+    # fi
+
+    [[ "x${url}" == "x" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    while IFS=$'\n' read -r _line; do
+        if __gvm_rematch "${_line}" "${regex}"
+        then
+            local __key __val
+            # GVM_REMATCH[1]: version name (e.g. v0.9.2)
+            # GVM_REMATCH[2]: isolated version (e.g. 0.9.2)
+            __key="${GVM_REMATCH[1]}"
+            __val="${url}"
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}" > /dev/null
+                versions_hash=( ${RETVAL} )
+            }
+            unset __key __val
+        fi
+    done <<< "$(\git ls-remote -t "${url}" | awk -F/ '{ print $NF }' | \sort)"
+
+    if [[ ${#versions_hash[@]} -eq 0 ]]
+    then
+        RETVAL="" && echo "${RETVAL}" && return 1
+    fi
+
+    RETVAL="${versions_hash[*]}"
+
+    # cache
+    # readonly __CACHE_GVM_FIND_UPDATES="${RETVAL}"
+
+    echo "${RETVAL}" && return 0
+}
+
+# __gvm_find_latest()
+# /*!
+# @abstract Find latest available GVM version.
+# @discussion
+# Finds lastest GVM version available from a specific repo.
+# @param source Url of download source.
+# @return Returns string containing latest GVM version (status 0) or an empty
+#   (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
+# */
+__gvm_find_latest()
+{
+    local url="${1}"; shift
+    local versions_hash; versions_hash=()
+
+    [[ -z "${url// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    __gvm_find_updates "${url}" > /dev/null
+    versions_hash=( ${RETVAL[@]} )
+
+    if [[ ${#versions_hash[@]} -eq 0 ]]
+    then
+        RETVAL="" && echo "${RETVAL}" && return 1
+    fi
+
+    # grab the last entry in the hash (which is already sorted)
+    local key_count="${#versions_hash[@]}"
+    local version_raw="${versions_hash[ $(( key_count-1 )) ]}"
+
+    RETVAL="${version_raw%%:*}"
+
+    echo "${RETVAL}" && return 1
+}
+
+list_updates()
+{
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+    local updates_hash; updates_hash=()
+    local repo_source="https://github.com/markeissler/gvm2"
+
+    if [[ "${opt_porcelain}" == false ]]
+    then
+        __gvm_locale_text_for_key "title/gvm_update_list" > /dev/null
+        printf "\n%s\n\n" "${RETVAL}"
+    fi
+
+    __gvm_find_updates "${repo_source}" > /dev/null
+    updates_hash=( ${RETVAL[@]} )
+
+    if [[ -n "$GVM_DEBUG" ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::list_updates() available updates dump"
+        prettyDumpFakeAssocArray "${updates_hash[*]}"
+    fi
+
+    if [[ ${#updates_hash[@]} -eq 0 ]]
+    then
+        __gvm_locale_text_for_key "update_available_list_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+        return 1
+    fi
+
+    local updates_hash_keys; updates_hash_keys=( $(keysForFakeAssocArray "${updates_hash[*]}") )
+    local _version
+    for _version in "${updates_hash_keys[@]}"
+    do
+        if [[ "${opt_porcelain}" == false ]]
+        then
+            printf "   %s\n" "${_version}"
+        else
+            printf "%s\n" "${_version}"
+        fi
+    done
+
+    return 0
+}
+
+check_version()
+{
+    local version="${1}"
+    local updates_hash; updates_hash=()
+    local repo_source="https://github.com/markeissler/gvm2"
+
+    [[ -z "${version// /}" ]] && return 1
+
+    __gvm_find_updates "${repo_source}" > /dev/null
+    updates_hash=( ${RETVAL[@]} )
+
+    # validate requested version
+    local updates_hash_keys; updates_hash_keys=( $(keysForFakeAssocArray "${updates_hash[*]}") )
+    local _version
+    for _version in "${updates_hash_keys[@]}"
+    do
+        [[ "${version}" == "${_version}" ]] && return 0
+    done
+    unset _version
+    unset updates_hash_keys
+
+    return 1
+}
+
+update()
+{
+    local version="${1:-latest}"; shift
+    local opt_force="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+    local repo_source="https://github.com/markeissler/gvm2"
+
+    if [[ "${version}" == "latest" ]]
+    then
+        __gvm_find_latest "${repo_source}" > /dev/null
+        version="${RETVAL}"
+        if [[ -z "${version// /}" ]]
+        then
+            __gvm_locale_text_for_key "update_find_latest_failed" > /dev/null
+            __gvm_display_fatal "${RETVAL}"
+        fi
+        unset rslt
+    else
+        check_version "${version}" > /dev/null
+        local rslt=$?
+        if [[ $rslt -ne 0 ]]
+        then
+            __gvm_locale_text_for_key "update_version_invalid" > /dev/null
+            __gvm_display_fatal "${RETVAL}"
+        fi
+        unset rslt
+    fi
+
+    # we should not have a .git directory, after install it is .git.bak
+    if [[ -d "${GVM_ROOT}/.git" || ! -d "${GVM_ROOT}/.git.bak" ]]
+    then
+        __gvm_locale_text_for_key "update_git_corrupted" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # confirm is the user is about to switch to a non-updateable GVM2
+    __gvm_extract_version "${version}" > /dev/null
+    __gvm_compare_versions "${RETVAL}" "0.10.0" > /dev/null
+    local rslt=$?
+    if [[ "${opt_force}" == false && $rslt -gt 1 ]]
+    then
+        __gvm_locale_text_for_key "update_warning_old_version" > /dev/null
+        __gvm_display_warning "${RETVAL}"
+        __gvm_prompt_confirm > /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            if [[ "${opt_quiet}" == false ]]
+            then
+                __gvm_locale_text_for_key "action_cancelled" > /dev/null
+                __gvm_display_message "\n${RETVAL}"
+            fi
+            return 0
+        fi
+    fi
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::update() updating with"
+        echo "  GVM_ROOT       -> ${GVM_ROOT}"
+        echo "  GVM_VERSION    -> ${GVM_VERSION}"
+        echo "  _version       -> ${version}"
+    fi
+
+    mv "${GVM_ROOT}/.git.bak" "${GVM_ROOT}/.git" &> /dev/null
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "update_git_restore_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    builtin cd "${GVM_ROOT}"
+
+    [[ "${opt_quiet}" == false ]] && __gvm_progress "git_pull"
+    \git pull origin "${version}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "update_git_update_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    [[ "${opt_quiet}" == false ]] && __gvm_progress "git_checkout"
+    \git checkout -f "${version}"
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "update_git_checkout_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}: ${version}"
+    fi
+
+    mv "${GVM_ROOT}/.git" "${GVM_ROOT}/.git.bak" &> /dev/null
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "update_git_backup_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    local rslt=$?
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "update_gvm_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    return $rslt
+}
+
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_list=false
+    local opt_force=false
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            -l | --list )
+                opt_list=true
+                ;;
+            -f | --force )
+                opt_force=true
+                ;;
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_update" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_update" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    # option sanity check
+    if [[ "${opt_list}" == true && "${#args[@]}" -gt 0 ]]
+    then
+        __gvm_locale_text_for_key "invalid_arguments" > /dev/null
+        printf "%s!\n\n" "${RETVAL}"
+        __gvm_locale_text_for_key "help/usage_update" > /dev/null
+        printf "%s\n" "${RETVAL}"
+        return 1
+    fi
+
+    if [[ "${opt_list}" == true && "${opt_force}" == true ]]
+    then
+        __gvm_locale_text_for_key "invalid_arguments" > /dev/null
+        printf "%s!\n\n" "${RETVAL}"
+        __gvm_locale_text_for_key "help/usage_update" > /dev/null
+        printf "%s\n" "${RETVAL}"
+        return 1
+    fi
+
+    if [[ "${opt_list}" == true ]]
+    then
+        list_updates "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+    else
+        update "${args[0]}" "${opt_force}" "${opt_porcelain}" "${opt_quiet}" ; rslt=$?
+    fi
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

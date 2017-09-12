@@ -103,8 +103,8 @@ prompt> mv ~/.gvm/gvm-update.tmp/.git ~/.gvm/
 prompt> rmdir ~/.gvm/gvm-update.tmp/
 prompt> builtin cd ~/.gvm
 prompt> git reset --hard HEAD
-prompt> mv git.bak git.bak.old
-prompt> mv .git git.bak
+prompt> mv .git.bak .git.bak.old
+prompt> mv .git .git.bak
 ```
 
 4. Open a new terminal to test.
