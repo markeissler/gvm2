@@ -39,17 +39,37 @@ dep_load() {
 __gvm_find_path_upwards()
 {
     local target="${1}"
-    local start_dir="${2:-$PWD}"
+    local start_dir=""
+    {
+        __gvm_pwd > /dev/null
+        start_dir="${2:-$RETVAL}"
+    }
     local final_dir="${3:-$HOME}"
     unset RETVAL
 
     if [[ \
-        "x${target// /}" == "x" || \
-        "x${start_dir// /}" == "x" || \
-        "x${final_dir// /}" == "x"
+        -z "${target// /}" || \
+        -z "${start_dir// /}" || \
+        -z "${final_dir// /}"
         ]]
     then
         RETVAL="" && echo "${RETVAL}" && return 1
+    fi
+
+    # WSL: PWD can either be in linux (root dir is /) or in Windows (root dir is
+    # /mnt/c). We can get the actual PWD to check where we are, if within /mnt,
+    # then a reasonable final_dir (the user's Windows HOME directory) is within
+    # /mnt/c/Users/USERNAME. Unfortunately, there is no way to know the USERNAME
+    # as the user can have a different account name for the linux install. So,
+    # we will stop looking at /mnt/c/Users.
+    #
+    local fwd_slash_char=$'/' # @TODO: need _shell_compat escape function!
+    local wsl_rootdir_regex="^\/mnt\/c\/"
+    local linux_homedir_regex="^${HOME//$fwd_slash_char/\\/}"
+    if __gvm_rematch "${start_dir}" "${wsl_rootdir_regex}" &&
+        __gvm_rematch "${final_dir}" "${linux_homedir_regex}"
+    then
+        final_dir="/mnt/c/Users"
     fi
 
     # NOTE: This call has to be made in a forked shell, otherwise the current
