@@ -1,18 +1,29 @@
 language: c
-os: [linux, osx]
-# osx_image: xcode8.2
+
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: trusty
+    - os: osx
+      osx_image: xcode8.3
+
 env:
   global:
     - SRC_REPO=$TRAVIS_BUILD_DIR
     - GVM_NO_GIT_BAK=1
     - GVM_NO_UPDATE_PROFILE=1
+
 git:
   depth: 9999999
 # addons:
 #   artifacts: true
+
 before_install:
-  - sudo apt-get -y remove mercurial
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get -y remove mercurial; fi
   - binscripts/gvm-installer $TRAVIS_COMMIT $TRAVIS_BUILD_DIR/tmp
+
 install: gem install tf -v '>=0.4.1'
+
 script:
   - rake default && rake scenario
