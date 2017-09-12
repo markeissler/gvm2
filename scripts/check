@@ -290,7 +290,6 @@ check_all()
         check_git
         check_hg
         check_make
-        check_hexdump
     )
 
     local check_list_filtered; check_list_filtered=()
