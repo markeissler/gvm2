@@ -16,21 +16,16 @@ if you find bugs.
 
 ## Overview
 
-Juggling different versions of Go across different projects is a troublesome task, a task that involves remembering and
-manually updating Go environment variables.
+__GVM2__ supports Go development through the creation of **_Go environments_** where each environment supports isolation of
+a Go version and associated package dependencies.
 
-While it "would be nice" to only ever have to work with a single version of Go, perhaps the most-recent release, the
-reality is that different projects may require different Go versions just because (you know what the reasons are). And
-different projects will almost definitely require different package dependencies.
-
-The [RVM](https://github.com/rvm/rvm) team had already solved this problem for ruby development;
-[GVM](https://github.com/moovweb/gvm) got us part of the way to solving the same problem for Go develpment. __GVM2__ has
-the goal of taking things a bit further by making this tool behave more like __RVM__.
+The goal of __GVM2__ is to become the ubiquitous environment manager for Go development in the same way that the [RVM](https://github.com/rvm/rvm)
+environment manager has become an indispensable tool for ruby development.
 
 Perhaps the biggest step forward is the introduction of __GVM2__ `.go-version` and `.go-pkgset` files similar to
-__RVM__'s `.ruby-version` and `.ruby-gemset` files. What a huge convenience it is to have your Go version selected
-automatically whenever you change directories! Couple this functionality with support for isolated dependency sets (in
-the form of "package sets") and suddenly version and package management business becomes a breeze.
+__RVM__'s `.ruby-version` and `.ruby-gemset` files. When you add these `.go-` files to your project's directory (or even
+in a parent directory) __GVM2__ will automatically update your `GOPATH` and related environment variables to reflect the
+correct Go version and package dependencies for the current project.
 
 ## Installing
 
@@ -74,11 +69,24 @@ correct order.
 
 <a name="upgrading"></a>
 
-## Upgrading
+## Upgrading (> 0.10.0)
 
-__GVM2__ does not yet support upgrading previous installations. Rest assured that before this project achieves revision
-1.0 this shortcoming will have been resolved. In the meantime, you can upgrade in place with the following
-instructions...
+```sh
+prompt> gvm update
+```
+
+List available updates:
+
+```sh
+prompt> gvm update --list
+```
+
+>NOTE: This command may be renamed to "upgrade" in a forthcoming release.
+
+## Upgrading (< 0.10.0)
+
+If you need to upgrade an older version of __GVM2__ (prior to 0.10.0) or if you'd like to migrate from __GVM__ to
+__GVM2__ then you will need to proceed with a manual upgrade.
 
 >WARNING: It is highly recommended to backup your entire `$HOME/.gvm` directory before proceeding.
 
@@ -102,14 +110,42 @@ prompt> git clone --no-checkout "https://github.com/markeissler/gvm2.git" ~/.gvm
 prompt> mv ~/.gvm/gvm-update.tmp/.git ~/.gvm/
 prompt> rmdir ~/.gvm/gvm-update.tmp/
 prompt> builtin cd ~/.gvm
-prompt> git reset --hard HEAD
-prompt> mv .git.bak .git.bak.old
+prompt> git reset --hard HEAD && git clean -qfdx
 prompt> mv .git .git.bak
 ```
 
 4. Open a new terminal to test.
 
 5. If everything looks ok, then go ahead and remove the `~/.gvm.bak` directory.
+
+## General Usage
+
+All __GVM2__ commands offer online help:
+
+```sh
+Usage: gvm <command> [option]
+
+GVM2 is the Go enVironment Manager
+
+Commands:
+    version     Print the GVM2 version number
+    update      Update GVM2 to latest release
+    use         Select which installed Go version to use
+    diff        View changes to an installed Go directory contents
+    help        Show this message
+    implode     Uninstall GVM2 (You probably don't want to do this)
+    install     Install a Go version
+    uninstall   Uninstall a Go version
+    cross       Cross compile a Go program
+    linkthis    Create a link from the GVM2 pkgset src directory to a working directory
+    list        List currently installed versions of Go
+    listall     List Go versions available for installation
+    alias       Manage Go version aliases
+    pkgset      Manage GVM2 package sets (aka "pkgsets")
+    pkgenv      Edit the environment for a GVM2 package set
+
+Run 'gvm <command> --help' for more information on a command.
+```
 
 ## Installing Go
 
@@ -142,7 +178,7 @@ Usage: gvm install [version] [options]
     -h,  --help               Display this message.
 ```
 
-[compiler_note]: https://docs.google.com/document/d/1OaatvGhEAq7VseQ9kkavxKNAfepWy2yhPUBs96FGV28/edit
+A little more background: [compiler_note](https://docs.google.com/document/d/1OaatvGhEAq7VseQ9kkavxKNAfepWy2yhPUBs96FGV28/edit)
 
 ## List Go Versions
 
@@ -161,22 +197,27 @@ prompt> gvm listall
 Additional options can be specified:
 
 ```txt
-usage: gvm listall [options]
+Usage: gvm listall [option]
 
-OPTIONS:
+List Go versions available for installation
+
+Options:
     -a, --all                   List all versions available
     -B, --binary                List available pre-built versions available
     -s, --source                List available source versions available
         --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
     -h, --help                  Show this message
 ```
 
 The `gvm listall` command will, by default, list all __source__ versions that are available to build on the target
-platform. The list will be considerably shorted for macOS due to changes in the build environment as of macOS 10.12
-(Sierra). In general, you can install older versions of Go on macOS by installing pre-built packages (binaries).
+platform. The list will be considerably shorter for macOS due to changes in the build environment as of macOS 10.12
+(Sierra). In general, you can install older versions of Go on macOS by installing __pre-built versions (binaries)__.
 
-To list all pre-built packages available for the target platform specify the `--binary` option to the `gvm listall`
+To list all pre-built versions available for the target platform specify the `--binary` option to the `gvm listall`
 command.
+
+>NOTE: The installer may default to installing binaries in a forthcoming release.
 
 ### Suppression of rc, beta, release, weekly tags
 
@@ -202,7 +243,7 @@ installed with `go get` will be installed into the currently active __pkgset__.
 
 Package sets are bound to Go versions. When you switch Go versions (using the `gvm use` command), the list of package
 sets available will change. The package set in use will be the last one you selected or the one that is auto-selected by
-__GVM2__ depending on the presence of a .go-pkgset file.
+__GVM2__ depending on the presence of a `.go-pkgset` file.
 
 ### Create a Package Set
 
@@ -330,15 +371,6 @@ GVM pkgset:
 prompt> xcode-select --install
 ```
 
-### Add dependencies with Homebrew
-
-The easiest way to install dependencies on MacOS is with the [Homebrew](https://brew.sh/) package manager:
-
-```sh
-prompt> brew update
-prompt> brew install mercurial
-```
-
 ## Linux Requirements
 
 <a name="install-ubuntu"></a>
@@ -346,7 +378,7 @@ prompt> brew install mercurial
 ### Debian/Ubuntu
 
 ```sh
-prompt> sudo apt-get install curl git mercurial make binutils bison gcc build-essential bsdmainutils
+prompt> sudo apt-get install curl git make binutils bison gcc build-essential
 ```
 
 ### Redhat/Centos
@@ -355,20 +387,23 @@ prompt> sudo apt-get install curl git mercurial make binutils bison gcc build-es
 prompt> sudo yum install curl git make bison gcc glibc-devel
 ```
 
- * Install Mercurial from http://pkgs.repoforge.org/mercurial/
-
 ## FreeBSD Requirements
 
 ```sh
-prompt> sudo pkg_add -r bash git mercurial
+prompt> sudo pkg_add -r bash git
 ```
 
-> WARNING: __GVM2__ is not currently tested or developed for FreeBSD. Complete support for this platform will likely
+>WARNING: __GVM2__ is not currently tested or developed for FreeBSD. Complete support for this platform will likely
 be restored in the future but is not currently scheduled.
 
 ## Windows 10 WSL (aka Bash on Ubuntu on Windows)
 
 __GVM2__ works on WSL. Instructions are the same as for [Debian/Ubuntu](#install-ubuntu).
+
+>NOTE: __GVM2 0.10.0__ vastly improves performance on WSL over previous releases, however, due to limitations in
+the current implementation of WSL with regard to file system interaction, performance is still poor when compared
+to running __GVM2__ on native Linux (bare metal, VM, Docker container, etc.) or macOS. This behavior is not
+limited to __GVM2__. For more information see: [Major performance (I/O?) issue in /mnt/* and in ~ (home) #873](https://github.com/Microsoft/BashOnWindows/issues/873).
 
 ## Typical Usage
 
