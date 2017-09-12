@@ -1,5 +1,119 @@
 # Changelog: GVM2
 
+## 0.10.0 / 2017-09-12
+
+Wow. Wow! With this release __GVM2__ has been 93% rewritten. Almost the entire code base has been touched
+at this point and the remaining bits will be touched in upcoming releases.
+
+Some of the goals for this release:
+
+- Consistency: This includes consistent design patterns, consistent command invocation, consistent command usage help.
+- Performance: Drastically reducing the number of sub-shells spawned throughout invocation lifetime.
+- Deprecation: Remove checks for deprecated dependencies (e.g. mercurial) and repurpose commands that no longer make
+    sense (e.g. `gvm cross` and `gvm update`).
+- Add ability to update installed __GVM2__ from the command line. (Who hasn't been waiting for this?)
+
+Read more about these topics below.
+
+Some of the goals for the next release:
+
+- Refactor install script
+- Add polish to command output (like adding a final newline where needed)
+
+### Consistency
+
+Command help has been standardized and implemented throuhgout. Some of this work still needs a bit of polish but you
+should be able to pass the `-h` or `--help` option to any command and receive usage information.
+
+Every command has been refactored to support consistent __option__ and (where applicable) __sub-option__ flags and
+some commands (like `gvm cross` and `gvm uninstall`) will support a list of arguments.
+
+The goal is to also implement `--porcelain` and `--quiet` option support throughout to facilitate automated workflows.
+Stubs for these options have been added to commands but not fully (or consistently) implemented yet.
+
+### Performance
+
+Testing __GVM2__ on [WSL - Windows Subsystem for Linux]() triggered a code review regarding the frequency with which
+sub-shells were spawned throughout invocation lifetime. While forking processes is a relativley lightweight procedure
+on UNIX/Linux, on Windows NT forking processes is a relatively expensive procedure. Without getting into the weeds
+here, we generally want to reduce the number of times we fork on WSL (at least for now).
+
+This release has been refactored entirely to drastically reduce the number of times a sub-shell is forked. This has
+reduced the amount of time it takes to complete certain __GVM2__ commands like `gvm list` which could take upwards of
+17 seconds to complete previously and now takes about 6 seconds on average. This is still very slow (on MacOS we are
+looking at less than 1 second) but any further improvements will likely have to come from the Windows team.
+
+### Deprecation
+
+This is a big one.
+
+- [bash-pseudo-hash](https://github.com/markeissler/bash-pseudo-hash) is an underlying library that is used throughout
+    the __GVM2__ code base. This library has been updated to `v1.3.0` which improves performance and elminates a
+    dependeny on the `hexdump` utility.
+- Once upon a time the __Go__ project relied on [mercurial](https://www.mercurial-scm.org/) as its source control
+    system; consquently, the original [GVM](https://github.com/moovweb/gvm) had a requirement that mercurial was
+    installed. With this release, the entire dependency check code has been refactored and __GVM2__ no longer checks
+    for the presence of the `hg` command.
+
+#### Updated Commands
+
+All of the commands have been refactored but some have also been replaced, repurposed, or removed.
+
+##### Added: gvm check
+
+The `gvm check` command is used to verify command dependencies. Previously, this functionality was implemented by
+the `scripts/gvm-check` script and was only meant to be run automatically whenever invoking the `gvm` main command.
+This updated command continues to be invoked automatically when calling specific commands (instead of performing the
+check every time) but it can also be invoked by the user at any time.
+
+```sh
+Usage: gvm check [option] [<command ...>]
+```
+
+#### Added: gvm update
+
+The `gvm update` command provides a new mechanism for updating the __GVM2__ installation. The `--list` option
+provides a list of versions that are available. A warning prompt is displayed if the user specifies a version
+number (to upgrade to) that doesn't support the update mechanism–meaning the user would have to manually perform
+an update from an older version that doesn't support this new update mechanism.
+
+#### Updated: gvm cross
+
+The gvm cross command has been repurposed. In GVM the command installed support for cross compilation, that support
+is now included with Go 1.5+. Therefore, the repurposed command is used to actually facilitate cross compilation
+itself and has the following syntax:
+
+```sh
+Usage: gvm cross [option] <os> <arch> [sub-option] <file ...>
+```
+
+As well, the --list option will return a list of supported cross compilation target platforms:
+
+```sh
+Usage: gvm cross --list [option]
+```
+
+#### Removed: gvm get
+
+The `gvm get` command has been removed. This poorly documented command was the mechanism used by the original
+[GVM](https://github.com/moovweb/gvm) to update the installation. The only way to know its purpose was to read
+the code that implemented it. This command has been superseded by the new `gvm update` command.
+
+#### Removed: gvm-check
+
+This was an internal script that should not have normally been called from the command line.
+
+#### Removed: gvm update (the old command)
+
+The previous gvm update command has been repurposed. The original command was used to update the local Go
+archive cache. This made no sense since available Go versions were always retrieved by polling the upstream
+git repo. Furthermore, the archive was explicitly updated before attempting to install a Go version from
+source, which is why the local archive exists. It didn't make any sense to run this command separately.
+
+### Short list of commit messages
+
+Over 140 commits have been applied to this release. To view the commits, [check the __GVM2__ repo](https://github.com/markeissler/gvm2).
+
 ## 0.9.2 / 2017-07-22
 
 So many bug fixes and improvements. Hurray!
