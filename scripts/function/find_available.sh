@@ -9,17 +9,16 @@
 
 # load dependencies
 dep_load() {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
-        "_bash_pseudo_hash"
-        "_shell_compat"
-        "tools"
+        "_bash_pseudo_hash.sh"
+        "_shell_compat.sh"
     )
     for file in "${deps[@]}"
     do
         source "${base}/${file}"
     done
-}; dep_load
+}; dep_load; unset -f dep_load
 
 # __gvm_find_available()
 # /*!
@@ -29,14 +28,16 @@ dep_load() {
 # @param source Url of download source.
 # @return Returns a pseudo hash where keys are Go versions and values are
 #   download urls (status 0) or an empty string (status 1) on failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_find_available()
 {
     local url="${1}"; shift
     local versions_hash; versions_hash=()
     local regex='^(go([0-9]+(\.[0-9]+[a-z0-9]*)*))$'
+    unset RETVAL
 
-    [[ "x${url}" != "x" ]] || (echo "" && return 1)
+    [[ "x${url}" == "x" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
     while IFS=$'\n' read -r _line; do
         if __gvm_rematch "${_line}" "${regex}"
@@ -46,19 +47,20 @@ __gvm_find_available()
             # GVM_REMATCH[2]: isolated version (e.g. 1.7.1)
             __key="${GVM_REMATCH[1]}"
             __val="${url}"
-            versions_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}" > /dev/null
+                versions_hash=( ${RETVAL} )
+            }
             unset __key __val
         fi
-    done <<< "$(\git ls-remote -t "${url}" | awk -F/ '{ print $NF }' | $SORT_PATH)"
+    done <<< "$(\git ls-remote -t "${url}" | awk -F/ '{ print $NF }' | \sort)"
 
     if [[ ${#versions_hash[@]} -eq 0 ]]
     then
-        unset versions_hash
-        echo "" && return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    printf "%s" "${versions_hash[*]}"
+    RETVAL="${versions_hash[*]}"
 
-    unset versions_hash
-    return 0
+    echo "${RETVAL}" && return 0
 }

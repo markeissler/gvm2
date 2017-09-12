@@ -16,6 +16,6 @@ mkdir -p "$GVM_ROOT/environments" > /dev/null 2>&1
 export GVM_VERSION=$(cat "$GVM_ROOT/VERSION")
 export PATH="$GVM_ROOT/bin:$PATH"
 export GVM_PATH_BACKUP="$PATH"
-[ -f "$GVM_ROOT/environments/default" ] && . "$GVM_ROOT/environments/default"
-. "$GVM_ROOT/scripts/env/gvm"
-. "$GVM_ROOT/scripts/env/cd" && cd .
+[ -f "$GVM_ROOT/environments/default" ] && source "$GVM_ROOT/environments/default"
+source "$GVM_ROOT/scripts/env/gvm.sh"
+source "$GVM_ROOT/scripts/env/cd.sh" && cd .

@@ -1,0 +1,1 @@
+GVM_ROOT does not exist. Please reinstall GVM2.

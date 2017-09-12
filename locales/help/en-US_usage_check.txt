@@ -1,0 +1,14 @@
+Usage: gvm check [option] [<command ...>]
+
+Verify GVM2 command dependencies
+
+Options:
+    -s, --skip                  Skip checking listed commands
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+If the -s | --skip option requires one or more space separated commands to be
+listed as the final arguments to the command.

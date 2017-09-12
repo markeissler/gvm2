@@ -1,0 +1,18 @@
+Usage: gvm pkgset empty [option] <pkgset>
+
+Flush the contents of a packaget set
+
+Options:
+    -l, --local                 Flush local package set
+    -f, --force                 Skip prompts and bypass sanity checks
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+When the -l | --local option is specified, the content of the local package set
+will be flushed.
+
+The -f | --force option should not generally be used as it will skip some sanity
+checks including a check for the use of reserved names.

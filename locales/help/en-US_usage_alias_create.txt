@@ -1,0 +1,7 @@
+Usage: gvm alias create [option] <alias-name> <go-version>
+
+Create a Go version alias
+
+Options:
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message

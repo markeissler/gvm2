@@ -1,4 +1,4 @@
-. "${SANDBOX}/gvm2/scripts/function/munge_path" || return 1
+source "${SANDBOX}/gvm2/scripts/function/munge_path.sh" || return 1
 
 ##
 ## munge a path

@@ -9,17 +9,16 @@
 
 # load dependencies
 dep_load() {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && /bin/pwd)"
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
-        "_bash_pseudo_hash"
-        "read_environment_file"
-        "tools"
+        "_bash_pseudo_hash.sh"
+        "read_environment_file.sh"
     )
     for file in "${deps[@]}"
     do
         source "${base}/${file}"
     done
-}; dep_load
+}; dep_load; unset -f dep_load
 
 # __gvm_find_installed()
 # /*!
@@ -30,37 +29,48 @@ dep_load() {
 # @param target [optional] Go version to find
 # @param installed_path [optional] Go install path (directory to installed gos)
 # @return Returns a pseudo hash where keys are Go versions and values are paths
-#   to Go version installations (status 0) or an empty string (status 1) on 
+#   to Go version installations (status 0) or an empty string (status 1) on
 #   failure.
+# @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_find_installed()
 {
     local target="${1}"; shift
     local installed_path="${1:-$GVM_ROOT/gos}"
-    local installed_hash; installed_hash=()
+    local installed_list; installed_list=()
     local versions_hash; versions_hash=()
+    unset RETVAL
 
-    [[ -d "${installed_path}" ]] || (echo "" && return 1)
+    [[ ! -d "${installed_path}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
-    if [[ -z "${target}" ]]
+    if [[ -z "${target// /}" ]]
     then
-        installed_hash=( $("${LS_PATH}" -1 "${installed_path}") )
-        for (( i=0; i<${#installed_hash[@]}; i++ ))
+        installed_list=( $(\ls -1 "${installed_path}") )
+        for (( i=0; i<${#installed_list[@]}; i++ ))
         do
             local __key __val
-            __key="${installed_hash[i]}"
+            __key="${installed_list[i]}"
             __val="${installed_path}/${__key}"
 
             # system is a special case
             if [[ "${__key}" == "system" ]]
             then
                 # resolve path from environment!
-                local system_env="$( __gvm_read_environment_file "${GVM_ROOT}/environments/system")"
-                __val="$(valueForKeyFakeAssocArray "GOROOT" "${system_env[*]}")"
+                __gvm_read_environment_file "${GVM_ROOT}/environments/system" > /dev/null
+                local system_env="${RETVAL}"
+                __val=""
+                {
+                    valueForKeyFakeAssocArray "GOROOT" "${system_env[*]}" > /dev/null
+                    __val="${RETVAL}"
+                }
                 unset system_env
             fi
 
-            versions_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}" > /dev/null
+                versions_hash=( ${RETVAL} )
+            }
+
             unset __key __val
         done
     else
@@ -69,23 +79,20 @@ __gvm_find_installed()
             local __key __val
             __key="${target}"
             __val="${installed_path}/${__key}"
-            versions_hash=( $(setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}") )
+            {
+                setValueForKeyFakeAssocArray "${__key}" "${__val}" "${versions_hash[*]}" > /dev/null
+                versions_hash=( ${RETVAL} )
+            }
             unset __key __val
         fi
     fi
 
-    unset installed_hash
-    unset installed_path
-    unset target
-
     if [[ ${#versions_hash[@]} -eq 0 ]]
     then
-        unset versions_hash
-        echo "" && return 1
+        RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    printf "%s" "${versions_hash[*]}"
+    RETVAL="${versions_hash[*]}"
 
-    unset versions_hash
-    return 0
+    echo "${RETVAL}" && return 0
 }

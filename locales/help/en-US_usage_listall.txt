@@ -1,0 +1,19 @@
+Usage: gvm listall [option]
+
+List Go versions available for installation
+
+Options:
+    -a, --all                   List all versions available
+    -B, --binary                List available pre-built versions available
+    -s, --source                List available source versions available
+        --porcelain             Machine-readable output
+    -q, --quiet                 Suppress progress messages
+    -h, --help                  Show this message
+
+Command line arguments
+----------------------
+Without any options source (-s|--source) is selected by default. Only bonafide
+releases are listed: legacy "weekly" and "release" tags are omitted. The source
+list is filtered to only include versions that can be built on the running
+platform. The binary list is filtered to only include versions that should have
+a binary package available for the running platform.

@@ -1,0 +1,1 @@
+Looks like the .git directory is present. Please reinstall GVM2.

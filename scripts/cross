@@ -1,64 +1,422 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+# scripts/cross
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-display_usage() {
-	display_message "Usage: gvm cross [os] [arch]"
-	display_message "  os   = linux/darwin/windows"
-	display_message "  arch = amd64/386/arm"
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_bash_pseudo_hash.sh"
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/resolve_current_version.sh"
+        "../scripts/function/semver_tools.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
+
+platforms() {
+    # platforms are initialized as a raw bash_pseudo_hash string
+    local platforms=(
+        "android:[arm]"
+        "darwin:[386,amd64,arm,arm64]"
+        "dragonfly:[amd64]"
+        "freebsd:[386,amd64,arm]"
+        "linux:[386,amd64,arm,arm64,ppc64,ppc64le,mips,mipsle,mips64,mips64le]"
+        "netbsd:[386,amd64,arm]"
+        "openbsd:[386,amd64,arm]"
+        "plan9:[386,amd64]"
+        "solaris:[amd64]"
+        "windows:[386,amd64]"
+    )
+    unset RETVAL
+
+    RETVAL="${platforms[*]}"
+
+    echo "${RETVAL}" && return 0
 }
 
-display_list() {
-	echo
-	display_usage
-	echo
-	display_message "Installed platforms:"
-	echo
-	$LS_PATH -1 "$GOROOT/pkg" | $GREP_PATH windows_ | sed 's/^/   /g'
-	$LS_PATH -1 "$GOROOT/pkg" | $GREP_PATH darwin_ | sed 's/^/   /g'
-	$LS_PATH -1 "$GOROOT/pkg" | $GREP_PATH linux_ | sed 's/^/   /g'
-	echo
-	exit 1
+list_platforms()
+{
+    # @TODO: Only certain OS/arch combinations are valid!
+    # See: https://golang.org/doc/install/source#environment
+
+    local opt_compact="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+    local platforms_hash; platforms_hash=()
+    local defaultIFS="$IFS"
+    local IFS="$defaultIFS"
+
+    if [[ "${opt_porcelain}" == false ]]
+    then
+        __gvm_locale_text_for_key "title/gvm_cross_platforms" > /dev/null
+        printf "\n%s\n\n" "${RETVAL}"
+    fi
+
+    platforms > /dev/null
+
+    platforms_hash=( ${RETVAL} )
+
+    if [[ -n "$GVM_DEBUG" ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::list_platforms() available platforms dump"
+        prettyDumpFakeAssocArray "${platforms_hash[*]}"
+    fi
+
+    if [[ ${#platforms_hash[@]} -eq 0 ]]
+    then
+        __gvm_locale_text_for_key "cross_platforms_list_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+        return 1
+    fi
+
+    local platform_hash_keys; platform_hash_keys=( $(keysForFakeAssocArray "${platforms_hash[*]}") )
+    local _os
+    for _os in "${platform_hash_keys[@]}"
+    do
+        local __archs; __archs=()
+        local __archs_raw=""
+        {
+            valueForKeyFakeAssocArray "${_os}" "${platforms_hash[*]}" > /dev/null
+            __archs_raw="${RETVAL}"
+        }
+        local __archs_ary; __archs_ary=( )
+        IFS=',' __archs_ary=( ${__archs_raw//[\[\]]/} ) IFS="$defaultIFS"
+        local __arch
+        local __pad='                    '
+        local __pad_length=$(( ${#__pad}-${#_os} ))
+        if [[ "${opt_compact}" == false ]]
+        then
+            # standard output:
+            #   darwin                386
+            #   darwin                amd64
+            #   darwin                arm
+            #   darwin                arm64
+            for __arch in "${__archs_ary[@]}"
+            do
+                if [[ "${opt_porcelain}" == false ]]
+                then
+                    printf "%s %s %s\n" "${_os}" "${__pad:0:(( $__pad_length ))}" "${__arch}"
+                else
+                    printf "%s:%s\n" "${_os}" "${__arch}"
+                fi
+            done
+        else
+            # compact output:
+            #   darwin                [386,amd64,arm,arm64]
+            for __arch in "${__archs_raw[@]}"
+            do
+                if [[ "${opt_porcelain}" == false ]]
+                then
+                    printf "%s %s %s\n" "${_os}" "${__pad:0:(( $__pad_length ))}" "${__arch}"
+                else
+                    printf "%s:%s\n" "${_os}" "${__arch}"
+                fi
+            done
+        fi
+        unset __arch
+        unset __archs_raw
+        unset __archs
+    done
+    unset _os
+    unset platform_hash_keys
+
+    return 0
 }
 
-command -v go &> /dev/null || display_fatal "Only available in versions after Go 1"
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if arch not found
+check_platform()
+{
+    local os="${1}"; shift
+    local arch="${1}"
+    local platforms_hash; platforms_hash=()
+    local defaultIFS="$IFS"
+    local IFS="$defaultIFS"
+    local retstat=1
 
-[ -z "$1" ] && display_list
+    [[ -z "${os// /}" ]] && return 1
+    [[ -z "${arch// /}" ]] && return 2
 
-if [ ! -f "$GOROOT/pkg/tool/cross" ]; then
-	display_message "Installing x86, x86-64, and ARM commands"
-	set -e
-	for arch in 8 6 5; do
-		for cmd in a c g l; do
-			go tool dist install -v cmd/$arch$cmd ||
-				display_fatal "Couldn't compile tool: $arch$cmd"
-		done
-	done
-	touch "$GOROOT/pkg/tool/cross"
-fi
+    platforms > /dev/null
 
-export GOOS=$1
-shift
-[ -z "$1" ] && display_usage && display_fatal "arch is not specified"
-export GOARCH=$1
+    platforms_hash=( ${RETVAL} )
 
-if [ ! -d "$GOROOT/pkg/${GOOS}_${GOARCH}" ]; then
-	display_message "Installing $GOOS $GOARCH runtime library"
-	if [ "$GOOS" = "windows" ]; then
-		export CGO_ENABLED=0
-	fi
+    if [[ -n "$GVM_DEBUG" ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::check_platform() available platforms dump"
+        prettyDumpFakeAssocArray "${platforms_hash[*]}"
+    fi
 
-	builtin cd "$GOROOT/src"
-	if [ -d pkg/runtime ]; then
-		runtime='pkg/runtime'
-	else
-		# Go 1.4 moved pkg/ up a level
-		runtime='runtime'
-	fi
-	go tool dist install -v "$runtime" ||
-		display_fatal "Couldn't compile runtime library for $GOOS $GOARCH"
-	go install -v -a std ||
-		display_fatal "Install runtime library for $GOOS $GOARCH"
-else
-	display_message "Runtime library already installed for $GOOS $GOARCH"
-fi
+    [[ ${#platforms_hash[@]} -eq 0 ]] && return 1
 
+    local platform_hash_keys; platform_hash_keys=( $(keysForFakeAssocArray "${platforms_hash[*]}") )
+    local _os
+    for _os in "${platform_hash_keys[@]}"
+    do
+        [[ "${os}" != "${_os}" ]] && continue
+
+        retstat=2 # set to no arch found
+
+        local __archs; __archs=()
+        local __archs_raw=""
+        {
+            valueForKeyFakeAssocArray "${_os}" "${platforms_hash[*]}" > /dev/null
+            __archs_raw="${RETVAL}"
+        }
+        local __archs_ary; __archs_ary=( )
+        IFS=',' __archs_ary=( ${__archs_raw//[\[\]]/} ) IFS="$defaultIFS"
+        local __arch
+        for __arch in "${__archs_ary[@]}"
+        do
+            [[ "${arch}" == "${__arch}" ]] && return 0
+        done
+
+        unset __arch
+        unset __archs_raw
+        unset __archs
+    done
+    unset _os
+    unset platform_hash_keys
+
+    return "${retstat}"
+}
+
+check_go()
+{
+    local go_active_min="${1}"
+    local go_active=""
+
+    __gvm_resolve_current_version > /dev/null
+    go_active="${RETVAL}"
+
+    __gvm_extract_version "${go_active}"
+    __gvm_compare_versions "${RETVAL}" "1.5" > /dev/null
+
+    [[ $? -lt 2 ]] && return 0
+
+    return 1
+}
+
+cross()
+{
+    local os="${1}"; shift
+    local arch="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"; shift
+    local opt_arm_vers=""
+    local args; args=( "$@" )
+    local sub_options; sub_options=()
+
+    # remove sub_options from args
+    local _all_args; _all_args=( "${args[@]}" ); args=()
+    local _arg
+    for _arg in "${_all_args[@]}"
+    do
+        case "${_arg}" in
+            --arm-v5 | --arm-v6 | --arm-v7 | --arm-v8 )
+                opt_arm_vers="${_arg##*v}"
+                ;;
+            *)
+                args+=( "${_arg}" )
+                ;;
+        esac
+    done
+    unset _arg
+    unset _all_args
+
+    if [[ -z "${os// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_cross_platform_os" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ -z "${arch// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_cross_platform_arch" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ "${#args}" -eq 0 ]]
+    then
+        __gvm_locale_text_for_key "specify_cross_files" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # validate platform
+    check_platform "${os}" "${arch}"
+    local rslt=$?
+    if [[ $rslt -eq 2 ]]
+    then
+        __gvm_locale_text_for_key "cross_platform_arch_invalid" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    elif [[ $rslt -eq 1 ]]
+    then
+        __gvm_locale_text_for_key "cross_platform_os_invalid" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+    unset rslt
+
+    # validate arm options
+    if [[ -n "${opt_arm_vers}" ]] && [[ ! "${arch}" =~ ^arm ]]
+    then
+        __gvm_locale_text_for_key "cross_platform_arm_args_invalid" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # validate active go (version >= 1.5)
+    check_go > /dev/null
+    local rslt=$?
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "cross_active_go_version_invalid" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+    unset rslt
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::cross() building with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  GOOS           -> ${os}"
+        echo "  GOARCH         -> ${arch}"
+        echo "  GOARM          -> ${opt_arm_vers}"
+        echo "  _files         -> ${args[@]}"
+    fi
+
+    if [[ -n "${opt_arm_vers}" ]]
+    then
+        GOOS="${os}" GOARCH="${arch}" GOARM=${opt_arm_vers} go build "${args[@]}"
+    else
+        GOOS="${os}" GOARCH="${arch}" go build "${args[@]}"
+    fi
+
+    # local command; command=( GOOS="${os}" GOARCH="${arch}" )
+    # [[ -n "${opt_arm_vers}" ]] && command+=( GOARM=${opt_arm_vers} )
+    # command+=( go build "${args[@]}" )
+    # eval ${command[@]}
+    # unset command
+
+    local rslt=$?
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "cross_build_failed" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    return $rslt
+}
+
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_list=false
+    local opt_compact=false
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local sub_options; sub_options=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            --arm-v5 | --arm-v6 | --arm-v7 | --arm-v8 )
+                # save this for later
+                sub_options+=( "${1}" )
+                ;;
+            -c | --compact )
+                opt_compact=true
+                ;;
+            -l | --list )
+                opt_list=true
+                ;;
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_cross" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_cross" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    # option sanity check
+    if [[ "${opt_compact}" == true && "${opt_list}" == false ]]
+    then
+        __gvm_locale_text_for_key "cross_opt_compact_list_only" > /dev/null
+        printf "%s!\n\n" "${RETVAL}"
+        __gvm_locale_text_for_key "help/usage_cross" > /dev/null
+        printf "%s\n" "${RETVAL}"
+        return 1
+    fi
+
+    if [[ "${opt_list}" == true && "${#args[@]}" -gt 0 ]]
+    then
+        __gvm_locale_text_for_key "invalid_arguments" > /dev/null
+        printf "%s!\n\n" "${RETVAL}"
+        __gvm_locale_text_for_key "help/usage_cross" > /dev/null
+        printf "%s\n" "${RETVAL}"
+        return 1
+    fi
+
+    if [[ "${opt_list}" == true ]]
+    then
+        list_platforms "${opt_compact}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+    else
+        [[ "${#sub_options[@]}" -gt 0 ]] && args+=( "${sub_options[@]}" )
+        cross "${args[0]}" "${args[1]}" "${opt_porcelain}" "${opt_quiet}" "${args[@]:2}"; rslt=$?
+    fi
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"

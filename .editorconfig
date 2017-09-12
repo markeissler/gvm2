@@ -11,6 +11,9 @@ indent_size = 2
 [*.{rb,rake}]
 indent_size = 2
 
+[Rakefile]
+indent_size = 2
+
 [Gemfile]
 indent_size = 2
 

@@ -1,7 +1,38 @@
-. "${SANDBOX}/gvm2/scripts/function/read_environment_file" || return 1
+source "${SANDBOX}/gvm2/scripts/function/read_environment_file.sh" || return 1
 
-hash=( $(__gvm_read_environment_file "${SANDBOX}/gvm2/tests/func_read_environment_file_comment_test_input.sh") )
-echo "${hash[@]}"
-expectedHashStr="GVM_ROOT:%2fUsers%2fme%2f.gvm gvm_go_name:go1.7.1 gvm_pkgset_name:global GOROOT:%24GVM_ROOT%2fgos%2fgo1.7.1"
+##
+## read an environment file
+##
 
-[[ "${hash[@]}" == "${expectedHashStr}" ]] # status=0
+## Setup expectation
+expectedHashStr="GVM_ROOT:%2FUsers%2Fme%2F.gvm gvm_go_name:go1.7.1 gvm_pkgset_name:global GOROOT:%24GVM_ROOT%2Fgos%2Fgo1.7.1"
+
+##
+## read an environment file (return status)
+##
+
+## Execute command
+result="$(__gvm_read_environment_file "${SANDBOX}/gvm2/tests/func_read_environment_file_comment_test_input.sh" > /dev/null; echo $?)"
+
+## Evaluate result
+[[ "${result[@]}" -eq "0" ]] # status=0
+
+##
+## read an environment file (return value)
+##
+
+## Execute command
+result=( $(__gvm_read_environment_file "${SANDBOX}/gvm2/tests/func_read_environment_file_comment_test_input.sh") )
+
+## Evaluate result
+[[ "${result[@]}" == "${expectedHashStr}" ]] # status=0
+
+##
+## read an environment file (RETVAL value)
+##
+
+## Execute command
+result=( $(__gvm_read_environment_file "${SANDBOX}/gvm2/tests/func_read_environment_file_comment_test_input.sh" > /dev/null; echo "${RETVAL}") )
+
+## Evaluate result
+[[ "${result[@]}" == "${expectedHashStr}" ]] # status=0

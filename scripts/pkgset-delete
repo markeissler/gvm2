@@ -1,25 +1,209 @@
 #!/usr/bin/env bash
-. "$GVM_ROOT/scripts/functions"
+# scripts/pkgset-delete
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
 
-[[ $gvm_go_name != "" ]] ||
-	display_fatal "No Go version selected"
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/locale_text.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/find_local_pkgset.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
 
-[[ $1 != "" ]] ||
-	display_fatal "Please specify the name"
+delete()
+{
+    local pkgset_name="${1}"; shift
+    local go_version="${1}"; shift
+    local opt_local="${1}"; shift
+    local opt_force="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
 
-target_top=$GVM_ROOT
-target_set_name=$1
-if [[ $1 == "--local" ]]; then
-	target_top=$(find_local_pkgset)/.gvm_local
-	target_set_name="local"
-fi
+    if [[ -z "${pkgset_name// /}" && "${opt_local}" == false ]]
+    then
+        __gvm_locale_text_for_key "specify_pkgset_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
 
-[[ -d $target_top/pkgsets/$gvm_go_name/$target_set_name ]] ||
-    display_fatal "Packageset doesn't exist!"
+    # Pkgset name cannot be a reserved name! unless you force it
+    if [[ "${opt_force}" == false ]]
+    then
+        case "${pkgset_name}" in
+            global | local | system )
+                __gvm_locale_text_for_key "invalid_pkgset_name_reserved" > /dev/null
+                __gvm_display_fatal "${RETVAL}: ${pkgset_name}"
+                ;;
+            * )
+                ;;
+        esac
+    fi
 
-rm -rf "$target_top/pkgsets/$gvm_go_name/$target_set_name" ||
-    display_fatal "Could not delete package set"
+    if [[ -z "${go_version// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_go_version_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
 
-rm -rf "$target_top/environments/$gvm_go_name@$target_set_name" ||
-    display_fatal "Could not delete package set"
+    local gvm_root="${GVM_ROOT}"
+    local gvm_root_str="\${GVM_ROOT}"
 
+    ## LOCAL - beg
+    ##
+    ## pkgset local path overrides (everything is written to $PWD/.gvm_local)
+    ##
+    if [[ "${opt_local}" == true ]]
+    then
+        __gvm_find_local_pkgset > /dev/null
+        local gvm_root_local="${RETVAL}"
+        if [[ ! -d "${gvm_root_local}" ]]
+        then
+            __gvm_pwd > /dev/null
+            local pwd="${RETVAL}"
+            gvm_root_local="${pwd}/.gvm_local"
+        fi
+
+        [[ -z "${pkgset_name// /}" ]] && pkgset_name="local"
+        gvm_root="${gvm_root_local}"
+        gvm_root_str="${gvm_root_local}"   ## GVM_ROOT_LOCAL?
+        unset gvm_root_local
+    fi
+    ## LOCAL - end
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::delete() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  _package       -> ${pkgset_name}"
+        echo "  _package_dir   -> ${gvm_root}/pkgsets/${go_version}/${pkgset_name}"
+    fi
+
+    # Pkgset folder not exists for Go version?
+    if [[ ! -d "${gvm_root}/pkgsets/${go_version}/${pkgset_name}" ]]
+    then
+        __gvm_locale_text_for_key "pkgset_not_exist" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    rm -rf "${gvm_root}/pkgsets/${go_version}/${pkgset_name}" &> /dev/null
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "pkgset_delete_failed"
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    rm -rf "${gvm_root}/environments/${go_version}@${pkgset_name}" &> /dev/null
+    if [[ $? -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "environment_delete_failed"
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "pkgset_delete_succeeded" > /dev/null
+        __gvm_display_message "${RETVAL}"
+    fi
+
+    return $?
+}
+
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_local=false
+    local opt_force=false
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            -l | --local )
+                opt_local=true
+                ;;
+            -f | --force )
+                opt_force=true
+                ;;
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_pkgset_delete" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_pkgset_delete" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    # option sanity check
+    if [[ "${opt_local}" == true && "${#args[@]}" -gt 0 ]]
+    then
+        __gvm_locale_text_for_key "invalid_arguments" > /dev/null
+        printf "%s!\n\n" "${RETVAL}"
+        __gvm_locale_text_for_key "help/usage_pkgset_delete" > /dev/null
+        printf "%s\n" "${RETVAL}"
+        return 1
+    fi
+
+    local pkgset_name="${args[0]:-}"
+    local go_version="${args[1]:-$gvm_go_name}"
+
+    # @TODO: Officially support a second arg passing the go_version and <version>@<pkgset> syntax.
+    delete "${pkgset_name}" "${go_version}" "${opt_local}" "${opt_force}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"
