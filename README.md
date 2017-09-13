@@ -88,30 +88,29 @@ prompt> gvm update --list
 If you need to upgrade an older version of __GVM2__ (prior to 0.10.0) or if you'd like to migrate from __GVM__ to
 __GVM2__ then you will need to proceed with a manual upgrade.
 
->WARNING: It is highly recommended to backup your entire `$HOME/.gvm` directory before proceeding.
+Essentially, with this method you will move your current install, then re-install __GVM2__ (latest version), then
+copy your previous configuration to the new installation. Once you are satisified that the upgrade has been a
+success you may elect to delete the previous (renamed) installation.
 
-1. Backup your `$HOME/.gvm` directory:
+>WARNING: Proceed with caution and make sure you follow these steps exactly.
+
+1. Move your `$HOME/.gvm` directory:
 
 ```sh
 prompt> builtin cd ~
-prompt> cp -Rp ~/.gvm ~/.gvm.bak
+prompt> mv ~/.gvm ~/.gvm.bak
 ```
 
-2. Grab the HEAD commit on master. This creates just the `.git` directory; the original `.git` directory will have been
-    renamed during original installation.
+2. Re-install __GVM2__:
 
 ```sh
-prompt> git clone --no-checkout "https://github.com/markeissler/gvm2.git" ~/.gvm/gvm-update.tmp
+prompt> curl -sSL https://raw.githubusercontent.com/markeissler/gvm2/master/binscripts/gvm-installer | bash
 ```
 
-3. Move the resulting `.git` directory in place, then reset the local repo state.
+3. Copy your previous configuration into the new installation:
 
 ```sh
-prompt> mv ~/.gvm/gvm-update.tmp/.git ~/.gvm/
-prompt> rmdir ~/.gvm/gvm-update.tmp/
-prompt> builtin cd ~/.gvm
-prompt> git reset --hard HEAD && git clean -qfdx
-prompt> mv .git .git.bak
+prompt> cp -Rp ~/.gvm.bak/{archive,environments,gos,pkgsets} ~/.gvm/
 ```
 
 4. Open a new terminal to test.

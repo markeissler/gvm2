@@ -1,5 +1,15 @@
 # Changelog: GVM2
 
+## 0.10.1 / 2017-09-12
+
+The upgrade instructions for upgrades of older __GVM2__ (< 0.10.0) and __GVM__ installations were incorrect as they
+resulted in previous environments being removed. The new instructions not only correct this problem but are also
+simplified and ensure that no lingering legacy files are retained.
+
+### Short list of commit messages
+
+  * Revise upgrade instructions in README.
+
 ## 0.10.0 / 2017-09-12
 
 Wow. Wow! With this release __GVM2__ has been 93% rewritten. Almost the entire code base has been touched
@@ -203,11 +213,11 @@ to fix incorrect starting point directory.
 __GVM2__ adds some significant new functionality to Go environment management
 with the introduction of:
 
-* `cd()` override
-* `.go-version`
-* `.go-pkgset`
-* `PATH` munging so [RVM](https://rvm.io/) and __GVM2__ can happily work together.
-* Fix bootsrap problems for MacOS Sierra (10.12).
+  * `cd()` override
+  * `.go-version`
+  * `.go-pkgset`
+  * `PATH` munging so [RVM](https://rvm.io/) and __GVM2__ can happily work together.
+  * Fix bootsrap problems for MacOS Sierra (10.12).
 
 ### `cd()` override
 
