@@ -12,8 +12,9 @@ dep_load()
 {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
-        "../function/_load_common.sh"
         "../function/_shell_compat.sh"
+        "../function/display_notices.sh"
+        "../function/locale_text.sh"
         "implode.sh"
         "pkgset_use.sh"
         "use.sh"
