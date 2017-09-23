@@ -15,7 +15,6 @@ dep_load()
         "../function/_shell_compat.sh"
         "../function/display_notices.sh"
         "../function/locale_text.sh"
-        "implode.sh"
         "pkgset_use.sh"
         "use.sh"
     )
@@ -91,8 +90,6 @@ gvm() {
 
     if [[ "${command}" == "use" ]]; then
         __gvm_use "$@"
-    elif [[ "${command}" == "implode" ]]; then
-        __gvm_implode
     elif [[ "${command}" == "pkgset" ]] && [[ "${sub_command}" == "use" ]]; then
         __gvm_pkgset_use "$@"
     else

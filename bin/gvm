@@ -12,7 +12,6 @@ dep_load()
     local deps; deps=(
         "../scripts/function/_shell_compat.sh"
         "../scripts/function/display_notices.sh"
-        "../scripts/env/implode.sh"
         "../scripts/env/use.sh"
     )
     for file in "${deps[@]}"
@@ -67,7 +66,7 @@ main()
     while true
     do
         case "${1}" in
-            alias | cross | diff | install | linkthis | list | listall | pkgenv | pkgset | uninstall | update )
+            alias | cross | diff | implode | install | linkthis | list | listall | pkgenv | pkgset | uninstall | update )
                 local command="${1}"
                 shift
                 sanity_check # @TODO: run a more lightweight, possibly cached, check here
@@ -84,11 +83,6 @@ main()
                 shift
                 "${GVM_ROOT}/scripts/${command}" "$@"
                 rslt=$?; unset command; break
-                ;;
-            implode )
-                shift
-                __gvm_implode "$@"
-                rslt=$?; break
                 ;;
             version )
                 __gvm_display_message "GVM2 v$GVM_VERSION installed at ${GVM_ROOT}"

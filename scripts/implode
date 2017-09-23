@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+# scripts/implode
+#
+# shellcheck shell=bash
+# vi: set ft=bash
+#
+
+# load dependencies
+dep_load()
+{
+    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local deps; deps=(
+        "../scripts/function/_shell_compat.sh"
+        "../scripts/function/display_notices.sh"
+        "../scripts/function/locale_text.sh"
+    )
+    for file in "${deps[@]}"
+    do
+        source "${base}/${file}"
+    done
+}; dep_load; unset -f dep_load
+
+implode()
+{
+    local opt_force="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+    local charNewline=$'\n'
+
+    # confirm implosion (complete GVM2 removal!)
+    if [[ "${opt_force}" == false ]]
+    then
+        __gvm_locale_text_for_key "implode_warning" > /dev/null
+        __gvm_display_warning "${RETVAL}"
+        __gvm_prompt_confirm > /dev/null
+        if [[ $? -ne 0 ]]
+        then
+            if [[ "${opt_quiet}" == false ]]
+            then
+                __gvm_locale_text_for_key "action_cancelled" > /dev/null
+                __gvm_display_message "${charNewline}${RETVAL}"
+            fi
+            return 0
+        fi
+    fi
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::implode() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  GVM_ROOT       -> ${GVM_ROOT}"
+    fi
+
+    #
+    # collect some messages ahead of time as locales are about to be deleted!
+    #
+    __gvm_locale_text_for_key "implode_failed" > /dev/null
+    local implode_failed_msg="${RETVAL}"
+
+    __gvm_locale_text_for_key "implode_succeeded" > /dev/null
+    local implode_success_msg="${RETVAL}"
+
+    # just delete everything under GVM_ROOT!
+    rm -rf "${GVM_ROOT}" &> /dev/null
+    if [[ $? -ne 0 ]]
+    then
+        if [[ "${opt_quiet}" == false ]]
+        then
+            __gvm_display_error "${implode_failed_msg}"
+        fi
+
+        return 1
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_display_message "${implode_success_msg}"
+    fi
+
+    return $?
+}
+
+_exit()
+{
+  stty sane; echo; __gvm_display_fatal "caught signal, shutting down"
+
+  # @TODO: additional cleanup?
+
+  wait; stty sane; exit 1
+}
+
+trap '_exit' SIGINT SIGQUIT SIGTERM
+
+main()
+{
+    local opt_force=false
+    local opt_porcelain=false
+    local opt_quiet=false
+    local args; args=()
+    local rslt
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set -x
+    fi
+
+    while true
+    do
+        case "${1}" in
+            -f | --force )
+                opt_force=true
+                ;;
+            --porcelain )
+                opt_porcelain=true
+                ;;
+            -q | --quiet )
+                opt_quiet=true
+                ;;
+            -h | ? | help | --help )
+                __gvm_locale_text_for_key "help/usage_implode" > /dev/null
+                printf "%s\n" "${RETVAL}"
+                return 0
+                ;;
+            *)
+                if [[ "${1:0:1}" == '-' ]]
+                then
+                    __gvm_locale_text_for_key "unrecognized_command" > /dev/null
+                    printf "%s: %s\n\n" "${RETVAL}" "${1:-empty}"
+                    __gvm_locale_text_for_key "help/usage_implode" > /dev/null
+                    printf "%s\n" "${RETVAL}"
+                    return 1
+                fi
+                # only save arg if it contains more than spaces
+                [[ -n "${1// /}" ]] && args+=( "${1}" )
+                ;;
+        esac
+        # guard against accidents...
+        shift; [[ "$#" -eq 0 ]] && break
+    done
+
+    implode "${opt_force}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+
+    if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
+    then
+        set +x
+    fi
+
+    return "${rslt}"
+}
+
+main "$@"
