@@ -12,9 +12,9 @@ dep_load()
 {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
-        "../function/_load_common.sh"
         "../function/_shell_compat.sh"
-        "implode.sh"
+        "../function/display_notices.sh"
+        "../function/locale_text.sh"
         "pkgset_use.sh"
         "use.sh"
     )
@@ -90,8 +90,6 @@ gvm() {
 
     if [[ "${command}" == "use" ]]; then
         __gvm_use "$@"
-    elif [[ "${command}" == "implode" ]]; then
-        __gvm_implode
     elif [[ "${command}" == "pkgset" ]] && [[ "${sub_command}" == "use" ]]; then
         __gvm_pkgset_use "$@"
     else

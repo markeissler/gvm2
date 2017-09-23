@@ -39,17 +39,19 @@ prompt> curl -sSL https://raw.githubusercontent.com/markeissler/gvm2/master/bins
 
 Or if you are using zsh just change `bash` to `zsh`.
 
+<a name="sourcing"></a>
+
 ### Sourcing gvm into your shell (bash, zsh)
 
-The __GVM2__ installer will attempt to update your shell init file (`.bashrc`, `.bash_profile`, `.zlogin`, etc.) by
+The __GVM2__ installer will attempt to update your shell init file (`.profile`, `.bash_profile`, `.zlogin`, etc.) by
 appending the following line:
 
 ```sh
 [[ -s "$HOME/.gvm/scripts/gvm" ]] && source "$HOME/.gvm/scripts/gvm"
 ```
 
-After the installer completes, you should verify that the line has been added to the correct file (e.g. `.bashrc` vs
-`.bash_profile`) since the installer can't guess the peculiarities of your setup!
+After the installer completes, you should verify that the line has been added to the correct file (e.g. `.profile`
+vs `.bash_profile`) since the installer can't guess the peculiarities of your setup!
 
 >If you are using [RVM](https://github.com/rvm/rvm) as well, then __GVM2__ should be loaded __after__ RVM. __The
 instructions for RVM will conflict with these instructions.__ Loading RVM last will result in a broken environment.
@@ -344,10 +346,10 @@ Again, a single line consisting of a __GVM2__ package set as reported by the `gv
 
 ### Auto selection of Go version and GVM pkgset
 
-Whenever you change directories (using the cd() command), __GVM2__ will search for an applicable `.go-version` and
-`.go-pkgset` file. The search will begin in the directory that your are changing to and will then continue all the way
-up to the top of your HOME directory. If these files appear anywhere along the path during the upwards traversal,
-__GVM2__ will select the file, parse it and apply it. __GVM2__ will only consider the first file it encounters.
+Whenever you change directories (using `cd`), __GVM2__ will search for an applicable `.go-version` and `.go-pkgset`
+file. The search will begin in the directory that your are changing to and will then continue all the way up to the top
+of your HOME directory. If these files appear anywhere along the path during the upwards traversal, __GVM2__ will select
+the file, parse it and apply it. __GVM2__ will only consider the first file it encounters.
 
 If the `.go-version` and/or the `.go-pkgset` files are not found, __GVM2__ will next attempt to make suitable guesses
 for an appropriate environment to select. The order of guessing looks like this:
@@ -361,6 +363,9 @@ Go version:
 GVM pkgset:
     global pkgset for the version of Go selected
 ```
+
+>NOTE: Auto selection is only supported when `gvm` is loaded as a function into your shell. See the
+[Sourcing gvm into your shell (bash, zsh)](#sourcing) section for more information.
 
 ## macOS Requirements
 
@@ -476,11 +481,17 @@ See `examples/native` for a working example.
 
 ## Contributing
 
+Contributions are welcome:
+
 1. Fork it
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+Please be sure to provide a concise overview of the issue you are trying to resolve. If you are submitting a pull
+request (PR) to address a bug you've encountered then it is critical you also provide steps to reproduce the problem
+along with captured output.
 
 ## Authors
 
