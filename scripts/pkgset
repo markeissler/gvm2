@@ -12,6 +12,7 @@ dep_load()
     local deps; deps=(
         "../scripts/function/_shell_compat.sh"
         "../scripts/function/locale_text.sh"
+        "../scripts/env/pkgset_use.sh"
     )
     for file in "${deps[@]}"
     do
@@ -47,6 +48,11 @@ main()
                 shift
                 "${GVM_ROOT}/scripts/pkgset-${command}" "$@"
                 rslt=$?; unset command; break
+                ;;
+            use )
+                shift
+                __gvm_pkgset_use "$@"
+                rslt=0; break
                 ;;
             -h | ? | help | --help )
                 __gvm_locale_text_for_key "help/usage_pkgset" > /dev/null

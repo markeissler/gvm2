@@ -13,9 +13,16 @@ dep_load()
 {
     local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
     local deps; deps=(
-        "../function/_load_common.sh"
         "../function/_bash_pseudo_hash.sh"
         "../function/_shell_compat.sh"
+        "../function/display_notices.sh"
+        "../function/find_installed.sh"
+        "../function/find_path_upwards.sh"
+        "../function/locale_text.sh"
+        "../function/munge_path.sh"
+        "../function/read_environment_file.sh"
+        "../function/resolve_fallback_version.sh"
+        "../function/resolve_fallback_pkgset.sh"
     )
     for file in "${deps[@]}"
     do

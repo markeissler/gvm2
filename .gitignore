@@ -6,7 +6,7 @@
 #   git config --global core.excludesfile ~/.gitignore_global
 
 # Ignore all logfiles and tempfiles.
-/log/*.log
+/logs/*.log
 /tmp
 /test/tmp
 

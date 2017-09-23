@@ -1,5 +1,29 @@
 # Changelog: GVM2
 
+## 0.10.2 / 2017-09-22
+
+Bug fixes to support calling `gvm` as a script instead of a function. In an interactive shell you should be loading the
+`gvm` command as a function by sourcing gvm into your shell ([refer to the README](README.md)). In a non-interactive
+shell `gvm` would not normally be loaded as a function but should be fully functional by calling the `$HOME/.gvm/bin/gvm`
+script. Both of the `gvm use` and `gvm pkgset use` functions were broken for the latter scenario.
+
+### Short list of commit messages
+
+  * GVM2-46 Fix output of confirmation prompt status on cancel.
+  * GVM2-45 Refactor implode as a script. Fix hang on --help.
+  * GVM2-44 Update gvm-installer profile updates for sourcing gvm.
+  * GVM2-44 Add tests to check if commands are reachable when gvm loaded as function or script.
+  * GVM2-44 Update gvm loader script generation in gvm-installer.
+  * GVM2-44 Update dependencies for gvm.sh and cd.sh.
+  * GVM2-44 Fix use and pkgset-use commands when gvm not loaded as function.
+  * GVM2-43 #comment Revise gvm sourcing instructions in README.
+
+### Additional contributors for this release
+
+Thanks to PRs from the following contributors:
+
+  * Karthikeyan Marudhachalam ([tmkarthi](https://github.com/tmkarthi))
+
 ## 0.10.1 / 2017-09-12
 
 The upgrade instructions for upgrades of older __GVM2__ (< 0.10.0) and __GVM__ installations were incorrect as they

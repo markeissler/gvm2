@@ -187,6 +187,7 @@ update()
     local opt_porcelain="${1}"; shift
     local opt_quiet="${1}"
     local repo_source="https://github.com/markeissler/gvm2"
+    local charNewline=$'\n'
 
     if [[ "${version}" == "latest" ]]
     then
@@ -230,7 +231,7 @@ update()
             if [[ "${opt_quiet}" == false ]]
             then
                 __gvm_locale_text_for_key "action_cancelled" > /dev/null
-                __gvm_display_message "\n${RETVAL}"
+                __gvm_display_message "${charNewline}${RETVAL}"
             fi
             return 0
         fi

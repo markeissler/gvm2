@@ -81,6 +81,7 @@ uninstall()
     local opt_quiet="${1}"; shift
     local args; args=( "$@" )
     local fail_hash; fail_hash=()
+    local charNewline=$'\n'
     local rslt_status=0
 
     if [[ "${#args}" -eq 0 ]]
@@ -130,7 +131,7 @@ uninstall()
             if [[ "${opt_quiet}" == false ]]
             then
                 __gvm_locale_text_for_key "action_cancelled" > /dev/null
-                __gvm_display_message "${RETVAL}"
+                __gvm_display_message "${charNewline}${RETVAL}"
             fi
             return 0
         fi
