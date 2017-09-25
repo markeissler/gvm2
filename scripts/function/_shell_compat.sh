@@ -83,7 +83,7 @@ __gvm_progress()
     __gvm_locale_text_for_key "${message}" > /dev/null
     [[ -n "${RETVAL}" ]] && l_message="${RETVAL}"
 
-    RETVAL="${l_message}"
+    RETVAL="-> ${l_message}"
 
     echo "${RETVAL}"; return 0
 }

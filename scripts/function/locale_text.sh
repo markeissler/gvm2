@@ -60,6 +60,13 @@ __gvm_locale_text_for_key() {
     local key="${key_raw}"
     unset RETVAL
 
+    # handle the disappearance of our underlying directory structure, which can
+    # happen during an upgrade.
+    if [[ ! -f "${BASH_SOURCE[0]}" ]]
+    then
+        RETVAL="${key_raw}" && echo "${RETVAL}" && return 1
+    fi
+
     # fixup locales_dir if default value was used but GVM_ROOT is empty
     #
     # NOTE: This should not happen but if the install is broken we still need to

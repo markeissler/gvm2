@@ -19,6 +19,9 @@ sleep 4
 ## 0.9.0
 ## 0.9.1
 ## 0.9.2
+## 0.10.0
+## 0.10.1
+## 0.10.2
 
 ## Setup expectation - nothing to do
 
@@ -29,6 +32,9 @@ availableVersions=( $(${SANDBOX}/gvm2/scripts/update --list --porcelain) )
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.9.0" ]] && break; done # status=0
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.9.1" ]] && break; done # status=0
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.9.2" ]] && break; done # status=0
+for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.0" ]] && break; done # status=0
+for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.1" ]] && break; done # status=0
+for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.2" ]] && break; done # status=0
 
 ## Wait so that we don't get locked out for making too many git api requests
 sleep 4
@@ -39,6 +45,9 @@ sleep 4
 ( builtin cd "${SANDBOX}/gvm2"; mv .git.bak .git; git remote set-url origin https://github.com/markeissler/gvm2.git; git -c user.name=test -c user.email=test@test.com commit -am "Pending"; mv .git .git.bak )
 
 ## Switch to latest
+gvm update v0.10.2 # status=0
+source "${SANDBOX}/gvm2/scripts/gvm"
+gvm version # status=0; match=/0.10.2/
 
 ## Switch to older version (accept prompt)
 yes y | gvm update v0.9.1 # status=0

@@ -1,0 +1,1 @@
+GVM2 backup directory already exists. Perhaps a failed update left it behind.

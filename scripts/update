@@ -119,7 +119,7 @@ list_updates()
     local updates_hash; updates_hash=()
     local repo_source="https://github.com/markeissler/gvm2"
 
-    if [[ "${opt_porcelain}" == false ]]
+    if [[ "${opt_porcelain}" == false && "${opt_quiet}" == false ]]
     then
         __gvm_locale_text_for_key "title/gvm_update_list" > /dev/null
         printf "\n%s\n\n" "${RETVAL}"
@@ -187,6 +187,10 @@ update()
     local opt_porcelain="${1}"; shift
     local opt_quiet="${1}"
     local repo_source="https://github.com/markeissler/gvm2"
+    local installer_source=""
+    local install_dir="${GVM_ROOT%/*}"
+    local install_name="${GVM_ROOT##*/}"
+    local backup_dir="${GVM_ROOT}.bak"
     local charNewline=$'\n'
 
     if [[ "${version}" == "latest" ]]
@@ -210,11 +214,21 @@ update()
         unset rslt
     fi
 
-    # we should not have a .git directory, after install it is .git.bak
-    if [[ -d "${GVM_ROOT}/.git" || ! -d "${GVM_ROOT}/.git.bak" ]]
+    # determine the installer_source url based on version
+    installer_source="https://raw.githubusercontent.com/markeissler/gvm2/${version}/binscripts/gvm-installer"
+
+    # we should not have a backup directory
+    if [[ -d "${backup_dir}" ]]
     then
-        __gvm_locale_text_for_key "update_git_corrupted" > /dev/null
+        __gvm_locale_text_for_key "update_backup_dir_exists" > /dev/null
         __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # check install dir
+    if [[ -z "${install_dir// /}" || ! -d "${install_dir}" ]]
+    then
+        __gvm_locale_text_for_key "update_install_dir_invalid" > /dev/null
+        __gvm_display_fatal "${RETVAL}: ${install_dir}"
     fi
 
     # confirm is the user is about to switch to a non-updateable GVM2
@@ -246,45 +260,80 @@ update()
         echo "  GVM_ROOT       -> ${GVM_ROOT}"
         echo "  GVM_VERSION    -> ${GVM_VERSION}"
         echo "  _version       -> ${version}"
+        echo "  _backup_dir    -> ${backup_dir}"
+        echo "  _install_dir   -> ${install_dir}"
+        echo "  _install_name  -> ${install_name}"
     fi
 
-    mv "${GVM_ROOT}/.git.bak" "${GVM_ROOT}/.git" &> /dev/null
+    if [[ "${opt_porcelain}" == false && "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "title/gvm_update" > /dev/null
+        printf "\n%s\n\n" "${RETVAL}"
+    fi
+
+    #
+    # collect some messages ahead of time as locales are about to be deleted!
+    #
+    __gvm_locale_text_for_key "update_backup_failed" > /dev/null
+    local update_backup_failed_msg="${RETVAL}"
+
+    __gvm_locale_text_for_key "update_install_failed" > /dev/null
+    local update_install_failed_msg="${RETVAL}"
+
+    __gvm_locale_text_for_key "update_restore_failed" > /dev/null
+    local update_restore_failed_msg="${RETVAL}"
+
+    __gvm_locale_text_for_key "update_cleanup_failed" > /dev/null
+    local update_cleanup_failed_msg="${RETVAL}"
+
+    __gvm_locale_text_for_key "update_failed" > /dev/null
+    local update_failed_msg="${RETVAL}"
+
+    __gvm_locale_text_for_key "update_succeeded" > /dev/null
+    local update_success_msg="${RETVAL}"
+
+    __gvm_locale_text_for_key "update_session_reload" > /dev/null
+    local update_session_reload_msg="${RETVAL}"
+
+    sleep 4
+
+    [[ "${opt_quiet}" == false ]] && __gvm_progress "gvm_backup"
+    mv "${GVM_ROOT}" "${backup_dir}" &> /dev/null
     if [[ $? -ne 0 ]]
     then
-        __gvm_locale_text_for_key "update_git_restore_failed" > /dev/null
-        __gvm_display_fatal "${RETVAL}"
+        __gvm_display_error "${update_backup_failed_msg}"
+        __gvm_display_fatal "${update_failed_msg}"
     fi
 
-    builtin cd "${GVM_ROOT}"
-
-    [[ "${opt_quiet}" == false ]] && __gvm_progress "git_pull"
-    \git pull origin "${version}"
+    [[ "${opt_quiet}" == false ]] && __gvm_progress "gvm_install"
+    \curl -sSL --retry 3 "${installer_source}" | bash -s "${version}" "${install_dir}" "${install_name}" &> /dev/null
     if [[ $? -ne 0 ]]
     then
-        __gvm_locale_text_for_key "update_git_update_failed" > /dev/null
-        __gvm_display_fatal "${RETVAL}"
+        __gvm_display_error "${update_install_failed_msg}"
+        __gvm_display_fatal "${update_failed_msg}"
     fi
 
-    [[ "${opt_quiet}" == false ]] && __gvm_progress "git_checkout"
-    \git checkout -f "${version}"
+    [[ "${opt_quiet}" == false ]] && __gvm_progress "gvm_restore"
+    cp -Rp "${backup_dir}/"{archive,environments,gos,pkgsets} "${GVM_ROOT}/" &> /dev/null
     if [[ $? -ne 0 ]]
     then
-        __gvm_locale_text_for_key "update_git_checkout_failed" > /dev/null
-        __gvm_display_fatal "${RETVAL}: ${version}"
+        __gvm_display_error "${update_restore_failed_msg}"
+        __gvm_display_fatal "${update_failed_msg}"
     fi
 
-    mv "${GVM_ROOT}/.git" "${GVM_ROOT}/.git.bak" &> /dev/null
-    if [[ $? -ne 0 ]]
-    then
-        __gvm_locale_text_for_key "update_git_backup_failed" > /dev/null
-        __gvm_display_fatal "${RETVAL}"
-    fi
-
+    [[ "${opt_quiet}" == false ]] && __gvm_progress "gvm_cleanup"
+    rm -rf "${backup_dir}" &> /dev/null
     local rslt=$?
     if [[ $rslt -ne 0 ]]
     then
-        __gvm_locale_text_for_key "update_gvm_failed" > /dev/null
-        __gvm_display_fatal "${RETVAL}"
+        __gvm_display_error "${update_cleanup_failed_msg}"
+        __gvm_display_fatal "${update_failed_msg}"
+    fi
+
+    if [[ "${opt_quiet}" == false ]]
+    then
+        __gvm_display_message "${update_success_msg}"
+        __gvm_display_warning "${update_session_reload_msg}!"
     fi
 
     return $rslt

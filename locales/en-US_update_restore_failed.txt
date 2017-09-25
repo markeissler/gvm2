@@ -1,0 +1,1 @@
+Failed to restore GVM2 config to updated installation
