@@ -42,6 +42,7 @@ implode()
             fi
             return 0
         fi
+        printf "%s" "${charNewLine}"
     fi
 
     #

@@ -1,0 +1,1 @@
+Failed to cleanup previous GVM2 backup directory
