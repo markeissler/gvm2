@@ -249,6 +249,7 @@ update()
             fi
             return 0
         fi
+        printf "%s" "${charNewLine}"
     fi
 
     #
@@ -260,9 +261,10 @@ update()
         echo "  GVM_ROOT       -> ${GVM_ROOT}"
         echo "  GVM_VERSION    -> ${GVM_VERSION}"
         echo "  _version       -> ${version}"
+        echo "  _installer_url -> ${installer_source}"
+        echo "  _repo_url      -> ${repo_source}"
         echo "  _backup_dir    -> ${backup_dir}"
-        echo "  _install_dir   -> ${install_dir}"
-        echo "  _install_name  -> ${install_name}"
+        echo "  _install_dir   -> ${install_dir}/${_install_name}"
     fi
 
     if [[ "${opt_porcelain}" == false && "${opt_quiet}" == false ]]
