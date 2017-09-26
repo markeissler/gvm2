@@ -1,5 +1,17 @@
 # Changelog: GVM2
 
+## 0.10.3 / 2017-09-26
+
+Improve `gvm update` to not need a git login. The updated function will move the current installation out of the way and
+then perform a new installation by pulling the installer (for the requested __GVM2__ version) from Github and then
+running it. On success of the install process, the config directories from the previous installation will be copied to
+the updated installation and then the previous installation will be removed. This design is intended to provide a method
+to restore the previous installation manually upon failure.
+
+> NOTE: The current roadmap will soon retire the use of `git` to install __GVM2__ in favor of installation from release
+    archives. While the use of `git` provides some level of implementation convenience and efficiency it also results in
+    an unnecessary use of storage space.
+
 ## 0.10.2 / 2017-09-22
 
 Bug fixes to support calling `gvm` as a script instead of a function. In an interactive shell you should be loading the
