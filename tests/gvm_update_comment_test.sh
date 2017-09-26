@@ -39,22 +39,22 @@ for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.2" ]] && b
 ## Wait so that we don't get locked out for making too many git api requests
 sleep 4
 
-## When running tests locally, the upstream url will use ssh instead of https,
-## so we need to fix it here. We will also commit any changes and then roll them
-## back at the end.
-( builtin cd "${SANDBOX}/gvm2"; mv .git.bak .git; git remote set-url origin https://github.com/markeissler/gvm2.git; git -c user.name=test -c user.email=test@test.com commit -am "Pending"; mv .git .git.bak )
-
-## Switch to latest
+## Switch to earlier release with update support (v0.10.2)
+##
+## NOTE: GVM2 >= v0.10.3 does not use git to update, we do not need to reset the
+## git origin url to use https!
+##
 gvm update v0.10.2 # status=0
 source "${SANDBOX}/gvm2/scripts/gvm"
 gvm version # status=0; match=/0.10.2/
 
-## When running tests locally, the upstream url will use ssh instead of https,
-## so we need to fix it here. We will also commit any changes and then roll them
-## back at the end.
+## Switch to older release without update support (accept prompt)
+##
+## NOTE: GVM2 < v0.10.2 uses git to update, the default upstream url will use
+## ssh instead of https and prompt for git user if not setup, so we will set one
+## up now and then run the update test.
+##
 ( builtin cd "${SANDBOX}/gvm2"; mv .git.bak .git; git remote set-url origin https://github.com/markeissler/gvm2.git; git -c user.name=test -c user.email=test@test.com commit -am "Pending"; mv .git .git.bak )
-
-## Switch to older version (accept prompt)
 yes y | gvm update v0.9.1 # status=0
 source "${SANDBOX}/gvm2/scripts/gvm"
 gvm version # status=0; match=/0.9.1/
