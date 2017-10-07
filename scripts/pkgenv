@@ -63,7 +63,7 @@ pkgenv()
     then
         \cat "${gvm_env_file}"
     else
-        "${EDITOR:-vi}" "$env_file"
+        "${EDITOR:-vi}" "${gvm_env_file}"
     fi
 
     return $?
