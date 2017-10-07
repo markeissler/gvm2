@@ -24,7 +24,7 @@ directory to the current base directory:
 Usually, you will want to specify a longer package name that includes the git
 repo path:
 
-    prompt> gvm linkthis bithumb.com/user/package
+    prompt> gvm linkthis github.com/<USERNAME>/<PACKAGE>
 
 For instance, the first invocation style will work if your pkgset includes a
 dependent package named "gotest":
@@ -40,7 +40,7 @@ Usually, packages are contained within repo paths:
     import (
             "fmt"
 
-            "bitbucket.org/markeissler/gotest"
+            "github.com/<USERNAME>/gotest"
     )
 
 Therefore, the second invocation style is the one that most developers will use.
