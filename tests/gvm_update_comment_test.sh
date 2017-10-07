@@ -35,6 +35,7 @@ for version in "${availableVersions[@]}";do [[ "${version}" == "v0.9.2" ]] && br
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.0" ]] && break; done # status=0
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.1" ]] && break; done # status=0
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.2" ]] && break; done # status=0
+for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.3" ]] && break; done # status=0
 
 ## Wait so that we don't get locked out for making too many git api requests
 sleep 4

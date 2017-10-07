@@ -1,5 +1,16 @@
 # Changelog: GVM2
 
+## 0.10.4 / 2017-10-07
+
+Bug fixes.
+
+### Short list of commit messages
+
+  * GVM2-52 Fix linkthis usage text for clarity.
+  * GVM2-51 Fix pkgenv to send proper path to text editor.
+  * GVM2-50 Update gvm update tests.
+  * GVM2-49 Fix sorting of gvm update list.
+
 ## 0.10.3 / 2017-09-26
 
 Improve `gvm update` to not need a git login. The updated function will move the current installation out of the way and

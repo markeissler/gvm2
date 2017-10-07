@@ -63,7 +63,7 @@ __gvm_find_updates()
             }
             unset __key __val
         fi
-    done <<< "$(\git ls-remote -t "${url}" | awk -F/ '{ print $NF }' | \sort)"
+    done <<< "$(\git ls-remote -t "${url}" | awk -F/ '{ print $NF }' | \sort -t. -k 1.2,1nr -k 2,2nr -k 3,3nr)"
 
     if [[ ${#versions_hash[@]} -eq 0 ]]
     then
