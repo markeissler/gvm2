@@ -39,7 +39,7 @@ check_existing_go() {
 		if [[ "x${active_go}" != "x" ]]; then
             active_go_root="$(PATH="${path}" go env GOROOT 2>/dev/null)"
 		else
-			echo "No existing Go versions detected"
+			echo "No existing Go versions detected."
 			return 1
 		fi
 	fi
@@ -173,17 +173,23 @@ fi
 
 echo "export GVM_ROOT=$GVM_DEST/$GVM_NAME" > "$GVM_DEST/$GVM_NAME/scripts/gvm"
 echo "source \$GVM_ROOT/scripts/gvm-default" >> "$GVM_DEST/$GVM_NAME/scripts/gvm"
-check_existing_go "${GVM_DEST}" "${GVM_NAME}" "${PATH}"
-[[ -s "$GVM_DEST/$GVM_NAME/scripts/gvm" ]] && source "$GVM_DEST/$GVM_NAME/scripts/gvm"
-echo "Installed GVM v${GVM_VERSION}"
+
+# add system go to config
+check_existing_go "${GVM_DEST}" "${GVM_NAME}" "${PATH}" || echo
+
+echo "Installed GVM2 v$(cat "${GVM_DEST}/${GVM_NAME}/VERSION")"
 echo
 echo "Please restart your terminal session or to get started right away run"
-echo " \`source ${source_file}\`"
+echo
+echo "  prompt> source ${source_file}"
 echo
 echo "Support for auto selection of Go version and GVM2 pkgset (via .go-version"
 echo "and .go-pkgset files) requires that GVM2 is loaded after RVM (if installed)."
 echo "For bash, you may need to manually update your .profile or .bash_profile"
 echo "files; for zsh, you may need to manually update your .zlogin file."
+echo
+echo "Additional dependencies may need to be installed before GVM2 can operate"
+echo "correctly."
 echo
 echo "See the README.md file for more information."
 echo
