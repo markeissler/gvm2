@@ -22,6 +22,9 @@ sleep 4
 ## 0.10.0
 ## 0.10.1
 ## 0.10.2
+## 0.10.3
+## 0.10.4
+##
 
 ## Setup expectation - nothing to do
 
@@ -36,6 +39,7 @@ for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.0" ]] && b
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.1" ]] && break; done # status=0
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.2" ]] && break; done # status=0
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.3" ]] && break; done # status=0
+for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.4" ]] && break; done # status=0
 
 ## Wait so that we don't get locked out for making too many git api requests
 sleep 4
