@@ -36,7 +36,7 @@ sanity_check()
     "${GVM_ROOT}/scripts/check" "--skip" "hg" &> /dev/null
     if [[ "$?" != "0" ]]
     then
-        __gvm_locale_text_for_key "missing_requirements" > /dev/null
+        __gvm_locale_text_for_key "missing_requirements_long" > /dev/null
         __gvm_display_fatal "${RETVAL}"
     fi
 
@@ -75,6 +75,7 @@ main()
                 ;;
             use )
                 shift
+                sanity_check # @TODO: run a more lightweight, possibly cached, check here
                 __gvm_use "$@"
                 rslt=$?; break
                 ;;
