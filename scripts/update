@@ -213,6 +213,13 @@ update()
         unset rslt
     fi
 
+    # nothing to do if already on selected version (skip leading v if present)
+    if [[ "${version#v*}" == "${GVM_VERSION#v*}" ]]
+    then
+        __gvm_locale_text_for_key "update_already_installed" > /dev/null
+        __gvm_display_fatal "${RETVAL}: ${version}"
+    fi
+
     # determine the installer_source url based on version
     installer_source="https://raw.githubusercontent.com/markeissler/gvm2/${version}/binscripts/gvm-installer"
 
