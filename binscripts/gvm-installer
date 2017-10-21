@@ -45,9 +45,9 @@ check_existing_go() {
 	fi
 
 	echo "Created profile for existing install of Go at ${active_go_root}"
-	mkdir -p "${gvm_dest}/${gvm_name}/environments" &> /dev/null || __gvm_display_error "Failed to create environment directory"
-	mkdir -p "${gvm_dest}/${gvm_name}/pkgsets/system/global" &> /dev/null || __gvm_display_error "Failed to create new package set"
-	mkdir -p "${gvm_dest}/${gvm_name}/gos/system" &> /dev/null || __gvm_display_error "Failed to create new Go folder"
+	mkdir -p "${gvm_dest}/${gvm_name}/environments" &> /dev/null || display_error "Failed to create environment directory"
+	mkdir -p "${gvm_dest}/${gvm_name}/pkgsets/system/global" &> /dev/null || display_error "Failed to create new package set"
+	mkdir -p "${gvm_dest}/${gvm_name}/gos/system" &> /dev/null || display_error "Failed to create new Go folder"
 	cat << EOF > $gvm_dest/$gvm_name/environments/system
 #
 # GVM2 - Automatically generated file. DO NOT EDIT!
@@ -92,9 +92,9 @@ then
     fi
 fi
 
-[ -d "$GVM_DEST/$GVM_NAME" ] && __gvm_display_error "Already installed!"
-[ -d "$GVM_DEST" ] || mkdir -p "$GVM_DEST" > /dev/null 2>&1 || __gvm_display_error "Failed to create $GVM_DEST"
-[ -z "$(which git)" ] && __gvm_display_error "Could not find git
+[ -d "$GVM_DEST/$GVM_NAME" ] && display_error "Already installed!"
+[ -d "$GVM_DEST" ] || mkdir -p "$GVM_DEST" > /dev/null 2>&1 || display_error "Failed to create $GVM_DEST"
+[ -z "$(which git)" ] && display_error "Could not find git
 
   Debian/Ubuntu: apt-get install git
   Redhat/Centos: yum install git
@@ -124,7 +124,7 @@ then
   _git_clone_cmd="git clone --quiet"
   [[ "${GVM_DEBUG}" -eq 1 ]] && _git_clone_cmd="${_git_clone_cmd// --quiet/}"
   ${_git_clone_cmd} "$SRC_REPO" "$GVM_DEST/$GVM_NAME"
-  [[ $? -ne 0 ]] && __gvm_display_error "Failed to clone from $SRC_REPO into $GVM_DEST/$GVM_NAME"
+  [[ $? -ne 0 ]] && display_error "Failed to clone from $SRC_REPO into $GVM_DEST/$GVM_NAME"
   unset _git_clone_cmd
 else
 	echo -n "Not cloning. "
@@ -142,7 +142,7 @@ fi
 # i.e: gvm-installer master foo
 pushd . > /dev/null
 
-cd "$GVM_DEST/$GVM_NAME" && git checkout --quiet "$BRANCH" 2> /dev/null ||	__gvm_display_error "Failed to checkout $BRANCH branch"
+cd "$GVM_DEST/$GVM_NAME" && git checkout --quiet "$BRANCH" 2> /dev/null ||	display_error "Failed to checkout $BRANCH branch"
 
 popd > /dev/null
 
