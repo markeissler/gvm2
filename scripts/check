@@ -29,6 +29,7 @@ check_ar()
     local os="${1}"
     local error_message=""
     local rslt
+    local nl=$'\n'
     unset RETVAL
 
     [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -38,10 +39,10 @@ check_ar()
     if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "missing_command" > /dev/null
-        error_message="${RETVAL}: ar\n\n"
+        error_message="${RETVAL}: ar${nl}"
         case "${os}" in
             linux )
-                error_message+="  linux: sudo apt-get install binutils"
+                error_message+="     linux: sudo apt-get install binutils"
                 ;;
             * )
                 ;;
@@ -59,6 +60,7 @@ check_bison()
     local os="${1}"
     local error_message=""
     local rslt
+    local nl=$'\n'
     unset RETVAL
 
     [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -68,10 +70,10 @@ check_bison()
     if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "missing_command" > /dev/null
-        error_message="${RETVAL}: bison\n\n"
+        error_message="${RETVAL}: bison${nl}"
         case "${os}" in
             linux )
-                error_message+="  linux: sudo apt-get install bison"
+                error_message+="     linux: sudo apt-get install bison"
                 ;;
             * )
                 ;;
@@ -89,6 +91,7 @@ check_curl()
     local os="${1}"
     local error_message=""
     local rslt
+    local nl=$'\n'
     unset RETVAL
 
     [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -98,13 +101,13 @@ check_curl()
     if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "missing_command" > /dev/null
-        error_message="${RETVAL}: curl\n\n"
+        error_message="${RETVAL}: curl${nl}"
         case "${os}" in
             linux )
-                error_message+="  linux: sudo apt-get install curl"
+                error_message+="     linux: sudo apt-get install curl"
                 ;;
             darwin )
-                error_message+="  macos: brew install curl"
+                error_message+="     macos: brew install curl"
                 ;;
             * )
                 ;;
@@ -122,6 +125,7 @@ check_gcc()
     local os="${1}"
     local error_message=""
     local rslt
+    local nl=$'\n'
     unset RETVAL
 
     [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -131,10 +135,10 @@ check_gcc()
     if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "missing_command" > /dev/null
-        error_message="${RETVAL}: gcc\n\n"
+        error_message="${RETVAL}: gcc${nl}"
         case "${os}" in
             linux )
-                error_message+="  linux: sudo apt-get install build-essential"
+                error_message+="     linux: sudo apt-get install build-essential"
                 ;;
             * )
                 ;;
@@ -152,6 +156,7 @@ check_git()
     local os="${1}"
     local error_message=""
     local rslt
+    local nl=$'\n'
     unset RETVAL
 
     [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -161,13 +166,13 @@ check_git()
     if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "missing_command" > /dev/null
-        error_message="${RETVAL}: git\n\n"
+        error_message="${RETVAL}: git${nl}"
         case "${os}" in
             linux )
-                error_message+="  linux: sudo apt-get install git"
+                error_message+="     linux: sudo apt-get install git"
                 ;;
             darwin )
-                error_message+="  macos: brew install git"
+                error_message+="     macos: brew install git"
                 ;;
             * )
                 ;;
@@ -185,6 +190,7 @@ check_hexdump()
     local os="${1}"
     local error_message=""
     local rslt
+    local nl=$'\n'
     unset RETVAL
 
     [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -194,10 +200,10 @@ check_hexdump()
     if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "missing_command" > /dev/null
-        error_message="${RETVAL}: check_hexdump\n\n"
+        error_message="${RETVAL}: hexdump${nl}"
         case "${os}" in
             linux )
-                error_message+="  linux: sudo apt-get install bsdmainutils"
+                error_message+="     linux: sudo apt-get install bsdmainutils"
                 ;;
             * )
                 ;;
@@ -215,6 +221,7 @@ check_hg()
     local os="${1}"
     local error_message=""
     local rslt
+    local nl=$'\n'
     unset RETVAL
 
     [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -224,13 +231,13 @@ check_hg()
     if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "missing_command" > /dev/null
-        error_message="${RETVAL}: hg\n\n"
+        error_message="${RETVAL}: hg${nl}"
         case "${os}" in
             linux )
-                error_message+="  linux: sudo apt-get install mercurial"
+                error_message+="     linux: sudo apt-get install mercurial"
                 ;;
             darwin )
-                error_message+="  macos: brew install mercurial"
+                error_message+="     macos: brew install mercurial"
                 ;;
             * )
                 ;;
@@ -248,6 +255,7 @@ check_make()
     local os="${1}"
     local error_message=""
     local rslt
+    local nl=$'\n'
     unset RETVAL
 
     [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
@@ -257,10 +265,10 @@ check_make()
     if [[ $rslt -ne 0 ]]
     then
         __gvm_locale_text_for_key "missing_command" > /dev/null
-        error_message="${RETVAL}: make\n\n"
+        error_message="${RETVAL}: make${nl}"
         case "${os}" in
             linux )
-                error_message+="  linux: sudo apt-get install build-essential"
+                error_message+="     linux: sudo apt-get install build-essential"
                 ;;
             * )
                 ;;
@@ -374,7 +382,7 @@ check_all()
             }
             if [[ "${opt_porcelain}" == false ]]
             then
-                printf "%s\n" "[!!] ${__message}"
+                printf "%s\n\n" "[!!] ${__message}"
             else
                 printf "%s\n" "[!!] ${_command}"
             fi
@@ -387,7 +395,7 @@ check_all()
     if [[ $rslt_status -ne 0 ]]
     then
         __gvm_locale_text_for_key "check_all_fail" > /dev/null
-        __gvm_display_fatal "${RETVAL}"
+        __gvm_display_fatal "${RETVAL}."
     fi
 
     if [[ "${opt_quiet}" == false ]]
