@@ -9,7 +9,8 @@
 
 # load dependencies
 dep_load() {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+    local base="$(builtin cd "$(dirname "${srcd}")" && builtin pwd)"
     local deps; deps=(
         "_shell_compat.sh"
     )
@@ -17,7 +18,7 @@ dep_load() {
     do
         source "${base}/${file}"
     done
-}; dep_load; unset -f dep_load
+}; dep_load; unset -f dep_load &> /dev/null || unset dep_load
 
 # __gvm_resolve_current_version()
 # /*!
@@ -40,8 +41,8 @@ dep_load() {
 # @note Also sets global variable RETVAL to the same return value.
 # */
 __gvm_resolve_current_version() {
-    local path="${1:-$PATH}"
-    local active_go="$(PATH="${path}" which go)"
+    local shell_path="${1:-$PATH}"
+    local active_go="$(PATH="${shell_path}" which go)"
     local regex='(go([0-9]+(\.[0-9]+)*)([a-z0-9]*))'
     unset RETVAL
 

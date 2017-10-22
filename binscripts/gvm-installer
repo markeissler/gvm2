@@ -28,16 +28,16 @@ update_profile() {
 check_existing_go() {
     local gvm_dest="${1}"; shift
     local gvm_name="${1}"; shift
-    local path="${1:-$PATH}"
-    local active_go="$(PATH="${path}" which go)"
+    local shell_path="${1:-$PATH}"
+    local active_go="$(PATH="${shell_path}" which go)"
     local active_go_root="${GOROOT}"
 
     [[ -z "${gvm_dest// /}" ]] && return 1
     [[ -z "${gvm_name// /}" ]] && return 1
 
-	if [[ "x${active_go_root}" == "x" ]]; then
-		if [[ "x${active_go}" != "x" ]]; then
-            active_go_root="$(PATH="${path}" go env GOROOT 2>/dev/null)"
+	if [[ -z "${active_go_root// /}" ]]; then
+		if [[ -n "${active_go// /}" && "${active_go}" != "go not found" ]]; then
+            active_go_root="$(PATH="${shell_path}" go env GOROOT 2>/dev/null)"
 		else
 			echo "No existing Go versions detected."
 			return 1
@@ -72,7 +72,7 @@ EOF
 
     unset active_go_root
     unset active_go
-    unset path
+    unset shell_path
     unset gvm_name
     unset gvm_dest
 }

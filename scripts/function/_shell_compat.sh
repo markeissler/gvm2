@@ -12,7 +12,8 @@
 # load dependencies
 dep_load()
 {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+    local base="$(builtin cd "$(dirname "${srcd}")" && builtin pwd)"
     local deps; deps=(
         "locale_text.sh"
     )
@@ -20,10 +21,20 @@ dep_load()
     do
         source "${base}/${file}"
     done
-}; dep_load; unset -f dep_load
 
-# force zsh to start arrays at index 0
-[[ -n $ZSH_VERSION ]] && setopt KSH_ARRAYS
+    # zsh fixups
+    if [[ -n "${ZSH_VERSION// /}" ]]
+    then
+        # add bash word split emulation for zsh
+        #
+        # see: http://zsh.sourceforge.net/FAQ/zshfaq03.html
+        #
+        setopt shwordsplit
+
+        # force zsh to start arrays at index 0
+        setopt KSH_ARRAYS
+    fi
+}; dep_load; unset -f dep_load &> /dev/null || unset dep_load
 
 # __gvm_is_function()
 # /*!
