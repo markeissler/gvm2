@@ -160,7 +160,7 @@ __gvm_pwd()
         printf -v pwd "%s" "$(builtin pwd)"
     elif [[ "x${ZSH_VERSION}" != "x" ]]
     then
-        printf -v pwd "%s" "$(builtin pwd)"
+        pwd="$(builtin pwd)"
     fi
 
     [[ -z "${pwd// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
