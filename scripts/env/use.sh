@@ -60,20 +60,20 @@ __gvm_use()
 
     # Go version regex patterns are specifically implemented to output rematches
     # in a consistent format. Consider the following examples:
-    #	go1
-    #	go1.7.1
-    #	release.r60.2
-    #	system
+    #   go1
+    #   go1.7.1
+    #   release.r60.2
+    #   system
     #   master
     #   go1.7.1@my-first-pkgset
     #   release.r60.2@my-second-pkgset
     #
     # These rematches apply:
-    #	GVM_REMATCH[1]: version name (e.g. go1, go1.7.1, release.r60.2, system)
-    #	GVM_REMATCH[2]: isolated version (e.g. 1, 1.7.1, 60.2, ' ')
+    #   GVM_REMATCH[1]: version name (e.g. go1, go1.7.1, release.r60.2, system)
+    #   GVM_REMATCH[2]: isolated version (e.g. 1, 1.7.1, 60.2, ' ')
     # In addition, if a pkgset has been provided as part of the version string,
     # the following additional rematch will apply:
-    #	GVM_REMATCH[5]: isolated pkgset (e.g. my-first-pkgset, etc.)
+    #   GVM_REMATCH[5]: isolated pkgset (e.g. my-first-pkgset, etc.)
     #
     # The regex patterns are implemented separately for the above patterns so
     # that specific matches can be discarded later. Patterns are built up in
@@ -97,7 +97,8 @@ __gvm_use()
 
     for _option in "${@}"
     do
-        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Parsing ${FUNCNAME[0]}() argument: ${_option:-[EMPTY]}"
+        local func="${FUNCNAME[0]}"; func="${func:-${(%):-%N}}"
+        [[ "${GVM_DEBUG}" -eq 1 ]] && echo "Parsing ${func}() argument: ${_option:-[EMPTY]}"
 
         # if the accumulator has a trailing option flag (that is, the option
         # flag has been specified but no argument has been supplied) then make
@@ -189,7 +190,8 @@ __gvm_use()
 
     if [[ "${GVM_DEBUG}" -eq 1 ]]
     then
-        printf "Command (%s) options dump:\n" "${BASH_SOURCE[0]##*/}"
+        local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+        printf "Command (%s) options dump:\n" "${srcd##*/}"
         local _item
         for _item in "${options_hash[@]}"
         do
@@ -228,7 +230,8 @@ __gvm_use()
     local installed_hash; installed_hash=( ${RETVAL} )
     if [[ "${GVM_DEBUG}" -eq 1 ]]
     then
-        printf "Command (%s) installed versions dump:\n" "${BASH_SOURCE[0]##*/}"
+        local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+        printf "Command (%s) installed versions dump:\n" "${srcd##*/}"
         prettyDumpFakeAssocArray "${installed_hash[*]}"
     fi
     if ! valueForKeyFakeAssocArray "${version}" "${installed_hash[*]}" > /dev/null
