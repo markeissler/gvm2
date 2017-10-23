@@ -182,7 +182,8 @@ __gvm_pkgset_use()
 
     if [[ "${GVM_DEBUG}" -eq 1 ]]
     then
-        printf "Command (%s) options dump:\n" "${BASH_SOURCE[0]##*/}"
+        local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+        printf "Command (%s) options dump:\n" "${srcd##*/}"
         local _item
         for _item in "${options_hash[@]}"
         do
