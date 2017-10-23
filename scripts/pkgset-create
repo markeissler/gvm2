@@ -127,7 +127,7 @@ create()
             __gvm_display_fatal "${RETVAL}"
         fi
 
-        cat << EOF > "${gvm_root}/environments/${go_version}@${pkgset_name}"
+        cat << EOF >> "${gvm_root}/environments/${go_version}@${pkgset_name}"
 # Package Set-Specific Overrides
 export gvm_pkgset_name="${pkgset_name}"
 export GOPATH; GOPATH="${pkgset_gopath_additions}:\${GOPATH}"
