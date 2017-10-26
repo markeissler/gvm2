@@ -119,23 +119,17 @@ fi
 
 if [[ -z "$GIT_ROOT" || "$(basename "$GIT_ROOT")" != "gvm2" ]]
 then
-  echo "Cloning from $SRC_REPO to $GVM_DEST/$GVM_NAME"
+    echo "Cloning from $SRC_REPO to $GVM_DEST/$GVM_NAME"
 
-  _git_clone_cmd="git clone --quiet"
-  [[ "${GVM_DEBUG}" -eq 1 ]] && _git_clone_cmd="${_git_clone_cmd// --quiet/}"
-  ${_git_clone_cmd} "$SRC_REPO" "$GVM_DEST/$GVM_NAME"
-  [[ $? -ne 0 ]] && display_error "Failed to clone from $SRC_REPO into $GVM_DEST/$GVM_NAME"
-  unset _git_clone_cmd
+    _git_clone_cmd="git clone --quiet"
+    [[ "${GVM_DEBUG}" -eq 1 ]] && _git_clone_cmd="${_git_clone_cmd// --quiet/}"
+     ${_git_clone_cmd} "$SRC_REPO" "$GVM_DEST/$GVM_NAME"
+    [[ $? -ne 0 ]] && display_error "Failed to clone from $SRC_REPO into $GVM_DEST/$GVM_NAME"
+    unset _git_clone_cmd
 else
-    echo -n "Not cloning. "
-    if [[ $GVM_DEST == *"$GIT_ROOT"* ]]
-    then
-        echo "Creating symlink: $GVM_DEST -> $GIT_ROOT"
-        ln -s "$GIT_ROOT" "$GVM_DEST/$GVM_NAME"
-    else
-        echo "Copying: $GIT_ROOT -> $GVM_DEST/$GVM_NAME"
-        cp -r "$GIT_ROOT" "$GVM_DEST/$GVM_NAME"
-    fi
+    echo -n "Copying from ${GIT_ROOT} to ${GVM_DEST}/${GVM_NAME}"
+
+    cp -r "${GIT_ROOT}" "${GVM_DEST}/${GVM_NAME}" &> /dev/null
 fi
 
 # GVM_DEST may be a non-relative path
