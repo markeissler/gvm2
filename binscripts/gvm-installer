@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 display_error() {
-	tput sgr0
-	tput setaf 1
-	echo "ERROR: $1"
-	tput sgr0
-	exit 1
+    tput sgr0
+    tput setaf 1
+    echo "ERROR: $1"
+    tput sgr0
+    exit 1
 }
 
 # @TODO: check if gvm is sourced before rvm
@@ -17,12 +17,12 @@ display_error() {
 # And if it does, warn the user. This is critical for cd() support!!
 #
 update_profile() {
-	[ -f "$1" ] || return 1
+    [ -f "$1" ] || return 1
 
-	grep -F "$source_line" "$1" > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		echo -e "\n$source_line" >> "$1"
-	fi
+    grep -F "$source_line" "$1" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "\n$source_line" >> "$1"
+    fi
 }
 
 check_existing_go() {
@@ -35,20 +35,20 @@ check_existing_go() {
     [[ -z "${gvm_dest// /}" ]] && return 1
     [[ -z "${gvm_name// /}" ]] && return 1
 
-	if [[ -z "${active_go_root// /}" ]]; then
-		if [[ -n "${active_go// /}" && "${active_go}" != "go not found" ]]; then
+    if [[ -z "${active_go_root// /}" ]]; then
+        if [[ -n "${active_go// /}" && "${active_go}" != "go not found" ]]; then
             active_go_root="$(PATH="${shell_path}" go env GOROOT 2>/dev/null)"
-		else
-			echo "No existing Go versions detected."
-			return 1
-		fi
-	fi
+        else
+            echo "No existing Go versions detected."
+            return 1
+        fi
+    fi
 
-	echo "Created profile for existing install of Go at ${active_go_root}"
-	mkdir -p "${gvm_dest}/${gvm_name}/environments" &> /dev/null || display_error "Failed to create environment directory"
-	mkdir -p "${gvm_dest}/${gvm_name}/pkgsets/system/global" &> /dev/null || display_error "Failed to create new package set"
-	mkdir -p "${gvm_dest}/${gvm_name}/gos/system" &> /dev/null || display_error "Failed to create new Go folder"
-	cat << EOF > $gvm_dest/$gvm_name/environments/system
+    echo "Created profile for existing install of Go at ${active_go_root}"
+    mkdir -p "${gvm_dest}/${gvm_name}/environments" &> /dev/null || display_error "Failed to create environment directory"
+    mkdir -p "${gvm_dest}/${gvm_name}/pkgsets/system/global" &> /dev/null || display_error "Failed to create new package set"
+    mkdir -p "${gvm_dest}/${gvm_name}/gos/system" &> /dev/null || display_error "Failed to create new Go folder"
+    cat << EOF > $gvm_dest/$gvm_name/environments/system
 #
 # GVM2 - Automatically generated file. DO NOT EDIT!
 #
@@ -60,11 +60,11 @@ export GOPATH; GOPATH="${gvm_dest}/${gvm_name}/pkgsets/system/global"
 export PATH; PATH="${gvm_dest}/${gvm_name}/pkgsets/system/global/bin:\${GOROOT}/bin:\${GVM_ROOT}/bin:\${PATH}"
 EOF
 
-	# create system@global pkgset
-	cp $gvm_dest/$gvm_name/environments/system $gvm_dest/$gvm_name/environments/system@global
-	# @TODO: This is here for consistency with 'gvm pkgset create' which adds
-	# some duplicated entries when the pkgset is 'global'. Need to fix it!
-	cat << EOF >> ${gvm_dest}/${gvm_name}/environments/system@global
+    # create system@global pkgset
+    cp $gvm_dest/$gvm_name/environments/system $gvm_dest/$gvm_name/environments/system@global
+    # @TODO: This is here for consistency with 'gvm pkgset create' which adds
+    # some duplicated entries when the pkgset is 'global'. Need to fix it!
+    cat << EOF >> ${gvm_dest}/${gvm_name}/environments/system@global
 export gvm_pkgset_name="global"
 export GOPATH; GOPATH="${gvm_dest}/${gvm_name}/pkgsets/system/global:\${GOPATH}"
 export PATH; PATH="${gvm_dest}/${gvm_name}/pkgsets/system/global/bin:\${PATH}"
@@ -109,12 +109,12 @@ GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 
 if [[ "${GVM_DEBUG}" -eq 1 ]]
 then
-	echo "Vars dump:"
-	echo "  BRANCH   -> ${BRANCH}"
-	echo "  GVM_DEST -> ${GVM_DEST}"
-	echo "  GVM_NAME -> ${GVM_NAME}"
-	echo "  SRC_REPO -> ${SRC_REPO}"
-	echo "  GIT_ROOT -> ${GIT_ROOT}"
+    echo "Vars dump:"
+    echo "  BRANCH   -> ${BRANCH}"
+    echo "  GVM_DEST -> ${GVM_DEST}"
+    echo "  GVM_NAME -> ${GVM_NAME}"
+    echo "  SRC_REPO -> ${SRC_REPO}"
+    echo "  GIT_ROOT -> ${GIT_ROOT}"
 fi
 
 if [[ -z "$GIT_ROOT" || "$(basename "$GIT_ROOT")" != "gvm2" ]]
@@ -127,15 +127,15 @@ then
   [[ $? -ne 0 ]] && display_error "Failed to clone from $SRC_REPO into $GVM_DEST/$GVM_NAME"
   unset _git_clone_cmd
 else
-	echo -n "Not cloning. "
-  if [[ $GVM_DEST == *"$GIT_ROOT"* ]]
-  then
-	  echo "Creating symlink: $GVM_DEST -> $GIT_ROOT"
-    ln -s "$GIT_ROOT" "$GVM_DEST/$GVM_NAME"
-  else
-	  echo "Copying: $GIT_ROOT -> $GVM_DEST/$GVM_NAME"
-    cp -r "$GIT_ROOT" "$GVM_DEST/$GVM_NAME"
-  fi
+    echo -n "Not cloning. "
+    if [[ $GVM_DEST == *"$GIT_ROOT"* ]]
+    then
+        echo "Creating symlink: $GVM_DEST -> $GIT_ROOT"
+        ln -s "$GIT_ROOT" "$GVM_DEST/$GVM_NAME"
+    else
+        echo "Copying: $GIT_ROOT -> $GVM_DEST/$GVM_NAME"
+        cp -r "$GIT_ROOT" "$GVM_DEST/$GVM_NAME"
+    fi
 fi
 
 # GVM_DEST may be a non-relative path
@@ -152,23 +152,23 @@ source_line="[[ -s \"${GVM_DEST}/$GVM_NAME/scripts/gvm\" ]] && source \"${GVM_DE
 source_file="${GVM_DEST}/$GVM_NAME/scripts/gvm"
 
 if [ -z "$GVM_NO_UPDATE_PROFILE" ] ; then
-  if [ -n "$ZSH_NAME" ]; then
-    update_profile "$HOME/.zlogin"
-  elif [ "$(uname)" == "Linux" ]; then
-    update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
-  elif [ "$(uname)" == "Darwin" ]; then
-    update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
-  fi
+    if [ -n "$ZSH_NAME" ]; then
+        update_profile "$HOME/.zlogin"
+    elif [ "$(uname)" == "Linux" ]; then
+        update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
+    elif [ "$(uname)" == "Darwin" ]; then
+        update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
+    fi
 fi
 
 if [ -z "$GVM_NO_UPDATE_PROFILE" ] && [ "$?" != "0" ]; then
-	echo "Unable to locate profile settings file (something like $HOME/.profile or"
+    echo "Unable to locate profile settings file (something like $HOME/.profile or"
     echo "$HOME/.bash_profile)."
-	echo
-	echo "You will have to manually add the following line:"
-	echo
-	echo "  $source_line"
-	echo
+    echo
+    echo "You will have to manually add the following line:"
+    echo
+    echo "  $source_line"
+    echo
 fi
 
 echo "export GVM_ROOT=$GVM_DEST/$GVM_NAME" > "$GVM_DEST/$GVM_NAME/scripts/gvm"
