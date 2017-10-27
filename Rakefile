@@ -59,7 +59,7 @@ def remove_logs(label="")
   _label = ""
   _label = "(#{label})" unless (label.nil? || label.empty?)
 
-  printf "Removing old log files ${_label}...\n"
+  printf "Removing old log files #{_label}...\n"
 
   _build_logs = Dir.glob("#{root_path}/build_logs/*.log")
 
