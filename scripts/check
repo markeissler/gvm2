@@ -56,6 +56,37 @@ check_ar()
 }
 
 # @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
+check_bash()
+{
+    local os="${1}"
+    local error_message=""
+    local rslt
+    local nl=$'\n'
+    unset RETVAL
+
+    [[ -z "${os// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    command -v bash &> /dev/null; rslt=$?
+
+    if [[ $rslt -ne 0 ]]
+    then
+        __gvm_locale_text_for_key "missing_command" > /dev/null
+        error_message="${RETVAL}: bash${nl}"
+        case "${os}" in
+            linux )
+                error_message+="     linux: sudo apt-get install bash"
+                ;;
+            * )
+                ;;
+        esac
+    fi
+
+    RETVAL="${error_message}"
+
+    echo "${RETVAL}" && return "${rslt}"
+}
+
+# @return [Int] Returns 0 on success, 1 if os not found, 2 if command not found
 check_bison()
 {
     local os="${1}"
@@ -293,6 +324,7 @@ check_all()
 
     local check_list; check_list=(
         check_ar
+        check_bash
         check_bison
         check_curl
         check_gcc
