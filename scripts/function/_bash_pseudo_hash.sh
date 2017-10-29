@@ -308,10 +308,21 @@ __bphp_encode()
                 new_string+="$__char"
                 ;;
             * )
-                printf -v __char '\\x%02X' "'$__char"
                 if [[ -n "${ZSH_VERSION// /}" ]]
                 then
-                    __char="$(printf '\\x%02X' "'$__char")"
+                    if [[ -z "${ZSH_VERSION_ARY[@]}" ]]
+                    then
+                        __bphp_parse_semver "${ZSH_VERSION}" > /dev/null
+                        ZSH_VERSION_ARY=( ${RETVAL} )
+                    fi
+                    if [[ ${ZSH_VERSION_ARY[0]} -gt 5 ]] || [[ ${ZSH_VERSION_ARY[0]} -eq 5 && ${ZSH_VERSION_ARY[1]} -ge 3 ]]
+                    then
+                        printf -v __char '\\x%02X' "'$__char"
+                    else
+                        __char="$(printf '\\x%02X' "'$__char")"
+                    fi
+                else
+                    printf -v __char '\\x%02X' "'$__char"
                 fi
                 new_string+="${__char//\\x/%}"
                 ;;
@@ -342,11 +353,21 @@ __bphp_decode()
 
     [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
-    printf -v new_string "%b" "${string//\%/\\x}"
-
     if [[ -n "${ZSH_VERSION// /}" ]]
     then
-        new_string="$(printf "%b" "${string//\%/\\x}")"
+        if [[ -z "${ZSH_VERSION_ARY[@]}" ]]
+        then
+            __bphp_parse_semver "${ZSH_VERSION}" > /dev/null
+            ZSH_VERSION_ARY=( ${RETVAL} )
+        fi
+        if [[ ${ZSH_VERSION_ARY[0]} -gt 5 ]] || [[ ${ZSH_VERSION_ARY[0]} -eq 5 && ${ZSH_VERSION_ARY[1]} -ge 3 ]]
+        then
+            printf -v new_string "%b" "${string//\%/\\x}"
+        else
+            new_string="$(printf "%b" "${string//\%/\\x}")"
+        fi
+    else
+        printf -v new_string "%b" "${string//\%/\\x}"
     fi
 
     if [[ -z "${new_string// /}" ]]
@@ -360,9 +381,31 @@ __bphp_decode()
     echo "${RETVAL}" && return 0
 }
 
+__bphp_parse_semver()
+{
+    local string="${1}"
+    local semver_ary; semver_ary=()
+    unset RETVAL
+
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    local major="${string%%.*}"; major="${major:-0}"
+    local minor="${string%.*}"; minor="${minor#*.}"; minor="${minor:-0}"
+    local patch="${string##*.}"; patch="${patch:-0}"
+
+    semver_ary=( "${major}" "${minor}" "${patch}" )
+
+    if [[ ${#semver_ary[@]} -eq 0 ]]
+    then
+        RETVAL=""; echo "${RETVAL}"; return 1
+    fi
+
+    RETVAL="${semver_ary[*]}"; echo "${RETVAL}"; return 0
+}
+
 __bph_version()
 {
-    local version="1.4.0"
+    local version="1.4.1"
 
     echo "${version}" && return 0
 }
