@@ -217,7 +217,7 @@ then
     [[ $? -ne 0 ]] && display_error "Failed to clone from $SRC_REPO into $GVM_DEST/$GVM_NAME"
     unset _git_clone_cmd
 else
-    echo -n "Copying from ${GIT_ROOT} to ${GVM_DEST}/${GVM_NAME}"
+    echo "Copying from ${GIT_ROOT} to ${GVM_DEST}/${GVM_NAME}"
 
     cp -r "${GIT_ROOT}" "${GVM_DEST}/${GVM_NAME}" &> /dev/null
 fi
