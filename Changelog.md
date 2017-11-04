@@ -16,6 +16,9 @@ __macOS__ and __Ubuntu Trusty__ platforms at this time but is currently restrict
 
 ### Short list of commit messages
 
+  * GVM2-72 Add GIT_COMMIT to Rakefile for Jenkins.
+  * GVM2-72 Enclose bash -c paths in quotes.
+  * GVM2-71 Fix broken line wrap on gvm-installer output.
   * GVM2-68 Fix unexpanded label reference in Rakefile.
   * GVM2-67 Remove symlink install strategy from gvm-installer.
   * GVM2-66 Fix gvm-installer to resolve dot and tilde in GVM_DEST.
