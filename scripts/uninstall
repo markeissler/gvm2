@@ -94,7 +94,8 @@ uninstall()
     local installed_hash; installed_hash=( ${RETVAL} )
     if [[ "${GVM_DEBUG}" -eq 1 ]]
     then
-        printf "Command (%s) installed versions dump:\n" "${BASH_SOURCE[0]##*/}"
+        local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+        printf "Command (%s) installed versions dump:\n" "${srcd##*/}"
         prettyDumpFakeAssocArray "${installed_hash[*]}"
     fi
 

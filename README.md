@@ -1,5 +1,7 @@
 # gvm2
 
+[![License](http://img.shields.io/badge/license-MIT-yellowgreen.svg)](#license)
+
 __GVM2__ manages [Go (Golang)](https://golang.org/) application environments and
 enables switching between them.
 
@@ -9,10 +11,10 @@ if you find bugs.
 
 ## Build Status
 
-| Service | Master | Develop |
-|:--------|:-------|:--------|
-| CI Status | [![Build Status](https://travis-ci.org/markeissler/gvm2.svg?branch=master)](https://travis-ci.org/markeissler/gvm2) | [![Build Status](https://travis-ci.org/markeissler/gvm2.svg?branch=develop)](https://travis-ci.org/markeissler/gvm2) |
-| Documentation |![Build Status](https://img.shields.io/badge/doxygen-unknown-lightgrey.svg) | ![Build Status](https://img.shields.io/badge/doxygen-unknown-lightgrey.svg)|
+| Service    | bash 4.3 | zsh 5.0.7 | zsh 5.3+ |
+|:-----------|:--------:|:---------:|:--------:|
+| Jenkins CI | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=bash-pseudo-hash+%28bash+4%29)]() | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=gvm2+%28bash+4%29)]() | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=gvm2+%28zsh+5.3%2B%29)]() |
+| Travis CI  | [![Build Status](https://travis-ci.org/markeissler/gvm2.svg?branch=master)](https://travis-ci.org/markeissler/gvm2) | -- | -- |
 
 ## Overview
 
@@ -30,6 +32,9 @@ correct Go version and package dependencies for the current project.
 ## Installing
 
 To upgrade a previous installation see the [Upgrading](#upgrading) section.
+
+>NOTE: Before proceeding verify that all dependencies have been installed. See the [Dependencies](#dependencies) section
+for more information.
 
 For a fresh installation:
 
@@ -123,27 +128,28 @@ prompt> cp -Rp ~/.gvm.bak/{archive,environments,gos,pkgsets} ~/.gvm/
 
 All __GVM2__ commands offer online help:
 
-```sh
+```txt
 Usage: gvm <command> [option]
 
 GVM2 is the Go enVironment Manager
 
 Commands:
-    version     Print the GVM2 version number
-    update      Update GVM2 to latest release
-    use         Select which installed Go version to use
+    alias       Manage Go version aliases
+    check       Check for and list missing dependencies
+    cross       Cross compile a Go program
     diff        View changes to an installed Go directory contents
     help        Show this message
     implode     Uninstall GVM2 (You probably don't want to do this)
     install     Install a Go version
-    uninstall   Uninstall a Go version
-    cross       Cross compile a Go program
-    linkthis    Create a link from the GVM2 pkgset src directory to a working directory
+    linkthis    Create link from package set src directory to working directory
     list        List currently installed versions of Go
     listall     List Go versions available for installation
-    alias       Manage Go version aliases
     pkgset      Manage GVM2 package sets (aka "pkgsets")
     pkgenv      Edit the environment for a GVM2 package set
+    uninstall   Uninstall a Go version
+    update      Update GVM2 to latest release
+    use         Select which installed Go version to use
+    version     Print the GVM2 version number
 
 Run 'gvm <command> --help' for more information on a command.
 ```
@@ -367,15 +373,19 @@ GVM pkgset:
 >NOTE: Auto selection is only supported when `gvm` is loaded as a function into your shell. See the
 [Sourcing gvm into your shell (bash, zsh)](#sourcing) section for more information.
 
-## macOS Requirements
+<a name="dependencies"></a>
 
-### Install Xcode command line tools
+## Dependencies
+
+### macOS Dependencies
+
+#### Install Xcode command line tools
 
 ```sh
 prompt> xcode-select --install
 ```
 
-## Linux Requirements
+### Linux Dependencies
 
 <a name="install-ubuntu"></a>
 
@@ -391,7 +401,7 @@ prompt> sudo apt-get install curl git make binutils bison gcc build-essential
 prompt> sudo yum install curl git make bison gcc glibc-devel
 ```
 
-## FreeBSD Requirements
+### FreeBSD Dependencies
 
 ```sh
 prompt> sudo pkg_add -r bash git

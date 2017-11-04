@@ -10,7 +10,8 @@
 # load dependencies
 dep_load()
 {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+    local base="$(builtin cd "$(dirname "${srcd}")" && builtin pwd)"
     local deps; deps=(
         "../function/_shell_compat.sh"
         "../function/display_notices.sh"
@@ -22,13 +23,35 @@ dep_load()
     do
         source "${base}/${file}"
     done
-}; dep_load; unset -f dep_load
+}; dep_load; unset -f dep_load &> /dev/null || unset dep_load
+
+__gvmp_sanity_check() {
+    if [ -z "${GVM_ROOT// /}" ]
+    then
+        if [ -n "${ZSH_NAME// /}" ]; then
+            __gvm_locale_text_for_key "gvmroot_not_set_long_zsh" > /dev/null
+        else
+            __gvm_locale_text_for_key "gvmroot_not_set_long_bash" > /dev/null
+        fi
+        __gvm_display_error "${RETVAL}"
+    fi
+
+    # check for all required utility dependencies
+    "${GVM_ROOT}/scripts/check" "--skip" "hg" &> /dev/null
+    if [[ "$?" != "0" ]]
+    then
+        __gvm_locale_text_for_key "missing_requirements_long" > /dev/null
+        __gvm_display_error "${RETVAL}"
+    fi
+
+    return $?
+}
 
 # gvm2()
 # /*!
 # @abstract Alias of the gvm() function.
 # */
-function gvm2() {
+gvm2() {
     gvm "$@"; return $?
 }
 
@@ -38,7 +61,7 @@ function gvm2() {
 # @discussion
 # This function will end up calling one of the following scripts:
 #   + scripts/env/use
-#   + scripts/env/implode
+#   + scripts/env/pkgset_use
 #   + bin/gvm
 # @param command [optional] The GVM command to execute
 # @param sub_command [optional] The GVM sub_command to execute (only works with
@@ -89,8 +112,10 @@ gvm() {
     mkdir -p "${GVM_ROOT}/environments" > /dev/null 2>&1
 
     if [[ "${command}" == "use" ]]; then
+        __gvmp_sanity_check || return 1
         __gvm_use "$@"
     elif [[ "${command}" == "pkgset" ]] && [[ "${sub_command}" == "use" ]]; then
+        __gvmp_sanity_check || return 1
         __gvm_pkgset_use "$@"
     else
         "${GVM_ROOT}/bin/gvm" "$@"

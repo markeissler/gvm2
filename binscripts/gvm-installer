@@ -1,54 +1,136 @@
 #!/usr/bin/env bash
 
+# load dependencies
+dep_load()
+{
+    # zsh fixups
+    if [[ -n "${ZSH_VERSION// /}" ]]
+    then
+        # add bash word split emulation for zsh
+        #
+        # see: http://zsh.sourceforge.net/FAQ/zshfaq03.html
+        #
+        setopt shwordsplit
+
+        # force zsh to start arrays at index 0
+        setopt KSH_ARRAYS
+    fi
+}; dep_load; unset -f dep_load &> /dev/null || unset dep_load
+
 display_error() {
-	tput sgr0
-	tput setaf 1
-	echo "ERROR: $1"
-	tput sgr0
-	exit 1
+    tput sgr0
+    tput setaf 1
+    echo "ERROR: $1"
+    tput sgr0
+    exit 1
+}
+
+__gvm_resolve_path() {
+    local path_in="${1-$PATH}"
+    local path_in_ary; path_in_ary=()
+    local path_out=""
+    local path_out_ary; path_out_ary=()
+    local defaultIFS="$IFS"
+    local IFS="$defaultIFS"
+    local spaceChar=$' '
+    unset RETVAL
+
+    [[ -z "${path_in// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    # convert path into an array of elements, encode spaces
+    IFS=':' path_in_ary=( ${path_in//$spaceChar/%2f} ) IFS="$defaultIFS"
+
+    local _path
+    for _path in "${path_in_ary[@]}"
+    do
+        case "${_path}" in
+            ".."/* | "."* )
+                ;;
+            "."/* )
+                _path="${PWD}"/"${_path#"./"}"
+                ;;
+            "."* )
+                _path="${PWD}"
+                ;;
+            "~+"/* )
+                _path="${PWD}"/"${_path#"~+/"}"
+                ;;
+            "~-"/* )
+                _path="${OLDPWD}"/"${_path#"~-/"}"
+                ;;
+            "~"/* )
+                _path="${HOME}"/"${_path#"~/"}"
+                ;;
+            "~"* )
+                local __user="${_path%%/*}"
+                local __path_home="$(bash -c "echo ${__user}")"
+                if [[ "${_path}" == */* ]]
+                then
+                    _path="${__path_home}"/"${_path#*/}"
+                else
+                    _path="${__path_home}"
+                fi
+                unset __path_home user
+                ;;
+        esac
+        path_out_ary+=( "${_path}" )
+    done
+    unset _path
+
+    # convert path elements array into path string, decode spaces
+    IFS=":" path_out="${path_out_ary[*]}" IFS="$defaultIFS"
+
+    RETVAL="${path_out//%2f/$spaceChar}"
+
+    if [[ -z "${RETVAL// /}" ]]
+    then
+        RETVAL="" && echo "${RETVAL}" && return 1
+    fi
+
+    echo "${RETVAL}" && return 0
 }
 
 # @TODO: check if gvm is sourced before rvm
 # GVM needs to be sourced after RVM because the latter doesn't play nice. So,
 # we need to scan .bashrc, .bash_profile, etc., to see if:
-#		[ -s "$HOME/.rvm/scripts/rvm" ]]
+#   [ -s "$HOME/.rvm/scripts/rvm" ]]
 # appears after
-#		[[ -s "$HOME/.gvm/scripts/gvm" ]]
+#   [[ -s "$HOME/.gvm/scripts/gvm" ]]
 # And if it does, warn the user. This is critical for cd() support!!
 #
 update_profile() {
-	[ -f "$1" ] || return 1
+    [ -f "$1" ] || return 1
 
-	grep -F "$source_line" "$1" > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		echo -e "\n$source_line" >> "$1"
-	fi
+    grep -F "$source_line" "$1" > /dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "\n$source_line" >> "$1"
+    fi
 }
 
 check_existing_go() {
     local gvm_dest="${1}"; shift
     local gvm_name="${1}"; shift
-    local path="${1:-$PATH}"
-    local active_go="$(PATH="${path}" which go)"
+    local shell_path="${1:-$PATH}"
+    local active_go="$(PATH="${shell_path}" which go)"
     local active_go_root="${GOROOT}"
 
     [[ -z "${gvm_dest// /}" ]] && return 1
     [[ -z "${gvm_name// /}" ]] && return 1
 
-	if [[ "x${active_go_root}" == "x" ]]; then
-		if [[ "x${active_go}" != "x" ]]; then
-            active_go_root="$(PATH="${path}" go env GOROOT 2>/dev/null)"
-		else
-			echo "No existing Go versions detected"
-			return 1
-		fi
-	fi
+    if [[ -z "${active_go_root// /}" ]]; then
+        if [[ -n "${active_go// /}" && "${active_go}" != "go not found" ]]; then
+            active_go_root="$(PATH="${shell_path}" go env GOROOT 2>/dev/null)"
+        else
+            echo "No existing Go versions detected."
+            return 1
+        fi
+    fi
 
-	echo "Created profile for existing install of Go at ${active_go_root}"
-	mkdir -p "${gvm_dest}/${gvm_name}/environments" &> /dev/null || __gvm_display_error "Failed to create environment directory"
-	mkdir -p "${gvm_dest}/${gvm_name}/pkgsets/system/global" &> /dev/null || __gvm_display_error "Failed to create new package set"
-	mkdir -p "${gvm_dest}/${gvm_name}/gos/system" &> /dev/null || __gvm_display_error "Failed to create new Go folder"
-	cat << EOF > $gvm_dest/$gvm_name/environments/system
+    echo "Created profile for existing install of Go at ${active_go_root}"
+    mkdir -p "${gvm_dest}/${gvm_name}/environments" &> /dev/null || display_error "Failed to create environment directory"
+    mkdir -p "${gvm_dest}/${gvm_name}/pkgsets/system/global" &> /dev/null || display_error "Failed to create new package set"
+    mkdir -p "${gvm_dest}/${gvm_name}/gos/system" &> /dev/null || display_error "Failed to create new Go folder"
+    cat << EOF > $gvm_dest/$gvm_name/environments/system
 #
 # GVM2 - Automatically generated file. DO NOT EDIT!
 #
@@ -60,11 +142,11 @@ export GOPATH; GOPATH="${gvm_dest}/${gvm_name}/pkgsets/system/global"
 export PATH; PATH="${gvm_dest}/${gvm_name}/pkgsets/system/global/bin:\${GOROOT}/bin:\${GVM_ROOT}/bin:\${PATH}"
 EOF
 
-	# create system@global pkgset
-	cp $gvm_dest/$gvm_name/environments/system $gvm_dest/$gvm_name/environments/system@global
-	# @TODO: This is here for consistency with 'gvm pkgset create' which adds
-	# some duplicated entries when the pkgset is 'global'. Need to fix it!
-	cat << EOF >> ${gvm_dest}/${gvm_name}/environments/system@global
+    # create system@global pkgset
+    cp $gvm_dest/$gvm_name/environments/system $gvm_dest/$gvm_name/environments/system@global
+    # @TODO: This is here for consistency with 'gvm pkgset create' which adds
+    # some duplicated entries when the pkgset is 'global'. Need to fix it!
+    cat << EOF >> ${gvm_dest}/${gvm_name}/environments/system@global
 export gvm_pkgset_name="global"
 export GOPATH; GOPATH="${gvm_dest}/${gvm_name}/pkgsets/system/global:\${GOPATH}"
 export PATH; PATH="${gvm_dest}/${gvm_name}/pkgsets/system/global/bin:\${PATH}"
@@ -72,7 +154,7 @@ EOF
 
     unset active_go_root
     unset active_go
-    unset path
+    unset shell_path
     unset gvm_name
     unset gvm_dest
 }
@@ -82,6 +164,14 @@ GVM_DEST="${2:-$HOME}"
 GVM_NAME="${3}"
 SRC_REPO="${SRC_REPO:-https://github.com/markeissler/gvm2.git}"
 
+# remove trailing slash
+GVM_DEST="${GVM_DEST/%\//}"
+
+# resolve absolute path
+__gvm_resolve_path "${GVM_DEST}" > /dev/null
+GVM_DEST="${RETVAL}"
+
+# set GVM_NAME (always falls back to gvm2 unless GVM_DEST is $HOME)
 if [[ -z "${GVM_NAME// }" ]]
 then
     if [[ "${GVM_DEST}" == "${HOME}" ]]
@@ -92,9 +182,9 @@ then
     fi
 fi
 
-[ -d "$GVM_DEST/$GVM_NAME" ] && __gvm_display_error "Already installed!"
-[ -d "$GVM_DEST" ] || mkdir -p "$GVM_DEST" > /dev/null 2>&1 || __gvm_display_error "Failed to create $GVM_DEST"
-[ -z "$(which git)" ] && __gvm_display_error "Could not find git
+[ -d "$GVM_DEST/$GVM_NAME" ] && display_error "Already installed!"
+[ -d "$GVM_DEST" ] || mkdir -p "$GVM_DEST" > /dev/null 2>&1 || display_error "Failed to create $GVM_DEST"
+[ -z "$(which git)" ] && display_error "Could not find git
 
   Debian/Ubuntu: apt-get install git
   Redhat/Centos: yum install git
@@ -109,40 +199,34 @@ GIT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 
 if [[ "${GVM_DEBUG}" -eq 1 ]]
 then
-	echo "Vars dump:"
-	echo "  BRANCH   -> ${BRANCH}"
-	echo "  GVM_DEST -> ${GVM_DEST}"
-	echo "  GVM_NAME -> ${GVM_NAME}"
-	echo "  SRC_REPO -> ${SRC_REPO}"
-	echo "  GIT_ROOT -> ${GIT_ROOT}"
+    echo "Vars dump:"
+    echo "  BRANCH   -> ${BRANCH}"
+    echo "  GVM_DEST -> ${GVM_DEST}"
+    echo "  GVM_NAME -> ${GVM_NAME}"
+    echo "  SRC_REPO -> ${SRC_REPO}"
+    echo "  GIT_ROOT -> ${GIT_ROOT}"
 fi
 
 if [[ -z "$GIT_ROOT" || "$(basename "$GIT_ROOT")" != "gvm2" ]]
 then
-  echo "Cloning from $SRC_REPO to $GVM_DEST/$GVM_NAME"
+    echo "Cloning from $SRC_REPO to $GVM_DEST/$GVM_NAME"
 
-  _git_clone_cmd="git clone --quiet"
-  [[ "${GVM_DEBUG}" -eq 1 ]] && _git_clone_cmd="${_git_clone_cmd// --quiet/}"
-  ${_git_clone_cmd} "$SRC_REPO" "$GVM_DEST/$GVM_NAME"
-  [[ $? -ne 0 ]] && __gvm_display_error "Failed to clone from $SRC_REPO into $GVM_DEST/$GVM_NAME"
-  unset _git_clone_cmd
+    _git_clone_cmd="git clone --quiet"
+    [[ "${GVM_DEBUG}" -eq 1 ]] && _git_clone_cmd="${_git_clone_cmd// --quiet/}"
+    ${_git_clone_cmd} "$SRC_REPO" "$GVM_DEST/$GVM_NAME"
+    [[ $? -ne 0 ]] && display_error "Failed to clone from $SRC_REPO into $GVM_DEST/$GVM_NAME"
+    unset _git_clone_cmd
 else
-	echo -n "Not cloning. "
-  if [[ $GVM_DEST == *"$GIT_ROOT"* ]]
-  then
-	  echo "Creating symlink: $GVM_DEST -> $GIT_ROOT"
-    ln -s "$GIT_ROOT" "$GVM_DEST/$GVM_NAME"
-  else
-	  echo "Copying: $GIT_ROOT -> $GVM_DEST/$GVM_NAME"
-    cp -r "$GIT_ROOT" "$GVM_DEST/$GVM_NAME"
-  fi
+    echo "Copying from ${GIT_ROOT} to ${GVM_DEST}/${GVM_NAME}"
+
+    cp -r "${GIT_ROOT}" "${GVM_DEST}/${GVM_NAME}" &> /dev/null
 fi
 
 # GVM_DEST may be a non-relative path
 # i.e: gvm-installer master foo
 pushd . > /dev/null
 
-cd "$GVM_DEST/$GVM_NAME" && git checkout --quiet "$BRANCH" 2> /dev/null ||	__gvm_display_error "Failed to checkout $BRANCH branch"
+cd "$GVM_DEST/$GVM_NAME" && git checkout --quiet "$BRANCH" 2> /dev/null || display_error "Failed to checkout $BRANCH branch"
 
 popd > /dev/null
 
@@ -152,38 +236,44 @@ source_line="[[ -s \"${GVM_DEST}/$GVM_NAME/scripts/gvm\" ]] && source \"${GVM_DE
 source_file="${GVM_DEST}/$GVM_NAME/scripts/gvm"
 
 if [ -z "$GVM_NO_UPDATE_PROFILE" ] ; then
-  if [ -n "$ZSH_NAME" ]; then
-    update_profile "$HOME/.zlogin"
-  elif [ "$(uname)" == "Linux" ]; then
-    update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
-  elif [ "$(uname)" == "Darwin" ]; then
-    update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
-  fi
+    if [ -n "$ZSH_NAME" ]; then
+        update_profile "$HOME/.zlogin"
+    elif [ "$(uname)" == "Linux" ]; then
+        update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
+    elif [ "$(uname)" == "Darwin" ]; then
+        update_profile "$HOME/.profile" || update_profile "$HOME/.bash_profile"
+    fi
 fi
 
 if [ -z "$GVM_NO_UPDATE_PROFILE" ] && [ "$?" != "0" ]; then
-	echo "Unable to locate profile settings file (something like $HOME/.profile or"
+    echo "Unable to locate profile settings file (something like $HOME/.profile or"
     echo "$HOME/.bash_profile)."
-	echo
-	echo "You will have to manually add the following line:"
-	echo
-	echo "  $source_line"
-	echo
+    echo
+    echo "You will have to manually add the following line:"
+    echo
+    echo "  $source_line"
+    echo
 fi
 
 echo "export GVM_ROOT=$GVM_DEST/$GVM_NAME" > "$GVM_DEST/$GVM_NAME/scripts/gvm"
 echo "source \$GVM_ROOT/scripts/gvm-default" >> "$GVM_DEST/$GVM_NAME/scripts/gvm"
-check_existing_go "${GVM_DEST}" "${GVM_NAME}" "${PATH}"
-[[ -s "$GVM_DEST/$GVM_NAME/scripts/gvm" ]] && source "$GVM_DEST/$GVM_NAME/scripts/gvm"
-echo "Installed GVM v${GVM_VERSION}"
+
+# add system go to config
+check_existing_go "${GVM_DEST}" "${GVM_NAME}" "${PATH}" || echo
+
+echo "Installed GVM2 v$(cat "${GVM_DEST}/${GVM_NAME}/VERSION")"
 echo
 echo "Please restart your terminal session or to get started right away run"
-echo " \`source ${source_file}\`"
+echo
+echo "  prompt> source ${source_file}"
 echo
 echo "Support for auto selection of Go version and GVM2 pkgset (via .go-version"
 echo "and .go-pkgset files) requires that GVM2 is loaded after RVM (if installed)."
 echo "For bash, you may need to manually update your .profile or .bash_profile"
 echo "files; for zsh, you may need to manually update your .zlogin file."
+echo
+echo "Additional dependencies may need to be installed before GVM2 can operate"
+echo "correctly."
 echo
 echo "See the README.md file for more information."
 echo

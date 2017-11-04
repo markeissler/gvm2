@@ -10,7 +10,8 @@
 # load dependencies
 dep_load()
 {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+    local base="$(builtin cd "$(dirname "${srcd}")" && builtin pwd)"
     local deps; deps=(
         "../function/_bash_pseudo_hash.sh"
         "../function/_shell_compat.sh"
@@ -24,7 +25,7 @@ dep_load()
     do
         source "${base}/${file}"
     done
-}; dep_load; unset -f dep_load
+}; dep_load; unset -f dep_load &> /dev/null || unset dep_load
 
 # __gvm_pkgset_use()
 # /*!
@@ -181,7 +182,8 @@ __gvm_pkgset_use()
 
     if [[ "${GVM_DEBUG}" -eq 1 ]]
     then
-        printf "Command (%s) options dump:\n" "${BASH_SOURCE[0]##*/}"
+        local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+        printf "Command (%s) options dump:\n" "${srcd##*/}"
         local _item
         for _item in "${options_hash[@]}"
         do

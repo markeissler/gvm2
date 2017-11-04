@@ -127,13 +127,13 @@ create()
             __gvm_display_fatal "${RETVAL}"
         fi
 
-        cat << EOF > "${gvm_root}/environments/${go_version}@${pkgset_name}"
+        cat << EOF >> "${gvm_root}/environments/${go_version}@${pkgset_name}"
 # Package Set-Specific Overrides
 export gvm_pkgset_name="${pkgset_name}"
 export GOPATH; GOPATH="${pkgset_gopath_additions}:\${GOPATH}"
 export PATH; PATH="${pkgset_path_additions}:\${PATH}"
-export GVM_OVERLAY_PREFIX; GVM_OVERLAY_PREFIX="${gvm_root_str}/pkgsets/${go_version}/${target_set_name}/overlay"
-export PATH; PATH="\${GVM_ROOT}/pkgsets/${go_version}/${target_set_name}/bin:\${GVM_OVERLAY_PREFIX}/bin:\${PATH}"
+export GVM_OVERLAY_PREFIX; GVM_OVERLAY_PREFIX="${gvm_root_str}/pkgsets/${go_version}/${pkgset_name}/overlay"
+export PATH; PATH="\${GVM_ROOT}/pkgsets/${go_version}/${pkgset_name}/bin:\${GVM_OVERLAY_PREFIX}/bin:\${PATH}"
 export LD_LIBRARY_PATH; LD_LIBRARY_PATH="\${GVM_OVERLAY_PREFIX}/lib:\${LD_LIBRARY_PATH}"
 export DYLD_LIBRARY_PATH; DYLD_LIBRARY_PATH="\${GVM_OVERLAY_PREFIX}/lib:\${DYLD_LIBRARY_PATH}"
 export PKG_CONFIG_PATH; PKG_CONFIG_PATH="\${GVM_OVERLAY_PREFIX}/lib/pkgconfig:\${PKG_CONFIG_PATH}"
