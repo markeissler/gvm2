@@ -8,7 +8,7 @@ end
 
 def commit
   @commit ||= (
-    ENV['TRAVIS_COMMIT'] || `git rev-parse --abbrev-ref HEAD`.chomp
+    ENV['GIT_COMMIT'] || ENV['TRAVIS_COMMIT'] || `git rev-parse --abbrev-ref HEAD`.chomp
   )
 end
 
