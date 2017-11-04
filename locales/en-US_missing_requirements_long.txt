@@ -1,1 +1,4 @@
 GVM2 is missing requirements. Not all dependencies met.
+
+- List missing dependencies -
+    prompt> gvm check

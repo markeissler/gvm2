@@ -103,9 +103,8 @@ __gvm_find_latest()
         RETVAL="" && echo "${RETVAL}" && return 1
     fi
 
-    # grab the last entry in the hash (which is already sorted)
-    local key_count="${#versions_hash[@]}"
-    local version_raw="${versions_hash[ $(( key_count-1 )) ]}"
+    # grab the first entry in the hash (which is already sorted)
+    local version_raw="${versions_hash[0]}"
 
     RETVAL="${version_raw%%:*}"
 
@@ -212,6 +211,13 @@ update()
             __gvm_display_fatal "${RETVAL}"
         fi
         unset rslt
+    fi
+
+    # nothing to do if already on selected version (skip leading v if present)
+    if [[ "${version#v*}" == "${GVM_VERSION#v*}" ]]
+    then
+        __gvm_locale_text_for_key "update_already_installed" > /dev/null
+        __gvm_display_fatal "${RETVAL}: ${version}"
     fi
 
     # determine the installer_source url based on version

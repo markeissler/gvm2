@@ -34,6 +34,19 @@
 # source once and only once!
 [[ ${BASH_PSEUDO_HASH:-} -eq 1 ]] && return || readonly BASH_PSEUDO_HASH=1
 
+# zsh fixups
+if [[ -n "${ZSH_VERSION// /}" ]]
+then
+    # add bash word split emulation for zsh
+    #
+    # see: http://zsh.sourceforge.net/FAQ/zshfaq03.html
+    #
+    setopt shwordsplit
+
+    # force zsh to start arrays at index 0
+    setopt KSH_ARRAYS
+fi
+
 # setValueForKeyFakeAssocArray()
 # /*!
 # @abstract Set value for key from a fake associative array
@@ -80,8 +93,8 @@
 setValueForKeyFakeAssocArray()
 {
     # parameter list supports empty arguments!
-    local target_key="$1"; shift
-    local new_value="$1"; shift # @todo: need to support setting nil values!
+    local target_key="${1}"; shift
+    local new_value="${1//@/\\@}"; new_value="${new_value:-@@}"; shift # @todo: need to support setting nil values!
     local target_ary; target_ary=()
     local defaultIFS="$IFS"
     local IFS="$defaultIFS"
@@ -157,7 +170,7 @@ setValueForKeyFakeAssocArray()
 # */
 valueForKeyFakeAssocArray()
 {
-    local target_key="$1"
+    local target_key="${1}"; shift
     local target_ary; target_ary=()
     local defaultIFS="$IFS"
     local IFS="$defaultIFS"
@@ -165,7 +178,7 @@ valueForKeyFakeAssocArray()
     local found_key=false
     unset RETVAL
 
-    IFS=$' ' target_ary=( ${2} ) IFS="$defaultIFS"
+    IFS=$' ' target_ary=( ${1} ) IFS="$defaultIFS"
 
     [[ -z "${target_key// /}" || ${#target_ary[@]} -eq 0 ]] && RETVAL="" && echo "${RETVAL}" && return 2
 
@@ -177,6 +190,8 @@ valueForKeyFakeAssocArray()
             found_key=true
             # @todo: need to support returning nil values!
             __bphp_decode "${_item#*:}" > /dev/null; value="${RETVAL}"
+            # decode nils
+            value="${value//@@/}"; value="${value//\\@/@}"
             break
         fi
     done
@@ -293,7 +308,22 @@ __bphp_encode()
                 new_string+="$__char"
                 ;;
             * )
-                printf -v __char '\\x%02X' "'$__char"
+                if [[ -n "${ZSH_VERSION// /}" ]]
+                then
+                    if [[ -z "${ZSH_VERSION_ARY[@]}" ]]
+                    then
+                        __bphp_parse_semver "${ZSH_VERSION}" > /dev/null
+                        ZSH_VERSION_ARY=( ${RETVAL} )
+                    fi
+                    if [[ ${ZSH_VERSION_ARY[0]} -gt 5 ]] || [[ ${ZSH_VERSION_ARY[0]} -eq 5 && ${ZSH_VERSION_ARY[1]} -ge 3 ]]
+                    then
+                        printf -v __char '\\x%02X' "'$__char"
+                    else
+                        __char="$(printf '\\x%02X' "'$__char")"
+                    fi
+                else
+                    printf -v __char '\\x%02X' "'$__char"
+                fi
                 new_string+="${__char//\\x/%}"
                 ;;
         esac
@@ -323,7 +353,22 @@ __bphp_decode()
 
     [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
 
-    printf -v new_string "%b" "${string//%/\\x}"
+    if [[ -n "${ZSH_VERSION// /}" ]]
+    then
+        if [[ -z "${ZSH_VERSION_ARY[@]}" ]]
+        then
+            __bphp_parse_semver "${ZSH_VERSION}" > /dev/null
+            ZSH_VERSION_ARY=( ${RETVAL} )
+        fi
+        if [[ ${ZSH_VERSION_ARY[0]} -gt 5 ]] || [[ ${ZSH_VERSION_ARY[0]} -eq 5 && ${ZSH_VERSION_ARY[1]} -ge 3 ]]
+        then
+            printf -v new_string "%b" "${string//\%/\\x}"
+        else
+            new_string="$(printf "%b" "${string//\%/\\x}")"
+        fi
+    else
+        printf -v new_string "%b" "${string//\%/\\x}"
+    fi
 
     if [[ -z "${new_string// /}" ]]
     then
@@ -336,9 +381,31 @@ __bphp_decode()
     echo "${RETVAL}" && return 0
 }
 
+__bphp_parse_semver()
+{
+    local string="${1}"
+    local semver_ary; semver_ary=()
+    unset RETVAL
+
+    [[ -z "${string// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    local major="${string%%.*}"; major="${major:-0}"
+    local minor="${string%.*}"; minor="${minor#*.}"; minor="${minor:-0}"
+    local patch="${string##*.}"; patch="${patch:-0}"
+
+    semver_ary=( "${major}" "${minor}" "${patch}" )
+
+    if [[ ${#semver_ary[@]} -eq 0 ]]
+    then
+        RETVAL=""; echo "${RETVAL}"; return 1
+    fi
+
+    RETVAL="${semver_ary[*]}"; echo "${RETVAL}"; return 0
+}
+
 __bph_version()
 {
-    local version="1.3.0"
+    local version="1.4.1"
 
     echo "${version}" && return 0
 }

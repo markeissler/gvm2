@@ -9,7 +9,8 @@
 
 # load dependencies
 dep_load() {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+    local base="$(builtin cd "$(dirname "${srcd}")" && builtin pwd)"
     local deps; deps=(
         "_shell_compat.sh"
     )
@@ -17,7 +18,7 @@ dep_load() {
     do
         source "${base}/${file}"
     done
-}; dep_load; unset -f dep_load
+}; dep_load; unset -f dep_load &> /dev/null || unset dep_load
 
 # __gvm_environment_sanitize()
 # /*!
@@ -38,8 +39,8 @@ dep_load() {
 # */
 __gvm_environment_sanitize() {
     local environment="${1}"; shift
-    local path="${1:-$PATH}"
-    local active_go="$(PATH="${path}" which go)"
+    local shell_path="${1:-$PATH}"
+    local active_go="$(PATH="${shell_path}" which go)"
     local active_go_root="${GOROOT}"
     local system_list; system_list=()
     local defaultIFS="${IFS}"
@@ -56,7 +57,7 @@ __gvm_environment_sanitize() {
         [[ "${GVM_DEBUG}" -eq 1 ]] && echo "__gvm_environment_sanitize() - Original GOROOT: ${GOROOT}"
 
         local old_go_root="${active_go_root}" && unset GOROOT
-        local new_go_root="$(PATH="${path}" go env GOROOT 2>/dev/null)"
+        local new_go_root="$(PATH="${shell_path}" go env GOROOT 2>/dev/null)"
 
         # set GOROOT based on currently active go
         #

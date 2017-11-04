@@ -12,7 +12,8 @@
 # load dependencies
 dep_load()
 {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+    local base="$(builtin cd "$(dirname "${srcd}")" && builtin pwd)"
     local deps; deps=(
         "locale_text.sh"
     )
@@ -20,10 +21,20 @@ dep_load()
     do
         source "${base}/${file}"
     done
-}; dep_load; unset -f dep_load
 
-# force zsh to start arrays at index 0
-[[ -n $ZSH_VERSION ]] && setopt KSH_ARRAYS
+    # zsh fixups
+    if [[ -n "${ZSH_VERSION// /}" ]]
+    then
+        # add bash word split emulation for zsh
+        #
+        # see: http://zsh.sourceforge.net/FAQ/zshfaq03.html
+        #
+        setopt shwordsplit
+
+        # force zsh to start arrays at index 0
+        setopt KSH_ARRAYS
+    fi
+}; dep_load; unset -f dep_load &> /dev/null || unset dep_load
 
 # __gvm_is_function()
 # /*!
@@ -60,6 +71,83 @@ __gvm_callstack()
     fi
 
     return 0
+}
+
+# __gvm_resolve_path()
+# /*!
+# @abstract Returns a resolved absolute path
+# @discussion Elements of the path will be resolved for dot and tilde chars.
+# @param string Path string
+# @return Returns string containing path with all elements resolved on success
+#   (status 0), otherwise an empty string on failure (status 1).
+# @note Also sets global variable RETVAL to the same return value.
+# @note Requires shwordsplit and KSH_ARRAYS are enabled (via setopt) for KSH.
+# @note Double dot relative references are not supported and will be passed
+#   through unmodified.
+# */
+__gvm_resolve_path() {
+    local path_in="${1-$PATH}"
+    local path_in_ary; path_in_ary=()
+    local path_out=""
+    local path_out_ary; path_out_ary=()
+    local defaultIFS="$IFS"
+    local IFS="$defaultIFS"
+    local spaceChar=$' '
+    unset RETVAL
+
+    [[ -z "${path_in// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1
+
+    # convert path into an array of elements, encode spaces
+    IFS=':' path_in_ary=( ${path_in//$spaceChar/%2f} ) IFS="$defaultIFS"
+
+    local _path
+    for _path in "${path_in_ary[@]}"
+    do
+        case "${_path}" in
+            ".."/* | "."* )
+                ;;
+            "."/* )
+                _path="${PWD}"/"${_path#"./"}"
+                ;;
+            "."* )
+                _path="${PWD}"
+                ;;
+            "~+"/* )
+                _path="${PWD}"/"${_path#"~+/"}"
+                ;;
+            "~-"/* )
+                _path="${OLDPWD}"/"${_path#"~-/"}"
+                ;;
+            "~"/* )
+                _path="${HOME}"/"${_path#"~/"}"
+                ;;
+            "~"* )
+                local __user="${_path%%/*}"
+                local __path_home="$(bash -c "echo ${__user}")"
+                if [[ "${_path}" == */* ]]
+                then
+                    _path="${__path_home}"/"${_path#*/}"
+                else
+                    _path="${__path_home}"
+                fi
+                unset __path_home user
+                ;;
+        esac
+        path_out_ary+=( "${_path}" )
+    done
+    unset _path
+
+    # convert path elements array into path string, decode spaces
+    IFS=":" path_out="${path_out_ary[*]}" IFS="$defaultIFS"
+
+    RETVAL="${path_out//%2f/$spaceChar}"
+
+    if [[ -z "${RETVAL// /}" ]]
+    then
+        RETVAL="" && echo "${RETVAL}" && return 1
+    fi
+
+    echo "${RETVAL}" && return 0
 }
 
 # __gvm_progress()
@@ -149,7 +237,7 @@ __gvm_pwd()
         printf -v pwd "%s" "$(builtin pwd)"
     elif [[ "x${ZSH_VERSION}" != "x" ]]
     then
-        printf -v pwd "%s" "$(builtin pwd)"
+        pwd="$(builtin pwd)"
     fi
 
     [[ -z "${pwd// /}" ]] && RETVAL="" && echo "${RETVAL}" && return 1

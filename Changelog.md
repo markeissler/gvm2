@@ -1,5 +1,46 @@
 # Changelog: GVM2
 
+## 0.10.5 / 2017-10-20
+
+Fixes for gvm-installer to address regression which caused the installer to fail for new installations. Also improved
+the update process to fail if the user requested the same __GVM2__ version that is currently installed.
+
+This release includes a number of fixes for __ZSH__ support. Unit and integration tests for __ZSH__ support will be
+included with the next release and at that time support is anticipated to be stable and complete.
+
+Finally, an additional internal continuous integration (CI) server has been added to help with testing. Status for the master
+branch as built on the [Jenkins CI](https://jenkins.io/) server can be viewed at the top of the [README](README.md)
+page. This CI server is building against __Debian Jessie__ (bash 4/zsh 5, gcc-4) and __Debian Stretch__
+(bash 4/zsh 5.3, gcc-6). The [Travis CI](https://travis-ci.org/markeissler/gvm2) server will continue to build for both
+__macOS__ and __Ubuntu Trusty__ platforms at this time but is currently restricted to just testing for bash 4.
+
+### Short list of commit messages
+
+  * GVM2-72 Add GIT_COMMIT to Rakefile for Jenkins.
+  * GVM2-72 Enclose bash -c paths in quotes.
+  * GVM2-71 Fix broken line wrap on gvm-installer output.
+  * GVM2-68 Fix unexpanded label reference in Rakefile.
+  * GVM2-67 Remove symlink install strategy from gvm-installer.
+  * GVM2-66 Fix gvm-installer to resolve dot and tilde in GVM_DEST.
+  * GVM2-65 Isolate tests for gcc4 vs gcc6 on linux.
+  * GVM2-64 Fix broken Package Set-Specific config produced by pkgset-create.
+  * GVM2-63 Fix broken pgkset env files produced by pkgset-create.
+  * GVM2-62 Add check for bash dependency.
+  * GVM2-61 Improve sanity checking for missing dependencies.
+  * GVM2-60 Fix scripts/update to fail if version is already installed.
+  * GVM2-56 Improve gvm-installer final output.
+  * GVM2-56 Fix calls to display_error() in gvm-installer.
+  * GVM2-54 Fix __gvm_find_latest() to return correct latest version.
+  * GVM2-53 Fix output for scripts/check.
+  * GVM2-53 Update gvm update tests.
+  * GVM2-26 Fix scripts/env/use.sh for zsh.
+  * GVM2-26 Fix scripts/env/pkgset_use.sh for zsh.
+  * GVM2-26 Fix scripts/uninstall for zsh.
+  * GVM2-26 Fix __gvm_pwd() for zsh.
+  * GVM2-26 Fix dep_load for zsh.
+  * GVM2-26 Update bash_pseudo_hash to v1.4.1.
+  * GVM2-26 Fix dep_load for zsh.
+
 ## 0.10.4 / 2017-10-07
 
 Bug fixes.

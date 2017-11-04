@@ -22,6 +22,9 @@ sleep 4
 ## 0.10.0
 ## 0.10.1
 ## 0.10.2
+## 0.10.3
+## 0.10.4
+##
 
 ## Setup expectation - nothing to do
 
@@ -36,9 +39,17 @@ for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.0" ]] && b
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.1" ]] && break; done # status=0
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.2" ]] && break; done # status=0
 for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.3" ]] && break; done # status=0
+for version in "${availableVersions[@]}";do [[ "${version}" == "v0.10.4" ]] && break; done # status=0
 
 ## Wait so that we don't get locked out for making too many git api requests
 sleep 4
+
+## @TODO: Uncomment for 0.10.6 or 0.11.0.
+## Switch to same version as installed
+##gvm update "v${GVM_VERSION}" # status=1; match=/GVM2 version is already installed/
+
+## Wait so that we don't get locked out for making too many git api requests
+##sleep 4
 
 ## Switch to earlier release with update support (v0.10.2)
 ##

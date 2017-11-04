@@ -9,7 +9,8 @@
 
 # load dependencies
 dep_load() {
-    local base="$(builtin cd "$(dirname "${BASH_SOURCE[0]}")" && builtin pwd)"
+    local srcd="${BASH_SOURCE[0]}"; srcd="${srcd:-${(%):-%x}}"
+    local base="$(builtin cd "$(dirname "${srcd}")" && builtin pwd)"
     local deps; deps=(
         "_bash_pseudo_hash.sh"
     )
@@ -17,7 +18,7 @@ dep_load() {
     do
         source "${base}/${file}"
     done
-}; dep_load; unset -f dep_load
+}; dep_load; unset -f dep_load &> /dev/null || unset dep_load
 
 # __gvm_read_environment_file()
 # /*!

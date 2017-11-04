@@ -1,5 +1,5 @@
 ##
-## macOS should be able to build certain old versions of Go.
+## macOS with clang >= 8 should be able to build certain old versions of Go.
 ##
 
 ##
