@@ -1,6 +1,14 @@
 # Changelog: GVM2
 
-## 0.10.5 / 2017-10-20
+## 0.10.6 / 2017-11-04
+
+Documentation fix: Build Status icon references for README.md were broken.
+
+### Short list of commit messages
+
+  * GVM2-73 Fix Build Status icons in README.md file.
+
+## 0.10.5 / 2017-11-04
 
 Fixes for gvm-installer to address regression which caused the installer to fail for new installations. Also improved
 the update process to fail if the user requested the same __GVM2__ version that is currently installed.
