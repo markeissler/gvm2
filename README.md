@@ -13,7 +13,7 @@ if you find bugs.
 
 | Service    | bash 4.3 | zsh 5.0.7 | zsh 5.3+ |
 |:-----------|:--------:|:---------:|:--------:|
-| Jenkins CI | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=bash-pseudo-hash+%28bash+4%29)]() | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=gvm2+%28bash+4%29)]() | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=gvm2+%28zsh+5.3%2B%29)]() |
+| Jenkins CI | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=gvm2+%28bash+4%29)]() | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=gvm2+%28zsh+5%29)]() | [![Build Status](http://ci.mixtur.com/buildStatus/icon?job=gvm2+%28zsh+5.3%2B%29)]() |
 | Travis CI  | [![Build Status](https://travis-ci.org/markeissler/gvm2.svg?branch=master)](https://travis-ci.org/markeissler/gvm2) | -- | -- |
 
 ## Overview
