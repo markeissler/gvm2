@@ -275,8 +275,10 @@ update()
 
     if [[ "${opt_porcelain}" == false && "${opt_quiet}" == false ]]
     then
+        # @TODO: update for locales
+        local version_to_from_text="to ${version} (from v${GVM_VERSION})"
         __gvm_locale_text_for_key "title/gvm_update" > /dev/null
-        printf "\n%s\n\n" "${RETVAL}"
+        printf "\n%s %s\n\n" "${RETVAL}" "${version_to_from_text}"
     fi
 
     #

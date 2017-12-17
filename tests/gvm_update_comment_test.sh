@@ -56,7 +56,7 @@ gvm update "v${GVM_VERSION}" # status=1; match=/GVM2 version is already installe
 ## NOTE: GVM2 >= v0.10.3 does not use git to update, we do not need to reset the
 ## git origin url to use https!
 ##
-gvm update v0.10.5 # status=0
+gvm update v0.10.5 # status=0; match=/to v0\.10\.5 \(from v[0-9]+\.[0-9]+\.[0-9]+\)/
 source "${SANDBOX}/gvm2/scripts/gvm"
 gvm version # status=0; match=/0.10.5/
 
