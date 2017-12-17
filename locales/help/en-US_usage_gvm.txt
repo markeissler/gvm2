@@ -1,6 +1,6 @@
 Usage: gvm <command> [option]
 
-GVM2 is the Go enVironment Manager
+GVM2 is the Go enVironment Manager (Revision 2)
 
 Commands:
     alias       Manage Go version aliases
