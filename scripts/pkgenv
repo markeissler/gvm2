@@ -21,7 +21,74 @@ dep_load()
     done
 }; dep_load; unset -f dep_load
 
-pkgenv()
+pkgenv_resolve()
+{
+    local go_version="${1}"; shift
+    local go_pkgset="${1}"; shift
+    local opt_porcelain="${1}"; shift
+    local opt_quiet="${1}"
+    local gvm_env_file="${GVM_ROOT}/environments/${go_version}@${go_pkgset}"
+
+    if [ -z "${go_version// /}" ]; then
+        __gvm_locale_text_for_key "specify_go_version_name"
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    if [[ -z "${go_pkgset// /}" ]]
+    then
+        __gvm_locale_text_for_key "specify_pkgenv_pkgset_name" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    # Package not exist?
+    if [[ ! -f "${gvm_env_file}" ]]
+    then
+        __gvm_locale_text_for_key "pkgenv_pkgset_not_exist" > /dev/null
+        __gvm_display_fatal "${RETVAL}"
+    fi
+
+    #
+    # Finally, do it
+    #
+    if [[ "${GVM_DEBUG}" -eq 1 ]]
+    then
+        printf "%s:\n" "${BASH_SOURCE[0]##*/}::pkgenv() running with"
+        echo "  GOROOT         -> ${GOROOT}"
+        echo "  GVM_ROOT       -> ${GVM_ROOT}"
+        echo "  gvm_go_name    -> ${gvm_go_name}"
+        echo "  gvm_go_pkgset  -> ${gvm_pkgset_name}"
+        echo "  _go_version    -> ${go_version}"
+        echo "  _go_pkgset     -> ${go_pkgset}"
+        echo "  _gvm_env_file  -> ${gvm_env_file}"
+    fi
+
+    if [[ "${opt_porcelain}" == false && "${opt_quiet}" == false ]]
+    then
+        __gvm_locale_text_for_key "title/gvm_pkgenv_resolve" > /dev/null
+        printf "\n%s\n\n" "${RETVAL}"
+    fi
+
+    # if go_version and go_pkgset do not match current then we need to spawn a
+    # child login shell, switch to the requested go_version and go_pkgset and
+    # call this function again.
+    if [[ ("${go_version}" != "${gvm_go_name}" || "${go_pkgset}" != "${gvm_pkgset_name}") && -z "${GVM_SPAWN// /}" ]]
+    then
+        echo "$(unset GVM_DEBUG; bash -lc "gvm use ${go_version}@${go_pkgset} > /dev/null; GVM_SPAWN=1 gvm pkgenv --porcelain --resolve")"
+        echo
+        return 0
+    fi
+
+    printf "GVM_ROOT: %s\n" "${GVM_ROOT}"
+    printf "GVM_GO_NAME: %s\n" "${gvm_go_name}"
+    printf "GVM_PKGSET_NAME: %s\n" "${gvm_pkgset_name}"
+    printf "GOROOT: %s\n" "${GOROOT}"
+    printf "GOPATH: %s\n" "${GOPATH}"
+    printf "PATH: %s\n\n" "${PATH}"
+
+    return $?
+}
+
+pkgenv_edit()
 {
     local go_version="${1}"; shift
     local go_pkgset="${1}"; shift
@@ -56,6 +123,8 @@ pkgenv()
         printf "%s:\n" "${BASH_SOURCE[0]##*/}::pkgenv() running with"
         echo "  GOROOT         -> ${GOROOT}"
         echo "  GVM_ROOT       -> ${GVM_ROOT}"
+        echo "  _go_version    -> ${go_version}"
+        echo "  _go_pkgset     -> ${go_pkgset}"
         echo "  _gvm_env_file  -> ${gvm_env_file}"
     fi
 
@@ -83,7 +152,8 @@ trap '_exit' SIGINT SIGQUIT SIGTERM
 main()
 {
     local go_version="${gvm_go_name}"
-    local go_pkgset="global"
+    local go_pkgset="${gvm_pkgset_name}"
+    local opt_resolve=false
     local opt_stdout=false
     local opt_porcelain=false
     local opt_quiet=false
@@ -98,6 +168,9 @@ main()
     while true
     do
         case "${1}" in
+            -r | --resolve )
+                opt_resolve=true
+                ;;
             -x | --stdout )
                 opt_stdout=true
                 ;;
@@ -175,7 +248,12 @@ main()
         fi
     fi
 
-    pkgenv "${go_version}" "${go_pkgset}" "${opt_stdout}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+    if [[ "${opt_resolve}" == true ]]
+    then
+        pkgenv_resolve "${go_version}" "${go_pkgset}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+    else
+        pkgenv_edit "${go_version}" "${go_pkgset}" "${opt_stdout}" "${opt_porcelain}" "${opt_quiet}"; rslt=$?
+    fi
 
     if [[ -n "$GVM_DEBUG" ]] && [[ -n "$GVM_DEBUG_LEVEL" && "$GVM_DEBUG_LEVEL" -gt 1 ]]
     then

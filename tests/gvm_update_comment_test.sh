@@ -75,4 +75,4 @@ gvm version # status=0; match=/0.9.1/
 sleep 4
 
 ## Reset install on exit so other tests don't break!
-( builtin cd "${SANDBOX}/gvm2"; mv .git.bak .git; git reset --hard $(git rev-list --all --max-count=1); mv .git .git.bak )
+( builtin cd "${SANDBOX}/gvm2"; mv git.bak .git; git reset --hard $(git rev-list --all --max-count=1); mv .git .git.bak )
